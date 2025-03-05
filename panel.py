@@ -9,7 +9,8 @@ class VIEW3D_PT_depth_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("render.depth_image", text="深度画像を保存")
+        layout.operator("render.depth_image", text="Save the depth image")
+
 
 classes = [VIEW3D_PT_depth_panel]
 

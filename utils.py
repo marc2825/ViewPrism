@@ -1,11 +1,8 @@
 import gpu
 import numpy as np
 
+# Use GPU off-screen rendering to obtain the depth buffer of the current 3D view with the specified width and height.
 def render_depth(context, width, height):
-    """
-    GPUオフスクリーンレンダリングを用いて、
-    指定幅・高さで現在の3Dビューの深度バッファを取得する。
-    """
     offscreen = gpu.types.GPUOffScreen(width, height)
     depth_data = None
     try:
@@ -54,7 +51,7 @@ def render_depth(context, width, height):
             bgl.glReadPixels(0, 0, width, height, bgl.GL_DEPTH_COMPONENT, bgl.GL_FLOAT, buffer)
             depth_data = np.array(buffer, dtype=np.float32).reshape(height, width)
     except Exception as e:
-        print("render_depthでエラーが発生しました:", e)
+        print("Error occured in render_depth:", e)
     finally:
         offscreen.free()
 

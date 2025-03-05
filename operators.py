@@ -25,24 +25,21 @@ class RENDER_OT_depth_image(bpy.types.Operator):
 
         depth_array = utils.render_depth(context, width, height)
         if depth_array is None:
-            self.report({'ERROR'}, "深度画像のレンダリングに失敗しました")
+            self.report({'ERROR'}, "The rendering of the depth image failed.")
             return {'CANCELLED'}
 
-        # 新規Imageを作成し、深度情報（グレースケール）をRGBAとしてセット
         image = bpy.data.images.new("DepthImage", width=width, height=height, alpha=False)
-        pixels = []
-        # ※ Blenderのimage.pixelsは下から上にピクセルを並べるので注意
+        pixels = [] # Down(&Left) -> Up(&Right)
         for y in range(height):
             for x in range(width):
-                val = depth_array[y, x]
-                # 値は[0,1]であることを想定。必要に応じて正規化してください。
+                val = depth_array[y, x] # TODO: Noramalize?
                 pixels.extend([val, val, val, 1.0])
         image.pixels = pixels
         image.filepath_raw = self.filepath
         image.file_format = 'PNG'
         image.save()
 
-        self.report({'INFO'}, f"深度画像を {self.filepath} に保存しました")
+        self.report({'INFO'}, f"Saved the depth image in {self.filepath}")
         return {'FINISHED'}
 
     def invoke(self, context, event):
