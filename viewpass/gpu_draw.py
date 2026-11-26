@@ -14,6 +14,9 @@ import numpy as np
 
 _shader = None
 _shader_error = None
+_targets = None             # reused render targets: (size, fb, tex_geom, tex_id, tex_depth, last_use)
+KEEP_MAX_PIXELS = 2_100_000 # keep targets up to ~1080p between captures (avoids GPU allocation churn)
+IDLE_RELEASE = 30.0         # seconds without a capture before kept targets are freed
 
 _VERT = """
 void main()
@@ -95,8 +98,51 @@ def shader():
     return _shader
 
 
+def release_targets():
+    global _targets
+    _targets = None
+    try:
+        import bpy
+        while bpy.app.timers.is_registered(_idle_release):
+            bpy.app.timers.unregister(_idle_release)
+    except ImportError:
+        pass
+
+
+def _idle_release():
+    import time
+    if _targets is None:
+        return None
+    left = IDLE_RELEASE - (time.monotonic() - _targets[5])
+    if left > 0:
+        return left
+    release_targets()
+    return None
+
+
+def _get_targets(width, height):
+    import time
+    import gpu
+    global _targets
+    if _targets is not None and _targets[0] == (width, height):
+        _targets = _targets[:5] + (time.monotonic(),)
+        return _targets[1:5]
+    _targets = None
+    tex_geom = gpu.types.GPUTexture((width, height), format='RGBA32F')
+    tex_id = gpu.types.GPUTexture((width, height), format='RGBA32F')
+    tex_depth = gpu.types.GPUTexture((width, height), format='DEPTH_COMPONENT32F')
+    fb = gpu.types.GPUFrameBuffer(depth_slot=tex_depth, color_slots=(tex_geom, tex_id))
+    if width * height <= KEEP_MAX_PIXELS:
+        import bpy
+        _targets = ((width, height), fb, tex_geom, tex_id, tex_depth, time.monotonic())
+        if not bpy.app.timers.is_registered(_idle_release):
+            bpy.app.timers.register(_idle_release, first_interval=IDLE_RELEASE, persistent=True)
+    return fb, tex_geom, tex_id, tex_depth
+
+
 def free_resources():
     global _shader, _shader_error
+    release_targets()
     _shader = None
     _shader_error = None
 
@@ -118,10 +164,7 @@ def render(width, height, view, projection, items, batches, depth_params, *, _af
 
     sh = shader()
     mode, dnear, dscale = depth_params
-    tex_geom = gpu.types.GPUTexture((width, height), format='RGBA32F')
-    tex_id = gpu.types.GPUTexture((width, height), format='RGBA32F')
-    tex_depth = gpu.types.GPUTexture((width, height), format='DEPTH_COMPONENT32F')
-    fb = gpu.types.GPUFrameBuffer(depth_slot=tex_depth, color_slots=(tex_geom, tex_id))
+    fb, tex_geom, tex_id, tex_depth = _get_targets(width, height)
     prev_depth_test = gpu.state.depth_test_get()
     prev_depth_mask = gpu.state.depth_mask_get()
     prev_blend = gpu.state.blend_get()
@@ -157,6 +200,9 @@ def render(width, height, view, projection, items, batches, depth_params, *, _af
         geom = np.frombuffer(buf_geom, dtype=np.float32).reshape(height, width, 4)[::-1].copy()
         ident = np.frombuffer(buf_id, dtype=np.float32).reshape(height, width, 4)[::-1].copy()
         return geom, ident
+    except BaseException:
+        release_targets()      # never reuse targets after a failure
+        raise
     finally:
         gpu.state.viewport_set(*prev_viewport)
         del fb, tex_geom, tex_id, tex_depth

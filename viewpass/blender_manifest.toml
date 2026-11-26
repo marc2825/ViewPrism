@@ -1,0 +1,30 @@
+schema_version = "1.0.0"
+
+# Working name; not final (see docs/STATUS.md). Do not publish without the owner's approval.
+id = "viewpass"
+version = "0.1.0"
+name = "ViewPass"
+tagline = "Export aligned depth, normal, ID and mask passes from the 3D viewport"
+maintainer = "marc2825"
+type = "add-on"
+
+tags = ["3D View", "Render", "Import-Export"]
+
+# Only versions actually verified with the test suites are allowed (see docs/STATUS.md).
+blender_version_min = "5.3.0"
+
+# CANDIDATE license, not yet decided by the owner. Required by the manifest schema to build.
+license = [
+  "SPDX:GPL-3.0-or-later",
+]
+
+[permissions]
+files = "Write exported pass images and metadata to the folder you choose"
+
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "*.pyc",
+  "/.git/",
+  "*.vptmp",
+]
