@@ -769,24 +769,20 @@ def t_multi_window(ctx, vp):
         with ctx.temp_override(window=win2, screen=win2.screen):
             bpy.ops.wm.window_close()
         print('MW: closed', flush=True)
-    # Right after closing a window Blender may have no active GPU context until the next redraw:
-    # the capture must fail explicitly (not crash), and work again after a redraw.
+    # Right after closing a window Blender has no current GPU context until it redraws (Blender
+    # 4.5 crashed here, 5.x raised). ViewPass must redraw first and capture correctly.
     window, area, region = find_view3d()
-    r = req(np.eye(4), persp(math.radians(60), W / H, .1, 100))
-    note = 'context still active after close'
+    plane('MW_front', (0.3, -0.2, -4), (.5, .5))
+    ctx.view_layer.update()
+    projm = persp(math.radians(60), W / H, .1, 100)
     print('MW: capture right after close', flush=True)
-    try:
-        with ctx.temp_override(**override(window, area, region)):
-            vp.capture.capture(bpy.context, r)
-    except vp.capture.GPUContextError as exc:
-        note = f'explicit error after close: {exc}'
     with ctx.temp_override(**override(window, area, region)):
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-    print('MW: capture after redraw', flush=True)
-    with ctx.temp_override(**override(window, area, region)):     # redraw_timer drops the override
-        res = vp.capture.capture(bpy.context, r)
-    check(res['depth'].shape == (H, W), 'capture after redraw failed')
-    return f"second main window uses its own view; {note}; recovered after redraw"
+        res = vp.capture.capture(bpy.context, req(np.eye(4), projm))
+    r_, c_ = pix(projm, (0.3, -0.2, -4), W, H)
+    check(name_at(res, r_, c_) == 'MW_front' and abs(res['depth'][r_, c_] - 4) < 1e-4,
+          'capture right after closing a window is wrong')
+    print('MW: done', flush=True)
+    return "second main window uses its own view; capture right after closing a window works"
 
 
 def t_reregister_clean(ctx, vp):

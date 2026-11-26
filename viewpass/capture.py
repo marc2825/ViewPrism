@@ -98,6 +98,31 @@ def _view3d_space(context):
     return space
 
 
+_known_windows = None
+
+
+def remember_windows(context):
+    """Record the current set of windows (called at registration and after each capture)."""
+    global _known_windows
+    wm = getattr(context, 'window_manager', None)
+    if wm is not None:
+        _known_windows = frozenset(w.as_pointer() for w in wm.windows)
+
+
+def _ensure_gpu_context(context):
+    """After a window was opened or closed Blender may have no current GPU context until it
+    redraws. On Blender 4.5 GPU calls in that state crash (5.x raises an error), so draw the
+    windows once first. This only happens when the set of windows changed since the last capture."""
+    import bpy
+    wm = context.window_manager
+    current = frozenset(w.as_pointer() for w in wm.windows)
+    if _known_windows is not None and current != _known_windows and len(wm.windows):
+        win = context.window if context.window is not None else wm.windows[0]
+        with context.temp_override(window=win, screen=win.screen):
+            bpy.ops.wm.redraw_timer(type='DRAW_WIN', iterations=1)
+    remember_windows(context)
+
+
 def capture(context, request, *, _after_draw=None):
     import bpy
     from . import gpu_draw, scene_geometry
@@ -107,6 +132,7 @@ def capture(context, request, *, _after_draw=None):
     t0 = time.perf_counter()
     req = validate_request(request)
     space = _view3d_space(context)
+    _ensure_gpu_context(context)
     view_layer = context.view_layer
     depsgraph = context.evaluated_depsgraph_get()
     w, h = req['width'], req['height']

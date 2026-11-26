@@ -10,8 +10,8 @@ type = "add-on"
 
 tags = ["3D View", "Render", "Import-Export"]
 
-# Only versions actually verified with the test suites are allowed (see docs/STATUS.md).
-blender_version_min = "5.3.0"
+# Only versions verified with the test suites (see docs/STATUS.md): 4.5 LTS and 5.3.
+blender_version_min = "4.5.0"
 
 # CANDIDATE license, not yet decided by the owner. Required by the manifest schema to build.
 license = [

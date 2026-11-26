@@ -25,6 +25,9 @@ def register():
             m.unregister()
         raise
     _modules = mods
+    import bpy
+    from . import capture
+    capture.remember_windows(bpy.context)
 
 
 def unregister():

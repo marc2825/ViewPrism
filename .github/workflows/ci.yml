@@ -55,10 +55,8 @@ jobs:
         include:
           - series: '5.3'
             steps: pure,selftest,harness,gui,build,package
-          # The manifest requires 5.3 (only verified versions), so installing the package on 4.5 is
-          # refused by design; 4.5 runs the code-level checks to find out whether it can be supported.
           - series: '4.5'
-            steps: pure,selftest,harness,gui,build
+            steps: pure,selftest,harness,gui,build,package
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
