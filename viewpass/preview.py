@@ -34,6 +34,7 @@ class _State:
         self.message = ''
         self.last_seconds = 0.0
         self.stale = False
+        self.windows = frozenset()
 
     @property
     def active(self):
@@ -105,7 +106,8 @@ def _rebuild_texture(settings):
         state.error = str(exc)
         rgb = np.zeros(state.raw['mask'].shape + (3,), np.float32)
     state.texture = _upload(rgb)
-    state.texture.filter_mode(settings.preview_pass in ('depth', 'normal'))
+    if hasattr(state.texture, 'filter_mode'):      # Blender 5.x; cosmetic only
+        state.texture.filter_mode(settings.preview_pass in ('depth', 'normal'))
 
 
 def _tag_redraw():
@@ -268,6 +270,12 @@ def _tick():
     settings = props.settings(ctx)
     if not settings.preview_auto:
         return 0.5                  # keep watching for a closed view so resources are released
+    # A window was opened/closed since the last tick: Blender may have no current GPU context
+    # until it redraws (on 4.5 GPU calls without a context can crash), so wait one tick.
+    windows = frozenset(w.as_pointer() for w in ctx.window_manager.windows)
+    if windows != state.windows:
+        state.windows = windows
+        return TICK
     now = time.monotonic()
     changed = state.dirty or viewport.view_signature(view) != state.signature
     if not changed:

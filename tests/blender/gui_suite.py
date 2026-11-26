@@ -446,9 +446,6 @@ def t_repeat_and_leak(ctx, vp):
         del res
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
         mem.append(private_bytes())
-    # Leak criterion: no growth trend in steady state. A per-capture leak (even 1 MB) grows on
-    # nearly every capture; allocator chunks show up as rare single steps. So: <= 3 growth steps
-    # > 1 MB and < 32 MB in total over the last 20 captures. (The 640x480 targets alone are 11 MB.)
     # large captures are not kept: allocation per capture, released afterwards
     big = req(np.eye(4), persp(math.radians(60), 16 / 9, .1, 100), 2560, 1440)
     with bpy.context.temp_override(**ov):
@@ -460,16 +457,20 @@ def t_repeat_and_leak(ctx, vp):
     if any(m is None for m in mem + mem_noredraw):
         detail['memory'] = 'NOT MEASURED on this OS (no process memory API); determinism checked only'
         return detail
+    # Leak criterion: no growth trend in steady state. A per-capture leak (even 1 MB) sets a new
+    # high-water mark on nearly every capture; allocator chunks and RSS oscillation (Linux) do not.
+    # So: <= 3 new highs (> 1 MB above the previous maximum) and < 32 MB net over the last 20
+    # captures. (The 640x480 targets alone are 11 MB.)
     tail = np.array(mem[-21:], dtype=np.float64) / 1e6
-    steps = int((np.diff(tail) > 1.0).sum())
+    steps = int(sum(tail[i] > tail[:i].max() + 1.0 for i in range(1, len(tail))))
     growth = float(tail[-1] - tail[0])
     burst = (mem_noredraw[-1] - mem_noredraw[0]) / 1e6
     print('MEM noredraw MB', [round(m / 1e6) for m in mem_noredraw])
     print('MEM redraw MB', [round(m / 1e6) for m in mem])
-    check(steps <= 3 and growth < 32, f'memory trend: {steps} growth steps, {growth:.1f} MB over the last 20 captures')
+    check(steps <= 3 and growth < 32, f'memory trend: {steps} new highs, {growth:.1f} MB over the last 20 captures')
     check(burst < 64, f'back-to-back captures grew {burst:.1f} MB (render targets should be reused)')
     detail.update(memory_source='VmRSS' if sys.platform.startswith('linux') else 'private bytes',
-                  mem_steady_growth_mb_last20=round(growth, 2), growth_steps_last20=steps,
+                  mem_steady_growth_mb_last20=round(growth, 2), new_highs_last20=steps,
                   mem_ramp_mb=round((max(mem) - mem[0]) / 1e6, 2), mem_growth_mb_20_back_to_back=round(burst, 2))
     return detail
 
@@ -739,8 +740,10 @@ def t_multi_window(ctx, vp):
     ctx.view_layer.update()
     before = {w.as_pointer() for w in bpy.context.window_manager.windows}
     window, area, region = find_view3d()
+    print('MW: window_new', flush=True)
     with ctx.temp_override(**override(window, area, region)):
         bpy.ops.wm.window_new()
+    print('MW: window created', flush=True)
     new = [w for w in bpy.context.window_manager.windows if w.as_pointer() not in before]
     check(len(new) == 1, 'second window not created')
     win2 = new[0]
@@ -758,16 +761,20 @@ def t_multi_window(ctx, vp):
                                                    ['depth', 'mask'])
             check(np.allclose(np.array(request['view_matrix']), np.array([list(r) for r in r2.data.view_matrix])),
                   'matrices not from the second window')
+            print('MW: capture in second window', flush=True)
             res = vp.capture.capture(bpy.context, request)
         check(res['mask'].any(), 'nothing captured in the second window')
     finally:
+        print('MW: window_close', flush=True)
         with ctx.temp_override(window=win2, screen=win2.screen):
             bpy.ops.wm.window_close()
+        print('MW: closed', flush=True)
     # Right after closing a window Blender may have no active GPU context until the next redraw:
     # the capture must fail explicitly (not crash), and work again after a redraw.
     window, area, region = find_view3d()
     r = req(np.eye(4), persp(math.radians(60), W / H, .1, 100))
     note = 'context still active after close'
+    print('MW: capture right after close', flush=True)
     try:
         with ctx.temp_override(**override(window, area, region)):
             vp.capture.capture(bpy.context, r)
@@ -775,6 +782,7 @@ def t_multi_window(ctx, vp):
         note = f'explicit error after close: {exc}'
     with ctx.temp_override(**override(window, area, region)):
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+    print('MW: capture after redraw', flush=True)
     with ctx.temp_override(**override(window, area, region)):     # redraw_timer drops the override
         res = vp.capture.capture(bpy.context, r)
     check(res['depth'].shape == (H, W), 'capture after redraw failed')
