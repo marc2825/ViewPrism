@@ -1,0 +1,8 @@
+line-length = 120
+target-version = "py311"
+# The independent harness is kept exactly as provided by the specification.
+extend-exclude = ["viewpass-dev"]
+
+[lint]
+# Errors that indicate real bugs: syntax errors, undefined names, unused imports/variables.
+select = ["E9", "F"]

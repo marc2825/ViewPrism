@@ -100,8 +100,18 @@ def name_at(res, r, c):
 
 
 def private_bytes():
+    """Process memory for leak trends: Windows private bytes, Linux RSS; None if unavailable."""
+    if sys.platform.startswith('linux'):
+        try:
+            with open('/proc/self/status', encoding='ascii') as fh:
+                for line in fh:
+                    if line.startswith('VmRSS:'):
+                        return int(line.split()[1]) * 1024
+        except OSError:
+            return None
+        return None
     if os.name != 'nt':
-        return 0
+        return None
     from ctypes import wintypes
 
     class PMC(ctypes.Structure):
@@ -197,7 +207,7 @@ def t_empty_scene(ctx, vp):
 
 def t_visibility(ctx, vp):
     clear_scene()
-    vis = plane('Visible', (-1, 0, -5), (.5, .5))
+    plane('Visible', (-1, 0, -5), (.5, .5))
     hid = plane('HiddenEye', (1, 0, -5), (.5, .5))
     hid.hide_set(True)
     ex = bpy.data.collections.new('Excluded')
@@ -252,8 +262,8 @@ def t_modifier_and_scale(ctx, vp):
     ob = plane('Arrayed', (-1, 0, -6), (.4, .4))
     m = ob.modifiers.new('arr', 'ARRAY')
     m.count, m.use_relative_offset, m.relative_offset_displace = 2, True, (2.5, 0, 0)   # copy at x + 2.0
-    mir = cube('Mirrored', (0, -1.6, -6), 1.0, scale=(-1.5, 1, 1))
-    tilt = plane('Tilted', (0, 1.6, -6), (.5, .3), scale=(2, 1, .5), rot=(0, math.radians(30), 0))
+    cube('Mirrored', (0, -1.6, -6), 1.0, scale=(-1.5, 1, 1))
+    plane('Tilted', (0, 1.6, -6), (.5, .3), scale=(2, 1, .5), rot=(0, math.radians(30), 0))
     ctx.view_layer.update()
     projm = persp(math.radians(70), W / H, .1, 100)
     res = vp.capture.capture(ctx, req(np.eye(4), projm))
@@ -324,7 +334,7 @@ def t_instances(ctx, vp):
 
 def t_viewport_matrices(ctx, vp):
     clear_scene()
-    target = plane('Target', (0.7, -0.4, 0.0), (.6, .4))
+    plane('Target', (0.7, -0.4, 0.0), (.6, .4))
     plane('Back', (0, 0, -3.0), (6, 6))
     ctx.view_layer.update()
     window, area, region = find_view3d()
@@ -363,7 +373,7 @@ def t_viewport_matrices(ctx, vp):
 def t_camera_view(ctx, vp):
     from bpy_extras.object_utils import world_to_camera_view
     clear_scene()
-    target = plane('CamTarget', (0.5, 0.3, 0.0), (.4, .3))
+    plane('CamTarget', (0.5, 0.3, 0.0), (.4, .3))
     plane('CamBack', (0, 0, -2.0), (8, 8))
     cam_data = bpy.data.cameras.new('TestCam')
     cam_data.lens, cam_data.shift_x = 40, 0.1
@@ -439,6 +449,17 @@ def t_repeat_and_leak(ctx, vp):
     # Leak criterion: no growth trend in steady state. A per-capture leak (even 1 MB) grows on
     # nearly every capture; allocator chunks show up as rare single steps. So: <= 3 growth steps
     # > 1 MB and < 32 MB in total over the last 20 captures. (The 640x480 targets alone are 11 MB.)
+    # large captures are not kept: allocation per capture, released afterwards
+    big = req(np.eye(4), persp(math.radians(60), 16 / 9, .1, 100), 2560, 1440)
+    with bpy.context.temp_override(**ov):
+        vp.capture.capture(bpy.context, big)
+    from viewpass import gpu_draw
+    check(gpu_draw._targets is None, 'large render targets must not be kept')
+    detail = dict(median_ms=round(1000 * float(np.median(times)), 2),
+                  p95_ms=round(1000 * float(np.percentile(times, 95)), 2))
+    if any(m is None for m in mem + mem_noredraw):
+        detail['memory'] = 'NOT MEASURED on this OS (no process memory API); determinism checked only'
+        return detail
     tail = np.array(mem[-21:], dtype=np.float64) / 1e6
     steps = int((np.diff(tail) > 1.0).sum())
     growth = float(tail[-1] - tail[0])
@@ -447,15 +468,10 @@ def t_repeat_and_leak(ctx, vp):
     print('MEM redraw MB', [round(m / 1e6) for m in mem])
     check(steps <= 3 and growth < 32, f'memory trend: {steps} growth steps, {growth:.1f} MB over the last 20 captures')
     check(burst < 64, f'back-to-back captures grew {burst:.1f} MB (render targets should be reused)')
-    # large captures are not kept: allocation per capture, released afterwards
-    big = req(np.eye(4), persp(math.radians(60), 16 / 9, .1, 100), 2560, 1440)
-    with bpy.context.temp_override(**ov):
-        vp.capture.capture(bpy.context, big)
-    from viewpass import gpu_draw
-    check(gpu_draw._targets is None, 'large render targets must not be kept')
-    return dict(median_ms=round(1000 * float(np.median(times)), 2), p95_ms=round(1000 * float(np.percentile(times, 95)), 2),
-                mem_steady_growth_mb_last20=round(growth, 2), growth_steps_last20=steps, mem_ramp_mb=round((max(mem) - mem[0]) / 1e6, 2),
-                mem_growth_mb_20_back_to_back=round(burst, 2))
+    detail.update(memory_source='VmRSS' if sys.platform.startswith('linux') else 'private bytes',
+                  mem_steady_growth_mb_last20=round(growth, 2), growth_steps_last20=steps,
+                  mem_ramp_mb=round((max(mem) - mem[0]) / 1e6, 2), mem_growth_mb_20_back_to_back=round(burst, 2))
+    return detail
 
 
 def t_fault_injection(ctx, vp):

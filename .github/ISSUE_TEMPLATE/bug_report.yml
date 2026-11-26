@@ -1,0 +1,47 @@
+name: Bug report
+description: Wrong output, an error, or a change to your scene
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Please do not attach private .blend files or images you cannot share publicly.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: A minimal scene (primitives) is ideal.
+    validations:
+      required: true
+  - type: input
+    id: blender
+    attributes:
+      label: Blender version
+      placeholder: e.g. 5.3.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. Windows 11 / macOS 15 / Ubuntu 24.04
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU, driver and backend
+      description: "Python console: `import gpu; gpu.platform.backend_type_get(), gpu.platform.renderer_get(), gpu.platform.version_get()`"
+    validations:
+      required: true
+  - type: textarea
+    id: meta
+    attributes:
+      label: "`<name>_meta.json` (warnings section) or console output"
+      render: text

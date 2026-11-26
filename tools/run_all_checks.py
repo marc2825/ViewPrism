@@ -49,8 +49,15 @@ def wrapper(blender, backend, tmp):
     return str(p)
 
 
+STEPS = ('pure', 'selftest', 'harness', 'gui', 'build', 'package', 'bench')
+DEFAULT_STEPS = 'pure,selftest,harness,gui,build,package'
+
+
 def bundled_python(blender):
-    cands = glob.glob(str(Path(blender).parent / '*' / 'python' / 'bin' / ('python.exe' if os.name == 'nt' else 'python3*')))
+    """Blender's bundled interpreter (has NumPy); ignores e.g. python3.13-config on Linux."""
+    name = re.compile(r'^python(\.exe|3(\.\d+)?)$')
+    cands = [p for p in glob.glob(str(Path(blender).resolve().parent / '*' / 'python' / 'bin' / 'python*'))
+             if name.match(Path(p).name)]
     return sorted(cands)[-1] if cands else None
 
 
@@ -58,9 +65,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--blender', required=True)
     ap.add_argument('--backends', default='vulkan,opengl')
-    ap.add_argument('--bench', action='store_true')
+    ap.add_argument('--steps', default=DEFAULT_STEPS,
+                    help=f'comma separated subset of {",".join(STEPS)}; only these are run and judged')
+    ap.add_argument('--bench', action='store_true', help='same as adding "bench" to --steps')
     ap.add_argument('--out', type=Path)
     a = ap.parse_args()
+    steps = {s for s in a.steps.split(',') if s} | ({'bench'} if a.bench else set())
+    unknown = steps - set(STEPS)
+    if unknown:
+        ap.error(f'unknown steps: {sorted(unknown)}')
     stamp = datetime.date.today().isoformat()
     out = (a.out or ROOT / 'docs' / 'evidence' / stamp).resolve()
     if out.exists():
@@ -86,27 +99,33 @@ def main():
     py = bundled_python(a.blender)
     # 1. pure
     log = tmp / 'pure.log'
-    if py:
+    if 'pure' not in steps:
+        pass
+    elif py:
         code = run([py, '-m', 'unittest', 'discover', '-v', '-s', str(ROOT / 'tests' / 'pure'), '-p', 'test_*.py'], log, cwd=ROOT)
-        txt = log.read_text(encoding='utf-8', errors='replace')
+        txt = log.read_text(encoding='utf-8', errors='replace').strip()
         m = re.search(r'Ran (\d+) tests', txt)
-        record('pure_unit_tests', code == 0 and 'OK' in txt.splitlines()[-1], f"{m.group(1) if m else '?'} tests", [log])
+        record('pure_unit_tests', code == 0 and txt.splitlines()[-1].startswith('OK'), f"{m.group(1) if m else '?'} tests", [log])
     else:
         summary.append(dict(step='pure_unit_tests', result='NOT RUN', detail='bundled Python not found'))
     # 2. harness self-test
-    log = tmp / 'harness_selftest.log'
-    code = run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'viewpass-dev' / 'harness'), '-p', 'test_*.py'], log, cwd=ROOT)
-    record('harness_selftest', code == 0, '', [log])
+    if 'selftest' in steps:
+        log = tmp / 'harness_selftest.log'
+        code = run([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'viewpass-dev' / 'harness'), '-p', 'test_*.py'], log, cwd=ROOT)
+        record('harness_selftest', code == 0, '', [log])
     backends = [b for b in a.backends.split(',') if b]
     for be in backends:
         exe = wrapper(a.blender, be, tmp)
         # 3. independent harness
-        hout = tmp / f'harness_{be}'
-        log = tmp / f'harness_{be}.log'
-        code = run([sys.executable, str(ROOT / 'viewpass-dev' / 'harness' / 'run.py'), '--blender', exe, '--mode', 'all',
-                    '--out', str(hout)], log, cwd=ROOT)
-        record(f'harness_{be}', code == 0, '', [log, hout / 'background.json', hout / 'gpu.json'])
+        if 'harness' in steps:
+            hout = tmp / f'harness_{be}'
+            log = tmp / f'harness_{be}.log'
+            code = run([sys.executable, str(ROOT / 'viewpass-dev' / 'harness' / 'run.py'), '--blender', exe, '--mode', 'all',
+                        '--out', str(hout)], log, cwd=ROOT)
+            record(f'harness_{be}', code == 0, '', [log, hout / 'background.json', hout / 'gpu.json'])
         # 4. GUI suite
+        if 'gui' not in steps:
+            continue
         gout = tmp / f'gui_{be}'
         log = tmp / f'gui_{be}.log'
         code = run([sys.executable, str(ROOT / 'tests' / 'run_blender_tests.py'), '--blender', a.blender, '--gpu-backend', be,
@@ -120,12 +139,18 @@ def main():
         record(f'gui_suite_{be}', code == 0, f'{npass}/{n} cases', [log, gout / 'gui.json'])
     # 5. build
     dist = tmp / 'dist'
-    log = tmp / 'build.log'
-    code = run([sys.executable, str(ROOT / 'tools' / 'build_extension.py'), '--blender', a.blender, '--out', str(dist)], log, cwd=ROOT)
-    zips = sorted(dist.glob('viewpass-*.zip'))
-    record('extension_build', code == 0 and bool(zips), zips[0].name if zips else '', [log])
+    zips = []
+    if 'build' in steps or 'package' in steps:
+        log = tmp / 'build.log'
+        code = run([sys.executable, str(ROOT / 'tools' / 'build_extension.py'), '--blender', a.blender, '--out', str(dist)], log, cwd=ROOT)
+        zips = sorted(dist.glob('viewpass-*.zip'))
+        record('extension_build', code == 0 and bool(zips), zips[0].name if zips else '', [log])
+        if a.out and zips:
+            shutil.copy2(zips[0], out / zips[0].name)
     # 6. package
-    if zips:
+    if 'package' not in steps:
+        pass
+    elif zips:
         pout = tmp / 'package'
         log = tmp / 'package.log'
         code = run([sys.executable, str(ROOT / 'tests' / 'run_blender_tests.py'), '--blender', a.blender, '--suite', 'package',
@@ -134,15 +159,18 @@ def main():
     else:
         summary.append(dict(step='package_lifecycle', result='NOT RUN', detail='no ZIP'))
     # 7. benchmark
-    if a.bench:
+    if 'bench' in steps:
         bout = tmp / 'bench'
         log = tmp / 'bench.log'
         code = run([sys.executable, str(ROOT / 'tools' / 'benchmark.py'), '--blender', a.blender, '--runs', '5',
                     '--out', str(bout)], log, cwd=ROOT, timeout=3600)
         record('benchmark', code == 0, '', [log, bout / 'summary.json'])
     lines = [f'# ViewPass check run {stamp}', '', f'- Blender: `{ver}`', f'- Platform: `{sys.platform}`',
-             f'- Backends: {", ".join(backends)}', '', '| Step | Result | Detail |', '|---|---|---|']
+             f'- Backends: {", ".join(backends)}', f'- Selected steps: {", ".join(s for s in STEPS if s in steps)}',
+             '', '| Step | Result | Detail |', '|---|---|---|']
     lines += [f"| {s['step']} | {s['result']} | {s['detail']} |" for s in summary]
+    if not summary:
+        summary.append(dict(step='(none)', result='NOT RUN', detail='no step selected'))
     lines += ['', 'Files in this folder are the raw logs/JSON of each step with local paths replaced by `<HOME>`/`<USER>`.']
     (out / 'SUMMARY.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print('\n'.join(lines))
