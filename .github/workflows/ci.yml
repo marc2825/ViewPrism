@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.13'
-      - run: python -m pip install --require-hashes -r ci/requirements-lint.txt
+      - run: python -m pip install --require-hashes -r ci/lint/requirements.txt
       - run: ruff check .
 
   pure:
@@ -38,6 +38,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python: ['3.11', '3.13']
+        # One hashed requirements directory per Python version: NumPy drops old Python versions
+        # (2.5 dropped 3.11), and Blender 4.5 LTS bundles 3.11. Dependabot updates each directory
+        # separately and never proposes a NumPy that the directory's Python cannot install.
+        include:
+          - python: '3.11'
+            requirements: ci/pure-py311/requirements.txt
+          - python: '3.13'
+            requirements: ci/pure/requirements.txt
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,7 +54,7 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install --require-hashes -r ci/requirements-pure.txt
+      - run: python -m pip install --require-hashes -r ${{ matrix.requirements }}
       - name: Pure unit tests (no bpy)
         run: python -m unittest discover -v -s tests/pure -p "test_*.py"
       - name: Independent harness self-test

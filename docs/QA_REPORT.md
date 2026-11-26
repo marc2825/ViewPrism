@@ -85,7 +85,7 @@ python tools/stress.py --blender <blender> --gpu-backend vulkan --out <dir>
 | Measure | Where |
 |---|---|
 | Actions pinned to full commit SHAs (version in a comment), Dependabot for Actions + pip | `.github/workflows/*.yml`, `.github/dependabot.yml` |
-| Python tools installed with `--require-hashes` | `ci/requirements-pure.txt`, `ci/requirements-lint.txt` |
+| Python tools installed with `--require-hashes`, one directory per tool / Python version (NumPy 2.5 dropped Python 3.11, so 3.11 stays on 2.4.x; Dependabot is told the Python version and ignores NumPy >= 2.5 there) | `ci/lint/`, `ci/pure/` (Python 3.13), `ci/pure-py311/` |
 | `persist-credentials: false` on every checkout; default token read-only | all workflows |
 | Release: build job read-only; publish job (`contents: write`) runs no repository code and re-verifies the checksums; manual runs are dry runs | `.github/workflows/release.yml` |
 | Blender download: archive cached, official checksum list fetched fresh each run, archive re-verified before extraction, mismatching cache deleted | `.github/scripts/fetch_blender.sh` |
