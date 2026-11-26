@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 marc2825
 # SPDX-License-Identifier: GPL-3.0-or-later
-# CI helper: resolve / download an official Blender build and verify its SHA-256.
+# CI helper: install an official Blender build and verify its SHA-256.
+#   fetch_blender.sh lookup <series> [platform]
+#       -> prints the version pinned in ci/blender.lock (no network)
 #   fetch_blender.sh resolve <series> [platform]
-#       -> prints the latest patch version of a series, e.g. 4.5.17
+#       -> prints the latest published patch version (network; only for the manual macOS probe)
 #   fetch_blender.sh fetch <version> <archive_cache_dir> <install_dir> [platform]
 #       -> downloads (or reuses) the archive, verifies it, extracts it, prints the executable path
 # platform: linux-x64 (default) | windows-x64 | macos-arm64
 #
-# CI caches only the downloaded *archive*. The official checksum list is downloaded fresh on every
-# run (never cached) and the archive is re-verified against it before extraction, so a stale or
-# tampered cache entry is rejected and deleted instead of being executed.
+# The expected SHA-256 comes from ci/blender.lock (reviewed, in the repository). Only versions that
+# are not in the lock file fall back to the official checksum list. A cached archive is verified
+# before every extraction; a mismatching one is deleted. With a cache hit and a locked version no
+# request goes to download.blender.org (it rate-limits bursts of CI requests with HTTP 403).
 # Development/CI tooling only: the add-on itself never downloads anything.
 set -euo pipefail
 
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOCK="$HERE/../../ci/blender.lock"
 BASE="https://download.blender.org/release"
-# download.blender.org occasionally answers 403/429 to bursts of CI requests: retry every error.
-CURL=(curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors)
-cmd="${1:?resolve|fetch}"
+CURL=(curl -fsSL --retry 6 --retry-all-errors -A "ViewPrism-CI (+https://github.com/marc2825/ViewPrism)")
+cmd="${1:?lookup|resolve|fetch}"
 
 suffix() {
   case "$1" in
@@ -28,16 +32,26 @@ suffix() {
   esac
 }
 
+lock_field() {  # <match column> <value> <platform> <output column>
+  awk -v c="$1" -v v="$2" -v p="$3" -v o="$4" '!/^#/ && NF >= 4 && $c == v && $3 == p {print $o; exit}' "$LOCK"
+}
+
+if [[ "$cmd" == "lookup" ]]; then
+  series="${2:?series, e.g. 4.5}"
+  platform="${3:-linux-x64}"
+  version="$(lock_field 1 "$series" "$platform" 2)"
+  [[ -n "$version" ]] || { echo "Blender ${series} ${platform} is not in ci/blender.lock" >&2; exit 1; }
+  echo "$version"
+  exit 0
+fi
+
 if [[ "$cmd" == "resolve" ]]; then
   series="${2:?series, e.g. 4.5}"
   sfx="$(suffix "${3:-linux-x64}")"
   listing="$("${CURL[@]}" "$BASE/Blender${series}/")"
   version="$(grep -oE "blender-${series//./\\.}\.[0-9]+-${sfx//./\\.}" <<<"$listing" \
              | sed -E 's/^blender-([0-9]+\.[0-9]+\.[0-9]+)-.*/\1/' | sort -uV | tail -n1)"
-  if [[ -z "$version" ]]; then
-    echo "no ${sfx} build found for Blender ${series}" >&2
-    exit 1
-  fi
+  [[ -n "$version" ]] || { echo "no ${sfx} build found for Blender ${series}" >&2; exit 1; }
   echo "$version"
   exit 0
 fi
@@ -50,16 +64,19 @@ if [[ "$cmd" == "fetch" ]]; then
   series="${version%.*}"
   file="blender-${version}-$(suffix "$platform")"
   mkdir -p "$cache" "$install"
-  sums="$(mktemp)"
-  "${CURL[@]}" -o "$sums" "$BASE/Blender${series}/blender-${version}.sha256"
-  expected="$(grep -E "[[:space:]]\*?${file}\$" "$sums" | awk '{print $1}')"
-  rm -f "$sums"
-  if [[ -z "$expected" ]]; then
-    echo "no checksum published for $file" >&2
-    exit 1
+  expected="$(lock_field 2 "$version" "$platform" 4)"
+  if [[ -n "$expected" ]]; then
+    echo "expected SHA-256 from ci/blender.lock" >&2
+  else
+    sums="$(mktemp)"
+    "${CURL[@]}" -o "$sums" "$BASE/Blender${series}/blender-${version}.sha256"
+    expected="$(grep -E "[[:space:]]\*?${file}\$" "$sums" | awk '{print $1}')"
+    rm -f "$sums"
+    [[ -n "$expected" ]] || { echo "no checksum published for $file" >&2; exit 1; }
+    echo "expected SHA-256 from the official list (version not locked)" >&2
   fi
   if [[ -f "$cache/$file" ]] && [[ "$(sha256sum "$cache/$file" | awk '{print $1}')" != "$expected" ]]; then
-    echo "cached $file does not match the official SHA-256; discarding it" >&2
+    echo "cached $file does not match the expected SHA-256; discarding it" >&2
     rm -f "$cache/$file"
   fi
   if [[ ! -f "$cache/$file" ]]; then

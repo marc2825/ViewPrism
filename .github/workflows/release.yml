@@ -31,16 +31,16 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - name: Resolve Blender version
+      - name: Blender version (pinned in ci/blender.lock)
         id: ver
         run: |
-          version="$(bash .github/scripts/fetch_blender.sh resolve 5.3 linux-x64)"   # fails the step if resolving fails
+          version="$(bash .github/scripts/fetch_blender.sh lookup 5.3 linux-x64)"   # no network; fails if not locked
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/blender-archive
           key: blender-archive-linux-x64-${{ steps.ver.outputs.version }}
-      - name: Download / verify Blender (SHA-256 checked every run)
+      - name: Download / verify Blender (SHA-256 from ci/blender.lock)
         id: blender
         run: |
           exe="$(bash .github/scripts/fetch_blender.sh fetch '${{ steps.ver.outputs.version }}' \

@@ -45,7 +45,7 @@ ALLOW = [
     re.compile(r'^git@github\.com$'),
 ]
 TEXT_SUFFIXES = {'.py', '.md', '.txt', '.toml', '.yml', '.yaml', '.json', '.log', '.sh', '.cfg', '.ini',
-                 '.html', '.svg', '.csv', ''}
+                 '.html', '.svg', '.csv', '.lock', ''}
 SKIP_DIRS = {'.git', '__pycache__', 'dist', '.venv', '.ruff_cache'}
 
 
