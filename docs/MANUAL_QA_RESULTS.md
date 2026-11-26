@@ -33,30 +33,34 @@ person must still do are marked **NOT TESTED (manual)**.
 
 ## Hands-on checklist for the owner (≈15 minutes, issue #9)
 
-1. Install `viewprism-0.2.0.zip` from the v0.2.0 GitHub release (Edit › Preferences › Get Extensions › Install from Disk) in Blender 4.5 or 5.3. Detailed steps (Japanese): `docs/EXTENSION_SUBMISSION.ja.md` §2.
-2. Open a real project, N-panel › ViewPrism: toggle passes, press the preview refresh icon, try
-   Depth / Normal / Object ID / Mask previews and Auto Refresh while orbiting.
-3. Export Passes on a saved file (`//viewprism/`), then Export As… and cancel once.
-4. Open the PNG/EXR files in the tools you actually use (e.g. image viewer, Krita/GIMP, Nuke, ComfyUI).
-5. Undo history and the scene should be unchanged (Edit › Undo History shows no ViewPrism entries).
-6. Note anything confusing in the panel; report back.
+Detailed steps in Japanese: `docs/EXTENSION_SUBMISSION.ja.md` §2.
 
-### Additionally for the redesigned panel (main branch, after 0.2.0)
-
-Install from a ZIP built from `main` (`python tools/build_extension.py --blender <blender>`).
-
-1. Per-pass rows:
-   - The eye shows a pass large; the same eye hides it again; the four thumbnails stay in the lower
+1. Install `viewprism-0.3.0.zip` from the v0.3.0 GitHub release (Edit › Preferences › Get Extensions ›
+   Install from Disk) in Blender 4.5 or 5.3.
+2. Open a real project, then in N panel › ViewPrism check the per-pass rows:
+   - The checkboxes change the file summary and the Export button text.
+   - The **eye** shows a pass large; the same eye hides it again; the four thumbnails stay in the lower
      left corner.
-   - The gear opens that pass's settings.
-2. File list:
-   - It matches the files that Export writes.
+   - The **gear** opens that pass's settings.
+3. File list:
+   - The files listed under Output are the files Export writes (saved .blend, `//viewprism/`).
    - With *Name Only* and an existing name, Export is disabled and says why.
-3. The preview turns darker and says it is outdated after orbiting; Refresh or Auto Refresh updates it.
-4. Switch Blender to Japanese (Preferences › Interface › Translation), then:
-   - check that labels, tooltips and messages are understandable;
-   - check that nothing is cut off at the default sidebar width.
+4. Export As… saves; cancelling writes nothing.
+5. Preview:
+   - After orbiting, the preview turns darker and says it is outdated.
+   - Refresh, or Auto Refresh, updates it without stutter in a heavy scene.
+6. Switch Blender to Japanese (Preferences › Interface › Translation):
+   - Labels, tooltips and messages are understandable.
+   - Nothing is cut off at the default sidebar width.
+7. Open the PNG/EXR files in the tools you actually use (e.g. image viewer, Krita/GIMP, Nuke, ComfyUI).
+8. Undo history and the scene should be unchanged (Edit › Undo History shows no ViewPrism entries).
+9. Note anything confusing in the panel; report back (issue #17 collects UI ideas).
 
-Automated equivalents: `t_panel_states` (every panel/popover/menu drawn in 10 states incl. Japanese),
-`t_planned_files`, `t_preview_thumbnails`, `t_preview_stays_current`. Human check: **NOT TESTED
-(manual)**.
+Automated equivalents for the panel:
+
+- `t_panel_states` (every panel, popover and menu drawn in 10 states, incl. Japanese)
+- `t_planned_files`
+- `t_preview_thumbnails`
+- `t_preview_stays_current`
+
+Human check: **NOT TESTED (manual)**.

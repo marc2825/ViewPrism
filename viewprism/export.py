@@ -15,10 +15,15 @@
 * Failures are reported per file with a stable error code and a path-free message for
   shareable metadata; the detailed exception text stays local.
 """
+import ctypes
+import ctypes.util
+import errno
 import json
 import os
 import re
 import secrets
+import sys
+import time
 
 SUFFIX = {'depth': 'depth', 'normal': 'normal', 'object_id': 'id', 'mask': 'mask'}
 FORMATS = {
@@ -32,6 +37,7 @@ _RESERVED = {'CON', 'PRN', 'AUX', 'NUL', *(f'COM{i}' for i in range(1, 10)), *(f
 MAX_INDEX = 99999
 TMP_SUFFIX = '.viewprism-tmp'
 LOCK_SUFFIX = '.viewprism-lock'
+STALE_LOCK_SECONDS = 15 * 60   # an export takes seconds; an older lock was left by a crash
 
 
 class ExportError(Exception):
@@ -100,7 +106,9 @@ def plan(directory, base, items, *, numbering='AUTO', overwrite=False, meta=True
     numbering 'AUTO': stem = f'{base}_{n:04d}' with the smallest n >= start for which no output file
     (nor a reservation of another export) exists; it never overwrites. With reserve=True the number is
     reserved by creating `.<stem>.viewprism-lock` exclusively, so concurrent exports (threads or other
-    Blender processes) cannot pick the same stem; call release(plan) afterwards.
+    Blender processes) cannot pick the same stem; call release(plan) afterwards. A lock older than
+    STALE_LOCK_SECONDS whose files do not exist was left by a crash: that number is used again (with
+    reserve=True the stale lock is replaced; exclusive creation still decides between racing exports).
     'NONE': stem = base; existing files raise CollisionError unless overwrite=True.
     Existence uses lexists, so dangling symlinks count as existing.
     """
@@ -130,8 +138,16 @@ def plan(directory, base, items, *, numbering='AUTO', overwrite=False, meta=True
         stem = f'{base}_{n:04d}'
         files = build(stem)
         lock = os.path.join(directory, f'.{stem}{LOCK_SUFFIX}')
-        if exists(lock) or any(exists(p) for _k, _n, p in files):
+        if any(exists(p) for _k, _n, p in files):
             continue
+        if exists(lock):
+            if not _lock_is_stale(lock):
+                continue                      # reserved by an export in progress
+            if reserve:
+                try:
+                    os.remove(lock)           # left by a crash; re-reserved exclusively below
+                except OSError:
+                    pass
         if reserve:
             try:
                 os.close(os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
@@ -142,6 +158,13 @@ def plan(directory, base, items, *, numbering='AUTO', overwrite=False, meta=True
                 continue
         return dict(stem=stem, files=files, overwrite=False, lock=lock if reserve else None)
     raise ExportError('no free file number left')
+
+
+def _lock_is_stale(lock):
+    try:
+        return time.time() - os.path.getmtime(lock) > STALE_LOCK_SECONDS
+    except OSError:
+        return False
 
 
 def release(the_plan):
@@ -170,21 +193,29 @@ def _publish_no_clobber(tmp, path):
       even a dangling link, is at `path`. One step, so nothing is left behind.
     * Elsewhere: a hard link fails the same way; the temporary name is then removed. Once the link
       exists the file is published, so a failure to remove the temporary name is not an export error.
-    * File systems without hard links (FAT/exFAT, some network shares): an empty placeholder is
-      created exclusively at `path` (fails if anything is there), then replaced atomically by the
-      temporary file. Other no-clobber writers see the placeholder and back off.
+    * File systems without hard links (FAT/exFAT, some network shares): the platform's no-replace
+      rename (Linux renameat2 RENAME_NOREPLACE, macOS renamex_np RENAME_EXCL), which is atomic too.
+    * Only if the file system supports neither: an exclusive placeholder (see _publish_via_placeholder).
+      Files that already exist and other ViewPrism exports are still never replaced; the remaining gap
+      is a program that itself *replaces* the placeholder in the microseconds before it is swapped.
     """
+    name = os.path.basename(path)
     if os.name == 'nt':
         try:
             os.rename(tmp, path)
         except FileExistsError:
-            raise CollisionError([os.path.basename(path)])
+            raise CollisionError([name])
         return
     try:
         os.link(tmp, path)
     except FileExistsError:
-        raise CollisionError([os.path.basename(path)])
+        raise CollisionError([name])
     except (OSError, NotImplementedError, AttributeError):
+        try:
+            if _rename_noreplace(tmp, path):
+                return
+        except FileExistsError:
+            raise CollisionError([name])
         _publish_via_placeholder(tmp, path)
         return
     try:
@@ -193,17 +224,76 @@ def _publish_no_clobber(tmp, path):
         pass                                  # published; at worst a second name for the same data stays
 
 
-def _publish_via_placeholder(tmp, path):
+_NOREPLACE = {}
+
+
+def _libc():
+    if 'libc' not in _NOREPLACE:
+        try:
+            _NOREPLACE['libc'] = ctypes.CDLL(ctypes.util.find_library('c') or None, use_errno=True)
+        except (OSError, TypeError):
+            _NOREPLACE['libc'] = None
+    return _NOREPLACE['libc']
+
+
+def _rename_noreplace(src, dst):
+    """Atomic rename that fails if `dst` exists. True when done, False when the platform or the file
+    system has no such rename (the caller falls back), FileExistsError when `dst` exists."""
+    if os.name == 'nt':
+        return False                          # Windows uses os.rename, which never replaces
+    libc = _libc()
+    if libc is None:
+        return False
+    if sys.platform.startswith('linux'):
+        fn = getattr(libc, 'renameat2', None)
+        args = (-100, os.fsencode(src), -100, os.fsencode(dst), 1)        # AT_FDCWD, RENAME_NOREPLACE
+        argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    elif sys.platform == 'darwin':
+        fn = getattr(libc, 'renamex_np', None)
+        args = (os.fsencode(src), os.fsencode(dst), 0x4)                  # RENAME_EXCL
+        argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    else:
+        return False
+    if fn is None:
+        return False
+    fn.argtypes, fn.restype = argtypes, ctypes.c_int
+    if fn(*args) == 0:
+        return True
+    err = ctypes.get_errno()
+    if err == errno.EEXIST:
+        raise FileExistsError(err, os.strerror(err), dst)
+    if err in (errno.EINVAL, errno.ENOSYS, errno.ENOTSUP, getattr(errno, 'EOPNOTSUPP', errno.ENOTSUP)):
+        return False
+    raise OSError(err, os.strerror(err), dst)
+
+
+def _publish_via_placeholder(tmp, path, _before_replace=None):
+    """Last resort without hard links or a no-replace rename: create an empty placeholder exclusively
+    (fails if anything exists), check right before the swap that the placeholder is still ours (same
+    file, still empty) and then replace it atomically. `_before_replace` is a test seam."""
+    name = os.path.basename(path)
     try:
         fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, 'O_NOFOLLOW', 0), 0o644)
     except FileExistsError:
-        raise CollisionError([os.path.basename(path)])
-    os.close(fd)
+        raise CollisionError([name])
     try:
+        mine = os.fstat(fd)
+    finally:
+        os.close(fd)
+    try:
+        if _before_replace is not None:
+            _before_replace()
+        now = os.lstat(path)
+        if (now.st_dev, now.st_ino) != (mine.st_dev, mine.st_ino) or now.st_size != 0:
+            raise CollisionError([name])       # someone else replaced our placeholder: leave theirs
         os.replace(tmp, path)
+    except CollisionError:
+        raise
     except BaseException:
         try:
-            os.remove(path)                   # our own empty placeholder
+            now = os.lstat(path)
+            if (now.st_dev, now.st_ino) == (mine.st_dev, mine.st_ino):
+                os.remove(path)               # our own empty placeholder
         except OSError:
             pass
         raise
@@ -287,8 +377,8 @@ def safe_message(code):
 
 
 _ABS_PATHS = [
-    re.compile(r'(?:[A-Za-z]:[\\/]|\\\\)[^\s"\'<>|*?]*'),            # Windows drive or UNC paths
-    re.compile(r'(?<![\w.~-])/(?:[^\s/"\'<>]+/)+[^\s/"\'<>]*'),      # POSIX absolute paths (2+ segments)
+    re.compile(r'(?:(?<![A-Za-z])[A-Za-z]:[\\/]|\\\\)[^\s"\'<>|*?]*'),  # Windows drive or UNC paths
+    re.compile(r'(?<![\w.~:/-])/[^\s/"\'<>]+(?:/[^\s/"\'<>]*)*'),  # POSIX absolute paths (1+ segments)
     re.compile(r'~[\\/][^\s"\'<>]*'),                                  # home-relative paths
 ]
 

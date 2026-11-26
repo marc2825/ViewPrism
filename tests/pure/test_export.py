@@ -111,6 +111,15 @@ class Writing(unittest.TestCase):
             else:
                 os.chmod(ro, 0o500)
             try:
+                try:                                      # root (containers) ignores permission bits
+                    with open(os.path.join(ro, '.probe'), 'w'):
+                        pass
+                except OSError:
+                    pass
+                else:
+                    os.remove(os.path.join(ro, '.probe'))
+                    self.skipTest('this user can write to a read-only folder (root/administrator): '
+                                  'no unwritable folder can be made here')
                 res = writer.export_capture(synthetic_result(), dict(writer.default_options(), outputs={'mask': ['PNG8']}), ro)
                 self.assertEqual(res['written'], [])
                 self.assertEqual(len(res['failed']), 2)      # mask + meta, each reported

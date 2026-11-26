@@ -86,5 +86,65 @@ class Translations(unittest.TestCase):
         self.assertEqual(ja[('*', tip)], ja[(i18n_data.CONTEXT, tip)])
 
 
+def _raised(fn, *args, **kw):
+    try:
+        fn(*args, **kw)
+    except Exception as exc:        # noqa: BLE001 - the message is what is tested
+        return str(exc)
+    raise AssertionError(f'{fn.__name__} did not raise')
+
+
+class Messages(unittest.TestCase):
+    """Messages of the capture/file layers are translated when shown (they stay English in metadata).
+    Samples come from the real functions, so a changed wording breaks this test instead of silently
+    falling back to English."""
+
+    def samples(self):
+        import numpy as np
+        from viewprism import encode, export, resources
+        out = [_raised(export.sanitize_stem, ''), _raised(export.sanitize_stem, 'a/b'),
+               _raised(export.sanitize_stem, '.x'), _raised(export.sanitize_stem, 'CON'),
+               _raised(export.sanitize_stem, 'a' * 300),
+               _raised(encode.normalize_depth, np.ones((2, 2), np.float32), np.ones((2, 2), bool), 'FIXED', 2.0, 2.0),
+               _raised(encode.normalize_depth, np.ones((2, 2), np.float32), np.ones((2, 2), bool), 'FIXED',
+                       float('nan'), 2.0),
+               _raised(encode.background_value, 2.0, True),
+               _raised(encode.encode_id_u16, np.array([[70000]]))]
+        for export_too in (True, False):
+            need = resources.estimate(7680, 4320, export=export_too)['cpu_bytes']
+            out.append(_raised(resources.check, 7680, 4320, export=export_too, memory=dict(physical=None, commit=1)))
+            out.append(resources.check(7680, 4320, export=export_too,
+                                       memory=dict(physical=need // 2, commit=10 ** 13))['warning'])
+        out += ['Run ViewPrism from a 3D Viewport', 'The 3D Viewport is too small', 'Camera view without an active camera',
+                'The 3D Viewport used for this export was closed or changed; run the export again',
+                'resolution 20000x100 exceeds the maximum side of 16384 px',
+                'resolution 9000x9000 exceeds the limit of 33,554,432 pixels',
+                'GPU error (out of memory); try a lower resolution', 'nothing visible: the capture is empty',
+                '2 object(s) have different viewport/render modifier settings (viewport result exported): A, B',
+                '1 object(s) may use transparency (exported as opaque surfaces)',
+                '1 object(s) use shader displacement (not included: geometry only): Rock',
+                '3 object(s) skipped: unsupported type VOLUME', '1 object(s) skipped: display as Wire',
+                'the viewport clipping region (Alt+B) is not applied to the export']
+        return out
+
+    def test_known_messages_have_japanese(self):
+        for text in self.samples():
+            ja = i18n_data.translate_message(text, 'ja_JP')
+            self.assertNotEqual(ja, text, f'no Japanese for: {text}')
+            self.assertNotIn('{', ja, ja)
+
+    def test_values_and_names_are_kept(self):
+        ja = i18n_data.translate_message('2 object(s) have different viewport/render modifier settings '
+                                         '(viewport result exported): Cube, Rock', 'ja_JP')
+        self.assertTrue(ja.startswith('2 個') and ja.endswith(': Cube, Rock'), ja)
+        self.assertIn('20000x100', i18n_data.translate_message(
+            'resolution 20000x100 exceeds the maximum side of 16384 px', 'ja_JP'))
+
+    def test_english_and_unknown_messages_pass_through(self):
+        for text in self.samples():
+            self.assertEqual(i18n_data.translate_message(text, 'en_US'), text)
+        self.assertEqual(i18n_data.translate_message('something new', 'ja_JP'), 'something new')
+
+
 if __name__ == '__main__':
     unittest.main()

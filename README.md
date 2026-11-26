@@ -103,8 +103,10 @@ you choose and the camera geometry can still reveal what is in your scene.
 
 **Safe writing.** Existing files are never replaced unless you choose *Name Only + Overwrite*, even
 if another program creates a file with the same name while ViewPrism is writing. Automatic numbering
-reserves its number, so several Blender instances exporting into the same folder do not collide. This
-also works on drives without hard links (FAT/exFAT USB drives, some network shares).
+reserves its number, so several Blender instances exporting into the same folder do not collide. On
+drives without hard links (FAT/exFAT USB drives, some network shares) the system's atomic no-replace
+rename is used where available; otherwise an exclusive placeholder, which still never replaces existing
+files or other ViewPrism exports.
 
 In a free orthographic viewport the depth origin is moved back to the near clipping plane so all depths
 are positive (recorded in the metadata). In camera view the depth is measured from the camera like the

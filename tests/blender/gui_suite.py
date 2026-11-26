@@ -908,6 +908,9 @@ def t_panel_states(ctx, vp):
         check(iface('Passes') == 'パス' and iface('Depth') == '深度', f'not translated: {iface("Passes")}')
         check(bpy.app.translations.pgettext_iface('Near is White') == 'Near is White',
               'add-on strings leaked into the default context')
+        from viewprism.i18n import message
+        s.base_name = ''                                   # the file list shows the name error
+        check(message(vp.operators.planned_files(s)['error']) == '名前が空です', 'core message not translated')
 
     def remember_stem():
         vp.operators.invalidate_plan()
@@ -985,7 +988,7 @@ def t_planned_files(ctx, vp):
     if not bpy.data.filepath:
         s.output_dir = '//relative/'
         unsaved = vp.operators.planned_files(s)
-        check(unsaved['unsaved'] and unsaved['stem'] == 'plan_0001', f'unsaved .blend case {unsaved}')
+        check(unsaved['unsaved'] and unsaved['stem'] == 'plan', f'unsaved .blend: Export As writes the name as is {unsaved}')
     vp.operators.status.update(text='', signature=None)
     return f'prediction equals the written files ({len(written)}); next number and errors predicted'
 
@@ -1000,7 +1003,7 @@ def t_preview_thumbnails(ctx, vp):
     set_view(area, region, distance=6)
     pv = vp.preview
     s = vp.props.settings(ctx)
-    thumbs_before = s.preview_thumbnails
+    thumbs_before, scale_before = s.preview_thumbnails, s.preview_scale
     s.preview_thumbnails = True
     before = snapshot()
     try:
@@ -1030,10 +1033,34 @@ def t_preview_thumbnails(ctx, vp):
             times[on] = float(np.median(samples))
         extra = times[True] - times[False]
         check(extra < 0.05, f'thumbnails cost {extra * 1000:.1f} ms per update')
+        # review findings: a mode change marks the preview outdated only while it differs; display
+        # settings still apply meanwhile; a new preview resolution asks for a capture
+        s.preview_thumbnails = True
+        shading = s.normal_mode
+        s.normal_mode = 'FLAT' if shading == 'SHADED' else 'SHADED'
+        check(pv.modes_differ(s), 'normal shading change not detected')
         s.preview_thumbnails = False
-        check(pv.state.thumbs == {}, 'thumbnails not freed when switched off')
+        check(pv.state.thumbs == {}, 'thumbnails must switch off even while the shading differs')
+        s.normal_mode = shading
+        check(not pv.modes_differ(s) and not pv.state.stale, 'switching back must make the preview current again')
+        pv.state.dirty = False
+        s.preview_scale = 30 if s.preview_scale != 30 else 40
+        check(pv.state.dirty, 'a new preview resolution must ask for a capture')
+        # nothing visible (no overlay, no thumbnails): the preview stops instead of capturing in vain
+        with ctx.temp_override(**override(window, area, region)):
+            bpy.ops.viewprism.preview_show(pass_name=s.preview_pass)
+        check(not pv.state.active, 'a preview showing nothing must stop')
+        # layout keeps the image aspect and leaves room for the sidebar
+        wide = pv.thumbnail_layout(1900, 400, 4750, 1000, 1.0)
+        check(wide and abs(wide[0][2] / wide[0][3] - 4.75) < 0.01, f'wide thumbnails squashed: {wide[:1]}')
+        tall = pv.thumbnail_layout(400, 1000, 400, 1000, 1.0)
+        check(tall, 'thumbnails of a tall view must not vanish')
+        full = pv.thumbnail_layout(700, 500, 1600, 900, 1.0)
+        side = pv.thumbnail_layout(700, 500, 1600, 900, 1.0, 0, 280)
+        check(side and side[-1][0] + side[-1][2] <= 700 - 280, f'thumbnails under the sidebar: {side[-1:]}')
+        check(full[-1][2] >= side[-1][2], 'sidebar inset must not enlarge thumbnails')
     finally:
-        s.preview_thumbnails = thumbs_before
+        s.preview_thumbnails, s.preview_scale = thumbs_before, scale_before
         with ctx.temp_override(**override(window, area, region)):
             bpy.ops.viewprism.preview_hide()
     check(snapshot() == before, 'preview changed the scene')

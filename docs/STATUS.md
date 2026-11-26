@@ -3,9 +3,10 @@
 Product name: **ViewPrism — Viewport Pass Exporter** (decided 2026-11-26; developed as "ViewPass").
 Merged into `main` on 2026-11-26 (PR #1, merge commit, full history kept). The repository
 `ViewPrism` (renamed from `Depth_Renderer`) is **public** since 2026-11-26. GitHub **pre-releases**:
-v0.1.0 and v0.2.0. License: **GPL-3.0-or-later** (#6). extensions.blender.org: listing and submission
-kit ready (`docs/EXTENSION_LISTING.md`, `docs/EXTENSION_SUBMISSION.ja.md`); the owner submits after a
-hands-on check. Planned features: `ROADMAP.md` (feature work paused until publication).
+v0.1.0, v0.2.0 and **v0.3.0** (redesigned UI, Japanese). License: **GPL-3.0-or-later** (#6).
+extensions.blender.org: listing and submission kit for v0.3.0 ready (`docs/EXTENSION_LISTING.md`,
+`docs/EXTENSION_SUBMISSION.ja.md`); the owner submits after a hands-on check. Planned features:
+`ROADMAP.md`; UI ideas: #17.
 
 Review issues of 2026-11-26: #6 licensing and rights (closed by PR #7), #4 export safety and metadata
 privacy (PR #8), #5 QA, resource limits and CI security (PR #10). CI dependencies per Python version and
@@ -58,14 +59,14 @@ after a capture from a second, later closed window.
 
 ## Test results
 
-- Local (Windows): [`docs/evidence/2026-11-27-ui/SUMMARY.md`](evidence/2026-11-27-ui/SUMMARY.md) (redesigned UI; v0.2.0: [`2026-11-27`](evidence/2026-11-27/SUMMARY.md)) (v0.2.0 branch), stress:
+- Local (Windows): [`docs/evidence/2026-11-27-v0.3.0/SUMMARY.md`](evidence/2026-11-27-v0.3.0/SUMMARY.md) (v0.3.0; v0.2.0: [`2026-11-27`](evidence/2026-11-27/SUMMARY.md)) (v0.2.0 branch), stress:
   [`docs/evidence/2026-11-26-stress/`](evidence/2026-11-26-stress/)
 - CI: [`docs/evidence/ci-2026-11-26/`](evidence/ci-2026-11-26/) (PR #10); every CI run also uploads its
   evidence as an artifact.
 
 | Suite | Count | Result |
 |---|---|---|
-| Pure unit tests | 89 | PASS (local + CI on Windows/Linux, Python 3.11/3.13; symlink cases run in CI) |
+| Pure unit tests | 100 | PASS (local + CI on Windows/Linux, Python 3.11/3.13; symlink cases run in CI) |
 | Independent harness self-test | 2 | PASS |
 | Independent harness (background registration + GPU analytic cases) | per environment above | PASS |
 | GUI/GPU suite | 26 cases per environment | PASS |
@@ -117,6 +118,8 @@ Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender
 - Git history: the published author e-mail and the old local path are **accepted**; no rewrite.
   Credential and third-party-data scanning stays mandatory in CI.
 - GitHub pre-release v0.2.0: **approved**, published 2026-11-27.
+- UI redesign (plans A + B list + C thumbnails, Japanese): approved and merged (#16); released as v0.3.0,
+  which is the version to submit to extensions.blender.org (owner, 2026-11-27).
 - extensions.blender.org: free distribution; the owner submits after a hands-on check. Untested OS/GPU
   combinations are stated, not a blocker.
 

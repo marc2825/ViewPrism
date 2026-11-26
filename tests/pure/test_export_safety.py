@@ -158,6 +158,67 @@ class NoClobber(unittest.TestCase):
             os.remove(tmp)
             self.assertEqual(leftovers(d), [])
 
+    def test_placeholder_replaced_by_another_program_is_not_overwritten(self):
+        """Issue #15: without hard links and a no-replace rename, a program that replaces our placeholder
+        before the swap keeps its file (the remaining window is only the check itself)."""
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, 'a.png')
+            tmp = os.path.join(d, '.a.png.0' + export.TMP_SUFFIX)
+            with open(tmp, 'wb') as fh:
+                fh.write(b'ours')
+
+            def other_program_replaces_it():
+                other = os.path.join(d, 'other.tmp')
+                with open(other, 'wb') as fh:
+                    fh.write(b'theirs')
+                os.replace(other, path)
+            with self.assertRaises(export.CollisionError):
+                export._publish_via_placeholder(tmp, path, _before_replace=other_program_replaces_it)
+            with open(path, 'rb') as fh:
+                self.assertEqual(fh.read(), b'theirs')
+            os.remove(tmp)
+
+    def test_no_replace_rename_before_the_placeholder(self):
+        """Issue #15: on Linux the no-hard-link path uses renameat2(RENAME_NOREPLACE), which is atomic."""
+        if not sys.platform.startswith('linux'):
+            self.skipTest('renameat2 is Linux-only (macOS uses renamex_np; Windows never needs it)')
+        with tempfile.TemporaryDirectory() as d:
+            src, dst = os.path.join(d, 's'), os.path.join(d, 'd')
+            for p, v in ((src, b'one'), (dst, b'existing')):
+                with open(p, 'wb') as fh:
+                    fh.write(v)
+            with self.assertRaises(FileExistsError):
+                export._rename_noreplace(src, dst)
+            os.remove(dst)
+            if not export._rename_noreplace(src, dst):
+                self.skipTest('this file system has no RENAME_NOREPLACE')
+            with open(dst, 'rb') as fh:
+                self.assertEqual(fh.read(), b'one')
+            path = os.path.join(d, 'a.png')
+            with mock.patch('os.link', side_effect=OSError(errno.EPERM, 'no hard links')), \
+                    mock.patch.object(export, '_publish_via_placeholder', side_effect=AssertionError('placeholder')):
+                export.atomic_write(path, b'data')
+            with open(path, 'rb') as fh:
+                self.assertEqual(fh.read(), b'data')
+
+    def test_stale_lock_from_a_crash_is_reused(self):
+        """Issue #15: a lock left by a crash no longer skips its number forever."""
+        items = [('mask:PNG8', 'mask', 'png')]
+        with tempfile.TemporaryDirectory() as d:
+            lock = os.path.join(d, '.x_0001' + export.LOCK_SUFFIX)
+            open(lock, 'w').close()
+            self.assertEqual(export.plan(d, 'x', items, meta=False)['stem'], 'x_0002')     # fresh: in use
+            old = os.path.getmtime(lock) - export.STALE_LOCK_SECONDS - 60
+            os.utime(lock, (old, old))
+            self.assertEqual(export.plan(d, 'x', items, meta=False)['stem'], 'x_0001')     # prediction
+            p = export.plan(d, 'x', items, meta=False, reserve=True)
+            try:
+                self.assertEqual(p['stem'], 'x_0001')
+                self.assertFalse(export._lock_is_stale(lock), 'the stale lock must be replaced by a fresh one')
+            finally:
+                export.release(p)
+            self.assertEqual(leftovers(d), [])
+
     def test_published_file_is_not_reported_failed_if_temp_cleanup_fails(self):
         """After the file is published, failing to remove the temporary name (e.g. a scanner holds it)
         must not turn a written file into a failure."""
@@ -265,6 +326,14 @@ class MetadataPrivacy(unittest.TestCase):
         cases = {WIN_PATH: '<path>', POSIX_PATH: '<path>', '\\\\' + 'server\\share\\x.exr': '<path>',
                  '~/' + 'renders/x.png': '<path>', 'Wire/Bounds': 'Wire/Bounds', 'n*0.5+0.5': 'n*0.5+0.5',
                  'ratio 1/2': 'ratio 1/2'}
+        for text, expected in cases.items():
+            self.assertEqual(export.redact_paths(text), expected, text)
+
+    def test_redact_single_segment_posix_paths(self):
+        """Issue #15: one-segment absolute paths were kept; URLs and fractions must stay readable."""
+        cases = {'cannot open /' + 'tmpfile': 'cannot open <path>', 'see /' + 'home': 'see <path>',
+                 '/' + 'var/log/x.txt': '<path>', 'and/or': 'and/or', 'N/A': 'N/A',
+                 'range 0.5/10 m': 'range 0.5/10 m', 'https://example.org/a/b': 'https://example.org/a/b'}
         for text, expected in cases.items():
             self.assertEqual(export.redact_paths(text), expected, text)
 

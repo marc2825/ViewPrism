@@ -19,6 +19,8 @@ _COMPRESSION_NAMES = {'NONE': NO_COMPRESSION, 'ZIPS': ZIPS_COMPRESSION, 'ZIP': Z
 UINT, HALF, FLOAT = 0, 1, 2
 _NP = {UINT: np.dtype('<u4'), HALF: np.dtype('<f2'), FLOAT: np.dtype('<f4')}
 ZLIB_LEVEL = 4      # speed/size balance for float data (lossless at any level)
+MAX_DECODE_PIXELS = 1 << 28      # decoder sanity limits; the decoder is for verification
+MAX_DECODE_CHANNELS = 64
 
 
 class ExrError(ValueError):
@@ -44,8 +46,13 @@ def _zip_pack(raw):
 
 
 def _zip_unpack(data, expected):
-    d = np.frombuffer(zlib.decompress(data), dtype=np.uint8)
-    if d.size != expected:
+    z = zlib.decompressobj()
+    try:
+        raw = z.decompress(data, expected + 1)               # never inflate more than the block needs
+    except zlib.error as exc:
+        raise ExrError(f'corrupt ZIP block: {exc}') from exc
+    d = np.frombuffer(raw, dtype=np.uint8)
+    if d.size != expected or z.unconsumed_tail:
         raise ExrError('ZIP block has unexpected size')
     acc = np.cumsum(np.concatenate([d[:1].astype(np.int64), d[1:].astype(np.int64) - 128]))
     t = (acc & 255).astype(np.uint8)
@@ -161,6 +168,8 @@ def _part_layout(header):
         raise ExrError(f"unsupported part type {header['type'][1]!r}")
     x0, y0, x1, y1 = struct.unpack('<iiii', header['dataWindow'][1])
     w, h = x1 - x0 + 1, y1 - y0 + 1
+    if not (0 < w and 0 < h and w * h <= MAX_DECODE_PIXELS) or not 0 < len(chans) <= MAX_DECODE_CHANNELS:
+        raise ExrError(f'image size {w}x{h} with {len(chans)} channels outside the decoder limits')
     lpb = _LINES_PER_BLOCK[comp]
     return dict(chans=chans, comp=comp, x0=x0, y0=y0, x1=x1, y1=y1, w=w, h=h, lpb=lpb,
                 nblocks=(h + lpb - 1) // lpb, line_bytes=sum(w * _NP[t].itemsize for _nm, t in chans))
@@ -169,11 +178,17 @@ def _part_layout(header):
 def _read_chunk(data, off, lay, out, multipart):
     if multipart:
         off += 4                          # part number
+    if not 0 <= off <= len(data) - 8:
+        raise ExrError('block offset outside the file')
     y, size = struct.unpack('<ii', data[off:off + 8])
     payload = data[off + 8:off + 8 + size]
+    if size < 0 or len(payload) != size or not lay['y0'] <= y <= lay['y1']:
+        raise ExrError('corrupt block header')
     nlines = min(lay['lpb'], lay['y1'] - y + 1)
     expected = nlines * lay['line_bytes']
     block = payload if (lay['comp'] == NO_COMPRESSION or size == expected) else _zip_unpack(payload, expected)
+    if len(block) != expected:
+        raise ExrError('block has unexpected size')
     buf = np.frombuffer(block, dtype=np.uint8).reshape(nlines, lay['line_bytes'])
     col = 0
     w = lay['w']
@@ -212,6 +227,8 @@ def decode(data):
     out, types, attrs = {}, {}, set()
     for hd, lay in zip(headers, layouts):
         attrs.update(hd)
+        if pos + 8 * lay['nblocks'] > len(data):
+            raise ExrError('truncated offset table')
         offsets = struct.unpack(f"<{lay['nblocks']}Q", data[pos:pos + 8 * lay['nblocks']])
         pos += 8 * lay['nblocks']
         part = {nm: np.empty((lay['h'], lay['w']), dtype=_NP[t].newbyteorder('=')) for nm, t in lay['chans']}
