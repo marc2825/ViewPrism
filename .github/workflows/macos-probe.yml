@@ -33,7 +33,9 @@ jobs:
         id: ver
         env:
           SERIES: ${{ inputs.series }}
-        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve "$SERIES" macos-arm64)" >> "$GITHUB_OUTPUT"
+        run: |
+          version="$(bash .github/scripts/fetch_blender.sh resolve "$SERIES" macos-arm64)"   # fails the step if resolving fails
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Download / verify Blender ${{ steps.ver.outputs.version }}
         id: blender
         run: |

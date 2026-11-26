@@ -128,7 +128,9 @@ jobs:
             libwayland-cursor0 libwayland-egl1 libdecor-0-0 > /dev/null
       - name: Resolve Blender version
         id: ver
-        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve '${{ matrix.series }}' linux-x64)" >> "$GITHUB_OUTPUT"
+        run: |
+          version="$(bash .github/scripts/fetch_blender.sh resolve '${{ matrix.series }}' linux-x64)"   # fails the step if resolving fails
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/blender-archive
@@ -178,7 +180,9 @@ jobs:
           python-version: '3.12'
       - name: Resolve Blender version
         id: ver
-        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve '${{ matrix.series }}' windows-x64)" >> "$GITHUB_OUTPUT"
+        run: |
+          version="$(bash .github/scripts/fetch_blender.sh resolve '${{ matrix.series }}' windows-x64)"   # fails the step if resolving fails
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/blender-archive

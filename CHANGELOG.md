@@ -12,6 +12,27 @@
   text in metadata is path-redacted. Detailed errors stay in the local report.
 - New *Metadata Names: Anonymized* option (neutral labels instead of object/camera names).
 
+### Resource limits and responsiveness (#5)
+- Memory guard: a capture or export that cannot fit into the memory that can still be allocated is
+  refused with a clear message (lower the resolution or close other programs); one that would make the
+  system page shows a warning. GPU allocation failures are reported as a GPU error and the next capture
+  works again.
+- Lower peak memory while exporting (chunked encoders, streamed PNG compression): an 8K export of all
+  passes now needs no memory beyond the capture itself (+3.7 GB instead of +5.3 GB in the stress scene).
+  Output files are bit-identical.
+- Auto preview refreshes only once the view and the scene have been still, so orbiting or dragging in
+  heavy scenes no longer stutters.
+
+### QA and CI (#5)
+- Stress test tool (`tools/stress.py`) and `docs/QA_REPORT.md` with every verified and untested
+  configuration.
+- CI: Blender 4.5, 5.0, 5.1, 5.2 and 5.3 on Linux; 4.5 and 5.3 on Windows (background); manual macOS
+  probe. Actions pinned to commit SHAs, hashed Python requirements, no persisted checkout credentials,
+  Blender archives re-verified every run, release publishing isolated from the build job.
+- Secret scanning in CI: gitleaks over the whole history with a canary that must be detected, and the
+  repository privacy scan (e-mails, user paths, credential formats, PNG metadata) over tree and history.
+- Fixed: dangling-symlink collisions on Windows were reported as "outside the folder" (still refused).
+
 ## 0.1.0 — 2026-11-26 (pre-release)
 
 Complete rewrite of the former "Depth Renderer" add-on as **ViewPrism — Viewport Pass Exporter**

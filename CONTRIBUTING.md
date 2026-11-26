@@ -40,9 +40,16 @@ python tools/run_all_checks.py --blender "<blender>" [--bench]
 
 Report the Blender version, OS, GPU and backend (`gpu.platform`) with any result.
 
-CI runs the same checks on every pull request (lint, pure tests on Windows/Linux, and the full Blender
-checks on Linux for 4.5 LTS and 5.3 under Xvfb with Mesa software OpenGL); all jobs are required for
+CI runs the same checks on every pull request: lint, pure tests on Windows/Linux, secret and privacy
+scans (tree + full history), the full Blender checks on Linux for 4.5 LTS and 5.0–5.3 under Xvfb with
+Mesa software OpenGL, and background checks on Windows for 4.5 LTS and 5.3. All jobs are required for
 merging into `main`. Lint: `ruff check .` (config in `ruff.toml`).
+
+Supply-chain rules for workflow changes: pin every action to a full commit SHA with the version in a
+comment, install Python tools only from the hashed files in `ci/` (`pip install --require-hashes -r …`),
+keep `persist-credentials: false`, and never give `contents: write` to a job that runs repository code.
+Never commit real credentials, personal paths or e-mail addresses, not even in tests: build test values
+at runtime (see `tests/pure/test_privacy_scan.py`) and run `python tools/privacy_scan.py` before pushing.
 
 ## Releasing (maintainer)
 

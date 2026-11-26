@@ -20,15 +20,26 @@ links are unavailable), AUTO numbers reserved with an exclusive lock file; only 
 
 ## Repository and CI
 
-- GitHub Actions may use only GitHub-owned actions; the default workflow token is read-only and only the
-  tag-triggered release job requests `contents: write` (draft release).
-- CI downloads official Blender Linux builds from download.blender.org and verifies them against the
-  published SHA-256 list (`.github/scripts/fetch_blender.sh`). This is CI tooling only; the add-on itself
-  never downloads anything.
-- Dependabot alerts, automated security fixes and weekly Actions updates are enabled. Since the repository
-  became public: secret scanning with push protection, private vulnerability reporting (see `SECURITY.md`)
-  and CodeQL code scanning are enabled as well.
-- CI evidence is sanitised the same way as local evidence (`<HOME>`/`<USER>`).
+- GitHub Actions may use only GitHub-owned actions, pinned to full commit SHAs (Dependabot updates the pin
+  and the version comment). The default workflow token is read-only; checkouts do not persist it. Only
+  the release *publish* job requests `contents: write`; it runs no repository code and only uploads the
+  files the read-only build job produced, after re-verifying their checksums.
+- Python tools in CI (NumPy, ruff) are installed from hashed requirement files (`ci/`, `--require-hashes`).
+- CI downloads official Blender builds (Linux, Windows; macOS in the manual probe) from
+  download.blender.org. Only the archive is cached. The official SHA-256 list is fetched fresh on every
+  run, and the archive is verified against it before extraction; a mismatching cache entry is deleted
+  (`.github/scripts/fetch_blender.sh`). gitleaks is downloaded with a pinned SHA-256. This is CI tooling
+  only; the add-on itself never downloads anything.
+- Secret scanning in CI (job "Secrets and privacy scan"): gitleaks over all refs with redacted output,
+  proven by a freshly generated canary that it must detect, plus `tools/privacy_scan.py` over the tree
+  and every reachable blob (reviewed historical findings in `tools/privacy_allowlist.txt`).
+- GitHub settings: Dependabot alerts and security updates, secret scanning with push protection,
+  private vulnerability reporting (see `SECURITY.md`) and CodeQL code scanning are enabled.
+  *Non-provider patterns* and *validity checks* could not be enabled for this personal repository
+  through the API (GitHub reports them as disabled); gitleaks and the repository scan cover generic
+  patterns instead.
+- CI evidence is sanitised the same way as local evidence (`<HOME>`/`<USER>`, including the Windows 8.3
+  short form of the home directory) and scanned before a run can pass.
 
 ## Code and asset origin
 

@@ -15,6 +15,8 @@
 set -euo pipefail
 
 BASE="https://download.blender.org/release"
+# download.blender.org occasionally answers 403/429 to bursts of CI requests: retry every error.
+CURL=(curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors)
 cmd="${1:?resolve|fetch}"
 
 suffix() {
@@ -29,7 +31,7 @@ suffix() {
 if [[ "$cmd" == "resolve" ]]; then
   series="${2:?series, e.g. 4.5}"
   sfx="$(suffix "${3:-linux-x64}")"
-  listing="$(curl -fsSL --retry 3 "$BASE/Blender${series}/")"
+  listing="$("${CURL[@]}" "$BASE/Blender${series}/")"
   version="$(grep -oE "blender-${series//./\\.}\.[0-9]+-${sfx//./\\.}" <<<"$listing" \
              | sed -E 's/^blender-([0-9]+\.[0-9]+\.[0-9]+)-.*/\1/' | sort -uV | tail -n1)"
   if [[ -z "$version" ]]; then
@@ -49,7 +51,7 @@ if [[ "$cmd" == "fetch" ]]; then
   file="blender-${version}-$(suffix "$platform")"
   mkdir -p "$cache" "$install"
   sums="$(mktemp)"
-  curl -fsSL --retry 3 -o "$sums" "$BASE/Blender${series}/blender-${version}.sha256"
+  "${CURL[@]}" -o "$sums" "$BASE/Blender${series}/blender-${version}.sha256"
   expected="$(grep -E "[[:space:]]\*?${file}\$" "$sums" | awk '{print $1}')"
   rm -f "$sums"
   if [[ -z "$expected" ]]; then
@@ -61,7 +63,7 @@ if [[ "$cmd" == "fetch" ]]; then
     rm -f "$cache/$file"
   fi
   if [[ ! -f "$cache/$file" ]]; then
-    curl -fsSL --retry 3 -o "$cache/$file.part" "$BASE/Blender${series}/$file"
+    "${CURL[@]}" -o "$cache/$file.part" "$BASE/Blender${series}/$file"
     mv "$cache/$file.part" "$cache/$file"
   fi
   actual="$(sha256sum "$cache/$file" | awk '{print $1}')"
