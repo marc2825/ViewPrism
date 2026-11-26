@@ -6,25 +6,25 @@
     {
       "projection": "perspective",
       "trial": 1,
-      "seconds": 0.007203400018624961,
+      "seconds": 0.007663100026547909,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     },
     {
       "projection": "perspective",
       "trial": 2,
-      "seconds": 0.0031384999747388065,
+      "seconds": 0.0038656999822705984,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     },
     {
       "projection": "orthographic",
       "trial": 1,
-      "seconds": 0.0021695999894291162,
+      "seconds": 0.00288019998697564,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     },
     {
       "projection": "orthographic",
       "trial": 2,
-      "seconds": 0.002193799999076873,
+      "seconds": 0.002751899999566376,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     }
   ],

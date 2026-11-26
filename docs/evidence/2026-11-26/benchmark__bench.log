@@ -1,13 +1,13 @@
-simple 0 cold 82.9 ms, warm median 45.7 ms
-simple 1 cold 83.3 ms, warm median 41.7 ms
-simple 2 cold 99.0 ms, warm median 53.3 ms
-simple 3 cold 92.1 ms, warm median 61.7 ms
-simple 4 cold 107.2 ms, warm median 54.9 ms
-complex 0 cold 195.0 ms, warm median 180.3 ms
-complex 1 cold 172.7 ms, warm median 169.0 ms
-complex 2 cold 274.8 ms, warm median 222.9 ms
-complex 3 cold 219.8 ms, warm median 185.7 ms
-complex 4 cold 209.3 ms, warm median 168.6 ms
+simple 0 cold 93.0 ms, warm median 64.5 ms
+simple 1 cold 80.1 ms, warm median 46.7 ms
+simple 2 cold 62.0 ms, warm median 48.0 ms
+simple 3 cold 61.2 ms, warm median 42.9 ms
+simple 4 cold 109.6 ms, warm median 55.7 ms
+complex 0 cold 240.8 ms, warm median 182.4 ms
+complex 1 cold 179.2 ms, warm median 157.4 ms
+complex 2 cold 191.8 ms, warm median 190.7 ms
+complex 3 cold 301.3 ms, warm median 190.2 ms
+complex 4 cold 217.0 ms, warm median 172.0 ms
 {
   "simple": {
     "runs": 5,
@@ -32,30 +32,30 @@ complex 4 cold 209.3 ms, warm median 168.6 ms
     },
     "blender": "5.3.0",
     "cold_ms": {
-      "median": 92.11670001968741,
-      "p95": 107.20750002656132,
+      "median": 80.07859997451305,
+      "p95": 109.62679999647662,
       "samples": [
-        82.94669998576865,
-        83.26200000010431,
-        98.98419998353347,
-        92.11670001968741,
-        107.20750002656132
+        92.99369994550943,
+        80.07859997451305,
+        62.025200051721185,
+        61.15299998782575,
+        109.62679999647662
       ]
     },
     "warm_ms": {
-      "median": 53.33769996650517,
-      "p95": 92.54919999511912,
+      "median": 50.82329997094348,
+      "p95": 83.31219997489825,
       "n": 35
     },
     "warm_stage_median_ms": {
-      "collect": 0.8512999629601836,
-      "upload": 0.11139997513964772,
-      "gpu_draw_readback": 21.994999959133565,
-      "post": 27.819400012958795,
-      "total": 51.858099992387
+      "collect": 0.9494000114500523,
+      "upload": 0.10699999984353781,
+      "gpu_draw_readback": 16.819500015117228,
+      "post": 27.52560004591942,
+      "total": 46.86460003722459
     },
     "encode_write_ms": {
-      "median": 182.05470003886148
+      "median": 147.18259999062866
     },
     "files_bytes": {
       "viewpass_0001_depth.png": 10558,
@@ -68,14 +68,14 @@ complex 4 cold 209.3 ms, warm median 168.6 ms
     "render_engines": {
       "BLENDER_EEVEE": {
         "render_s": [
-          0.35066110000479966,
-          0.2026089000282809
+          0.29086119995918125,
+          0.18077790003735572
         ]
       },
       "CYCLES": {
         "render_s": [
-          0.2897091000340879,
-          0.2853062999784015
+          0.3316217999672517,
+          0.29632939997827634
         ]
       }
     },
@@ -116,50 +116,50 @@ complex 4 cold 209.3 ms, warm median 168.6 ms
     },
     "blender": "5.3.0",
     "cold_ms": {
-      "median": 209.28149996325374,
-      "p95": 274.8414999805391,
+      "median": 217.01620001113042,
+      "p95": 301.34350003208965,
       "samples": [
-        194.9964999803342,
-        172.702300013043,
-        274.8414999805391,
-        219.8173999786377,
-        209.28149996325374
+        240.77740003122017,
+        179.23880001762882,
+        191.76830002106726,
+        301.34350003208965,
+        217.01620001113042
       ]
     },
     "warm_ms": {
-      "median": 180.2579999784939,
-      "p95": 229.4996000127867,
+      "median": 179.6123999520205,
+      "p95": 208.7263999856077,
       "n": 35
     },
     "warm_stage_median_ms": {
-      "collect": 89.39619996817783,
-      "upload": 6.118500023148954,
-      "gpu_draw_readback": 45.736400003079325,
-      "post": 36.799299996346235,
-      "total": 178.35589998867363
+      "collect": 87.17329998034984,
+      "upload": 6.056500016711652,
+      "gpu_draw_readback": 43.772800010629,
+      "post": 35.58130003511906,
+      "total": 180.77660002745688
     },
     "encode_write_ms": {
-      "median": 284.99230003217235
+      "median": 286.70290001900867
     },
     "files_bytes": {
       "viewpass_0001_depth.png": 173374,
       "viewpass_0001_depth.exr": 5911434,
-      "viewpass_0001_normal.png": 850431,
+      "viewpass_0001_normal.png": 850432,
       "viewpass_0001_id.png": 70134,
       "viewpass_0001_mask.png": 4122,
-      "viewpass_0001_meta.json": 4271
+      "viewpass_0001_meta.json": 4264
     },
     "render_engines": {
       "BLENDER_EEVEE": {
         "render_s": [
-          0.28891389997443184,
-          0.21973369998158887
+          0.3271579999709502,
+          0.21108269999967888
         ]
       },
       "CYCLES": {
         "render_s": [
-          0.40727919997880235,
-          0.3972796000307426
+          0.4611008999636397,
+          0.4152151999878697
         ]
       }
     },
@@ -178,4 +178,4 @@ complex 4 cold 209.3 ms, warm median 168.6 ms
     }
   }
 }
-Results: <HOME>\AppData\Local\Temp\viewpass-checks-77s2f5or\bench
+Results: <HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\bench

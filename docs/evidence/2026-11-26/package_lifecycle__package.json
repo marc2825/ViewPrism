@@ -5,7 +5,7 @@
     {
       "test": "package_lifecycle",
       "status": "pass",
-      "detail": "isolated user dir <HOME>\\AppData\\Local\\Temp\\viewpass-userres-la9pf3bw; installed + enabled from viewpass; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed"
+      "detail": "isolated user dir <HOME>\\AppData\\Local\\Temp\\viewpass-userres-a7jpo9ea; installed + enabled from viewpass; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed"
     }
   ]
 }

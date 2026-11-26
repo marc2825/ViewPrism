@@ -37,8 +37,8 @@ From `docs/PERFORMANCE.md` (Blender 5.3.0, RTX 3060 Ti, 5 fresh processes per sc
 
 | | ViewPass capture (warm median) | ViewPass encode+write (6 files) | EEVEE 1 spp render + multilayer EXR | Cycles CPU 1 spp, 0 bounces + EXR |
 |---|---|---|---|---|
-| Simple (146 tris) | 53 ms | 182 ms | 0.20–0.35 s | 0.29 s |
-| Complex (1.1 M tris, 2 601 instances) | 180 ms | 285 ms | 0.22–0.29 s | 0.40–0.41 s |
+| Simple (146 tris) | 51 ms | 147 ms | 0.18–0.29 s | 0.30–0.33 s |
+| Complex (1.1 M tris, 2 601 instances) | 180 ms | 287 ms | 0.21–0.33 s | 0.42–0.46 s |
 
 Values vs. Cycles (independent renderer, same camera): depth p99 relative error 4.3e-6, normal median
 0.015°, ID agreement 99.998 % (interior pixels), mask identical.
@@ -64,7 +64,7 @@ render), then ≈ 3 actions + render per export, and the .blend keeps the change
 
 **Where it is not better (or weaker)**
 
-1. **Speed is not a differentiator.** Capture + writing files (≈0.24 s simple / ≈0.47 s complex at
+1. **Speed is not a differentiator.** Capture + writing files (≈0.20 s simple / ≈0.47 s complex at
    1080p) is comparable to an EEVEE 1-spp pass render with EXR output on this machine. Rendering with
    Cycles at production sample counts is much slower, but most users who want guide images can use EEVEE
    or Workbench. The real saving is setup work and scene changes, not milliseconds.

@@ -6,12 +6,12 @@
 
 | Step | Result | Detail |
 |---|---|---|
-| pure_unit_tests | PASS | 47 tests |
+| pure_unit_tests | PASS | 48 tests |
 | harness_selftest | PASS |  |
 | harness_vulkan | PASS |  |
-| gui_suite_vulkan | PASS | 19/19 cases |
+| gui_suite_vulkan | PASS | 20/20 cases |
 | harness_opengl | PASS |  |
-| gui_suite_opengl | PASS | 19/19 cases |
+| gui_suite_opengl | PASS | 20/20 cases |
 | extension_build | PASS | viewpass-0.1.0.zip |
 | package_lifecycle | PASS |  |
 | benchmark | PASS |  |

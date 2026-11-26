@@ -26,15 +26,15 @@ python tools/benchmark.py --blender <blender.exe> --runs 5
 
 | Scene | Cold capture median / p95 | Warm capture median / p95 | Encode + write 6 files (median) |
 |---|---|---|---|
-| simple | 92 ms / 107 ms | 53 ms / 93 ms | 182 ms |
-| complex | 209 ms / 275 ms | 180 ms / 230 ms | 285 ms |
+| simple | 80 ms / 110 ms | 51 ms / 83 ms | 147 ms |
+| complex | 217 ms / 301 ms | 180 ms / 209 ms | 287 ms |
 
 Warm stage medians:
 
 | Scene | collect (depsgraph + `to_mesh`) | upload (batches) | GPU draw + readback | post (arrays) |
 |---|---|---|---|---|
-| simple | 0.9 ms | 0.1 ms | 22.0 ms | 27.8 ms |
-| complex | 89.4 ms | 6.1 ms | 45.7 ms | 36.8 ms |
+| simple | 0.9 ms | 0.1 ms | 16.8 ms | 27.5 ms |
+| complex | 87.2 ms | 6.1 ms | 43.8 ms | 35.6 ms |
 
 Files written per export (defaults + ID + mask): depth PNG8, depth EXR (Z + A, ZIP), normal PNG8,
 ID PNG16, mask PNG8, meta JSON. Encoding runs in 4 threads (pure NumPy/zlib).
@@ -52,10 +52,10 @@ GPU Cycles was not configured (that would change preferences).
 
 | Scene | EEVEE (1 spp) render s | Cycles CPU (1 spp) render s |
 |---|---|---|
-| simple | 0.35, 0.20 | 0.29, 0.29 |
-| complex | 0.29, 0.22 | 0.41, 0.40 |
+| simple | 0.29, 0.18 | 0.33, 0.30 |
+| complex | 0.33, 0.21 | 0.46, 0.42 |
 
-**Interpretation (critical):** per export, ViewPass (capture + files ≈ 0.24 s simple / ≈ 0.47 s complex) is
+**Interpretation (critical):** per export, ViewPass (capture + files ≈ 0.20 s simple / ≈ 0.47 s complex) is
 in the same range as an EEVEE pass render with EXR output on this hardware. ViewPass is not faster than a
 pre-configured EEVEE pass render. Its advantage is that it needs no camera, pass, compositor or output
 setup and changes nothing in the scene. The methods also differ (EEVEE/Cycles shade the image and write

@@ -21,44 +21,48 @@ test_id_roundtrip_and_overflow (test_encode.Others.test_id_roundtrip_and_overflo
 test_mask_and_colors (test_encode.Others.test_mask_and_colors) ... ok
 test_normal_rgb (test_encode.Others.test_normal_rgb) ... ok
 test_quantize (test_encode.Others.test_quantize) ... ok
-test_all_outputs_roundtrip (test_export.EndToEnd.test_all_outputs_roundtrip) ... <HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_depth.png'>
+test_all_outputs_roundtrip (test_export.EndToEnd.test_all_outputs_roundtrip) ... <HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_depth.png'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_depth.exr'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_depth.exr'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_normal.png'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_normal.png'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_normal.exr'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_normal.exr'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_id.png'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_id.png'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_id.exr'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_id.exr'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_mask.png'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_mask.png'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpf5m3kr7r\\viewpass_0001_meta.json'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:133: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp5qjsru6q\\viewpass_0001_meta.json'>
   rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 ok
-test_id_overflow_fails_only_that_file (test_export.EndToEnd.test_id_overflow_fails_only_that_file) ... <HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:188: ResourceWarning: unclosed file <_io.TextIOWrapper name='<HOME>\\AppData\\Local\\Temp\\tmp_zg072n8\\viewpass_0001_meta.json' mode='r' encoding='utf-8'>
+test_id_overflow_fails_only_that_file (test_export.EndToEnd.test_id_overflow_fails_only_that_file) ... <HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:200: ResourceWarning: unclosed file <_io.TextIOWrapper name='<HOME>\\AppData\\Local\\Temp\\tmpuaxjcyz3\\viewpass_0001_meta.json' mode='r' encoding='utf-8'>
   meta = json.load(open(os.path.join(d, f"{res['stem']}_meta.json"), encoding='utf-8'))
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 ok
 test_missing_pass_is_an_error_not_a_silent_skip (test_export.EndToEnd.test_missing_pass_is_an_error_not_a_silent_skip) ... ok
-test_normal_flip_only_changes_png (test_export.EndToEnd.test_normal_flip_only_changes_png) ... <HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:171: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpd91snwbh\\viewpass_0001_normal.png'>
+test_normal_flip_only_changes_png (test_export.EndToEnd.test_normal_flip_only_changes_png) ... <HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:183: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp7ee41rwy\\viewpass_0001_normal.png'>
   npng = png.decode(open(os.path.join(d, f'{stem}_normal.png'), 'rb').read())[0]
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:174: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmpd91snwbh\\viewpass_0001_normal.exr'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:186: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp7ee41rwy\\viewpass_0001_normal.exr'>
   ch, _ = exr.decode(open(os.path.join(d, f'{stem}_normal.exr'), 'rb').read())
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
-<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:176: ResourceWarning: unclosed file <_io.TextIOWrapper name='<HOME>\\AppData\\Local\\Temp\\tmpd91snwbh\\viewpass_0001_meta.json' mode='r' encoding='utf-8'>
+<HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:188: ResourceWarning: unclosed file <_io.TextIOWrapper name='<HOME>\\AppData\\Local\\Temp\\tmp7ee41rwy\\viewpass_0001_meta.json' mode='r' encoding='utf-8'>
   meta = json.load(open(os.path.join(d, f'{stem}_meta.json'), encoding='utf-8'))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_unicode_directory_and_name (test_export.EndToEnd.test_unicode_directory_and_name) ... <HOME>\Blender_Addon\Depth_Renderer\tests\pure\test_export.py:173: ResourceWarning: unclosed file <_io.BufferedReader name='<HOME>\\AppData\\Local\\Temp\\tmp7rw65eg1\\�o�� �t�H���_\\\xf1\\�[�x�e�X�g \xe9_0001_depth.exr'>
+  z = exr.decode(open(os.path.join(sub, f"{res['stem']}_depth.exr"), 'rb').read())[0]['Z']
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 ok
 test_items (test_export.Names.test_items) ... ok
@@ -83,6 +87,6 @@ test_log_mapping_resolves_millimetres_at_100m (test_projection.DepthMapping.test
 test_pixel_centres_top_left (test_projection.ProjectPixels.test_pixel_centres_top_left) ... ok
 
 ----------------------------------------------------------------------
-Ran 47 tests in 0.175s
+Ran 48 tests in 0.252s
 
 OK
