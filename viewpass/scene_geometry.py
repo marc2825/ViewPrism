@@ -105,6 +105,67 @@ def _id_key(inst, ob, mode):
     return ob.original.name_full
 
 
+def _material_flags(mat, cache):
+    """(transparent?, displaced?) for a material, by inspecting its settings and node tree."""
+    key = mat.as_pointer()
+    if key in cache:
+        return cache[key]
+    if hasattr(mat, 'surface_render_method'):     # Blender 4.2+ (legacy blend_method defaults to HASHED)
+        transparent = mat.surface_render_method == 'BLENDED'
+    else:
+        transparent = getattr(mat, 'blend_method', 'OPAQUE') in {'BLEND', 'CLIP', 'HASHED'}
+    displaced = False
+    tree = mat.node_tree if getattr(mat, 'use_nodes', True) else None
+    if tree is not None:
+        for node in tree.nodes:
+            if node.bl_idname == 'ShaderNodeBsdfTransparent':
+                transparent = True
+            alpha = node.inputs.get('Alpha') if hasattr(node, 'inputs') else None
+            if alpha is not None and node.bl_idname.startswith('ShaderNodeBsdf'):
+                if alpha.is_linked or getattr(alpha, 'default_value', 1.0) < 1.0:
+                    transparent = True
+            if node.bl_idname == 'ShaderNodeOutputMaterial':
+                disp = node.inputs.get('Displacement')
+                if disp is not None and disp.is_linked and \
+                        getattr(mat, 'displacement_method', 'BUMP') in {'DISPLACEMENT', 'BOTH'}:
+                    displaced = True
+    cache[key] = (transparent, displaced)
+    return cache[key]
+
+
+def deviation_warnings(objects):
+    """Warn where the geometry pass can differ from a final render (see docs/LIMITATIONS)."""
+    render_diff, transparent, displaced = [], [], []
+    mat_cache = {}
+    for ob in objects:
+        for m in getattr(ob, 'modifiers', ()):
+            levels_differ = hasattr(m, 'render_levels') and hasattr(m, 'levels') and m.levels != m.render_levels
+            if m.show_viewport != m.show_render or levels_differ:
+                render_diff.append(ob.name)
+                break
+        t = d = False
+        for slot in getattr(ob, 'material_slots', ()):
+            if slot.material is not None:
+                ft, fd = _material_flags(slot.material, mat_cache)
+                t, d = t or ft, d or fd
+        if t:
+            transparent.append(ob.name)
+        if d:
+            displaced.append(ob.name)
+
+    def fmt(names, text):
+        shown = ', '.join(sorted(names)[:3]) + (' ...' if len(names) > 3 else '')
+        return f'{len(names)} object(s) {text}: {shown}'
+    out = []
+    if render_diff:
+        out.append(fmt(render_diff, 'have different viewport/render modifier settings (viewport result exported)'))
+    if displaced:
+        out.append(fmt(displaced, 'use shader displacement (not included: geometry only)'))
+    if transparent:
+        out.append(fmt(transparent, 'may use transparency (exported as opaque surfaces)'))
+    return out
+
+
 def collect(depsgraph, view_layer, space, *, normal_mode='SHADED', id_mode='OBJECT'):
     """Returns (items, meshes, warnings, stats).
 
@@ -118,6 +179,7 @@ def collect(depsgraph, view_layer, space, *, normal_mode='SHADED', id_mode='OBJE
     skipped = Counter()
     failed = []
     vis_cache = {}
+    sources = {}
     n_inst = 0
     for inst in depsgraph.object_instances:
         if not inst.show_self:
@@ -153,6 +215,8 @@ def collect(depsgraph, view_layer, space, *, normal_mode='SHADED', id_mode='OBJE
         if meshes[mesh_key] is None:
             continue
         n_inst += inst.is_instance
+        src = ob.original
+        sources.setdefault(src.as_pointer(), src)
         key = _id_key(inst, ob, id_mode)
         pid = tuple(inst.persistent_id)
         items.append(DrawItem(key, mesh_key, np.array(inst.matrix_world, dtype=np.float64),
@@ -160,6 +224,7 @@ def collect(depsgraph, view_layer, space, *, normal_mode='SHADED', id_mode='OBJE
     items.sort(key=lambda it: it.sort_key)
     warnings = [f'{n} object(s) skipped: {why}' for why, n in sorted(skipped.items())]
     warnings += [f'could not convert {msg}' for msg in failed]
+    warnings += deviation_warnings(sources.values())
     used = {it.mesh_key for it in items}
     stats = dict(draw_items=len(items), instances=n_inst,
                  unique_meshes=len(used),

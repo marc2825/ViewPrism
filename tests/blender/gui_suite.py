@@ -436,13 +436,16 @@ def t_repeat_and_leak(ctx, vp):
         del res
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
         mem.append(private_bytes())
-    # Leak criterion: no growth trend in steady state (last 20 captures). Blender's GPU backends
-    # free resources at frame boundaries, so an initial ramp is recorded but is not a leak.
-    growth = (mem[-1] - mem[-20]) / 1e6
+    # Leak criterion: no growth trend in steady state. A per-capture leak (even 1 MB) grows on
+    # nearly every capture; allocator chunks show up as rare single steps. So: <= 3 growth steps
+    # > 1 MB and < 32 MB in total over the last 20 captures. (The 640x480 targets alone are 11 MB.)
+    tail = np.array(mem[-21:], dtype=np.float64) / 1e6
+    steps = int((np.diff(tail) > 1.0).sum())
+    growth = float(tail[-1] - tail[0])
     burst = (mem_noredraw[-1] - mem_noredraw[0]) / 1e6
     print('MEM noredraw MB', [round(m / 1e6) for m in mem_noredraw])
     print('MEM redraw MB', [round(m / 1e6) for m in mem])
-    check(growth < 16, f'private memory grew {growth:.1f} MB over the last 20 captures (steady state)')
+    check(steps <= 3 and growth < 32, f'memory trend: {steps} growth steps, {growth:.1f} MB over the last 20 captures')
     check(burst < 64, f'back-to-back captures grew {burst:.1f} MB (render targets should be reused)')
     # large captures are not kept: allocation per capture, released afterwards
     big = req(np.eye(4), persp(math.radians(60), 16 / 9, .1, 100), 2560, 1440)
@@ -451,7 +454,7 @@ def t_repeat_and_leak(ctx, vp):
     from viewpass import gpu_draw
     check(gpu_draw._targets is None, 'large render targets must not be kept')
     return dict(median_ms=round(1000 * float(np.median(times)), 2), p95_ms=round(1000 * float(np.percentile(times, 95)), 2),
-                mem_steady_growth_mb_last20=round(growth, 2), mem_ramp_mb=round((max(mem) - mem[0]) / 1e6, 2),
+                mem_steady_growth_mb_last20=round(growth, 2), growth_steps_last20=steps, mem_ramp_mb=round((max(mem) - mem[0]) / 1e6, 2),
                 mem_growth_mb_20_back_to_back=round(burst, 2))
 
 
@@ -733,7 +736,42 @@ def t_reregister_clean(ctx, vp):
     return 'unregister removes handlers, draw callbacks, timers; re-register works'
 
 
-TESTS = [t_registration, t_empty_scene, t_visibility, t_local_view, t_modifier_and_scale, t_instances,
+def t_deviation_warnings(ctx, vp):
+    clear_scene()
+    a_ = plane('SubdivDiff', (-1, 0, -5), (.4, .4))
+    m = a_.modifiers.new('sub', 'SUBSURF')
+    m.levels, m.render_levels = 1, 3
+    b = plane('AlphaMat', (0, 0, -5), (.4, .4))
+    mat = bpy.data.materials.new('VP_alpha')
+    mat.use_nodes = True
+    mat.node_tree.nodes['Principled BSDF'].inputs['Alpha'].default_value = 0.5
+    b.data.materials.append(mat)
+    c = plane('Displaced', (1, 0, -5), (.4, .4))
+    dmat = bpy.data.materials.new('VP_disp')
+    dmat.use_nodes = True
+    dmat.displacement_method = 'DISPLACEMENT'
+    nt = dmat.node_tree
+    disp = nt.nodes.new('ShaderNodeDisplacement')
+    nt.links.new(disp.outputs[0], nt.nodes['Material Output'].inputs['Displacement'])
+    c.data.materials.append(dmat)
+    plain = plane('Plain', (0, 1, -5), (.3, .3))
+    pmat = bpy.data.materials.new('VP_default')          # a default material must not be flagged
+    pmat.use_nodes = True
+    plain.data.materials.append(pmat)
+    ctx.view_layer.update()
+    res = vp.capture.capture(ctx, req(np.eye(4), persp(math.radians(70), W / H, .1, 100)))
+    text = ' | '.join(res['warnings'])
+    check('SubdivDiff' in text and 'viewport/render' in text, f'render-diff warning missing: {text}')
+    check('1 object(s) may use transparency' in text and 'AlphaMat' in text,
+          f'transparency warning missing or with false positives: {text}')
+    check('Displaced' in text and 'displacement' in text, f'displacement warning missing: {text}')
+    check('Plain' not in text, f'false positive: {text}')
+    for mname in ('VP_alpha', 'VP_disp', 'VP_default'):
+        bpy.data.materials.remove(bpy.data.materials[mname])
+    return text
+
+
+TESTS = [t_registration, t_empty_scene, t_deviation_warnings, t_visibility, t_local_view, t_modifier_and_scale, t_instances,
          t_viewport_matrices, t_camera_view, t_repeat_and_leak, t_fault_injection, t_sizes, t_multi_area,
          t_precision, t_edit_mode, t_operator_export, t_view_lost, t_preview_lifecycle, t_reregister_clean]
 

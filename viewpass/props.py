@@ -60,6 +60,12 @@ class ViewPassSettings(bpy.types.PropertyGroup):
                                     items=[('BLACK', 'Black', 'RGB (0, 0, 0)'),
                                            ('FLAT', 'Facing Viewer', 'RGB (0.5, 0.5, 1.0): the colour of a normal '
                                                                      'pointing at the viewer')])
+    normal_flip_x: BoolProperty(name='Flip X (PNG)', default=False, update=_redraw,
+                                description='Store -X in the normal PNG (some tools expect a mirrored X axis). '
+                                            'EXR stays canonical')
+    normal_flip_y: BoolProperty(name='Flip Y (PNG)', default=False, update=_redraw,
+                                description='Store -Y in the normal PNG (DirectX-style green channel). '
+                                            'EXR stays canonical')
     id_mode: EnumProperty(name='ID Per', default='OBJECT', update=_redraw,
                           items=[('OBJECT', 'Object', 'One ID per source object (instances share it)'),
                                  ('INSTANCER', 'Instancer', 'One ID per object in the view layer '

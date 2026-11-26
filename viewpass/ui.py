@@ -171,6 +171,9 @@ class VIEWPASS_PT_advanced(bpy.types.Panel):
         layout.prop(s, 'camera_frame')
         layout.prop(s, 'normal_mode')
         layout.prop(s, 'normal_background')
+        col = layout.column(heading='Normal PNG', align=True)
+        col.prop(s, 'normal_flip_x')
+        col.prop(s, 'normal_flip_y')
         layout.prop(s, 'id_mode')
         layout.prop(s, 'depth_background')
         if s.depth_background == 'VALUE':

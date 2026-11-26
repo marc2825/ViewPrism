@@ -161,6 +161,21 @@ class EndToEnd(unittest.TestCase):
             self.assertNotIn(d, text)                         # no absolute paths
             self.assertNotIn(os.path.expanduser('~'), text)
 
+    def test_normal_flip_only_changes_png(self):
+        r = synthetic_result()
+        opts = dict(writer.default_options(), outputs={'normal': ['PNG8', 'EXR']})
+        opts['normal'] = {'background': (0, 0, 0), 'flip_x': True, 'flip_y': True}
+        with tempfile.TemporaryDirectory() as d:
+            res = writer.export_capture(r, opts, d)
+            stem = res['stem']
+            npng = png.decode(open(os.path.join(d, f'{stem}_normal.png'), 'rb').read())[0]
+            # (0.6, 0, 0.8) flipped -> (-0.6, -0, 0.8) -> round((-0.6*0.5+0.5)*255)=51, 128, 230
+            np.testing.assert_array_equal(npng[3, 5], [51, 128, 230])
+            ch, _ = exr.decode(open(os.path.join(d, f'{stem}_normal.exr'), 'rb').read())
+            np.testing.assert_array_equal(ch['R'], r['normal'][..., 0])          # raw stays canonical
+            meta = json.load(open(os.path.join(d, f'{stem}_meta.json'), encoding='utf-8'))
+            self.assertEqual(meta['passes']['normal']['png']['mapping'], 'rgb = (-n.x, -n.y, n.z) * 0.5 + 0.5')
+
     def test_id_overflow_fails_only_that_file(self):
         r = synthetic_result()
         r['object_id'] = r['object_id'].copy()

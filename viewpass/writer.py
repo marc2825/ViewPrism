@@ -16,7 +16,7 @@ def default_options():
     return {
         'outputs': {'depth': ['PNG8', 'EXR'], 'normal': ['PNG8']},
         'depth': {'range': 'AUTO', 'near': None, 'far': None, 'near_white': True, 'background': 'FAR'},
-        'normal': {'background': (0.0, 0.0, 0.0)},
+        'normal': {'background': (0.0, 0.0, 0.0), 'flip_x': False, 'flip_y': False},
         'exr': {'compression': 'ZIP'},
         'base_name': 'viewpass', 'numbering': 'AUTO', 'overwrite': False, 'meta': True,
         'source': {}, 'version': '0.0.0',
@@ -77,10 +77,14 @@ def producers(result, options):
             if fmt.startswith('PNG'):
                 bits = 16 if fmt == 'PNG16' else 8
                 bg = tuple(float(v) for v in options['normal']['background'])
-                enc['normal']['png'] = dict(bit_depth=bits, mapping='rgb = n * 0.5 + 0.5',
-                                            background_rgb=list(bg), colour_management='none')
-                prods[f'normal:{fmt}'] = (lambda bits=bits, bg=bg: png.encode(
-                    encode.quantize_normal(normal, mask, bits, bg)))
+                fx = bool(options['normal'].get('flip_x', False))
+                fy = bool(options['normal'].get('flip_y', False))
+                sx, sy = ('-' if fx else '', '-' if fy else '')
+                enc['normal']['png'] = dict(bit_depth=bits, mapping=f'rgb = ({sx}n.x, {sy}n.y, n.z) * 0.5 + 0.5',
+                                            flip_x=fx, flip_y=fy, background_rgb=list(bg), colour_management='none')
+                shown = normal if not (fx or fy) else normal * np.array([-1 if fx else 1, -1 if fy else 1, 1], np.float32)
+                prods[f'normal:{fmt}'] = (lambda bits=bits, bg=bg, shown=shown: png.encode(
+                    encode.quantize_normal(shown, mask, bits, bg)))
             else:
                 enc['normal']['exr'] = dict(channels={'R': 'n.x', 'G': 'n.y', 'B': 'n.z', 'A': 'mask 0/1'},
                                             type='FLOAT', signed=True, compression=exr_comp)

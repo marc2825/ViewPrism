@@ -79,7 +79,8 @@ def display_image(result, pass_name, settings):
         return np.repeat(img[..., None], 3, axis=-1)
     if pass_name == 'normal':
         bg = (0.5, 0.5, 1.0) if settings.normal_background == 'FLAT' else (0.0, 0.0, 0.0)
-        return encode.normal_to_rgb(result['normal'], mask, bg)
+        sign = np.array([-1 if settings.normal_flip_x else 1, -1 if settings.normal_flip_y else 1, 1], np.float32)
+        return encode.normal_to_rgb(result['normal'] * sign, mask, bg)
     if pass_name == 'object_id':
         return encode.id_colors(result['object_id'], mask).astype(np.float32)
     return np.repeat(mask.astype(np.float32)[..., None], 3, axis=-1)
