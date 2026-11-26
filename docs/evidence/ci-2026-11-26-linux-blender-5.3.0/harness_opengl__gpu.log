@@ -1,0 +1,13 @@
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+VIEWPASS_RESULT {'status': 'pass', 'mode': 'gpu', 'blender': '5.3.0', 'checks': [{'projection': 'perspective', 'trial': 1, 'seconds': 0.05409106299999422, 'checks': 'analytic samples, alignment, background, visibility, state, repeat'}, {'projection': 'perspective', 'trial': 2, 'seconds': 0.002824585999995577, 'checks': 'analytic samples, alignment, background, visibility, state, repeat'}, {'projection': 'orthographic', 'trial': 1, 'seconds': 0.002460863999999674, 'checks': 'analytic samples, alignment, background, visibility, state, repeat'}, {'projection': 'orthographic', 'trial': 2, 'seconds': 0.0022445019999963733, 'checks': 'analytic samples, alignment, background, visibility, state, repeat'}], 'gpu': {'backend_type_get': 'OPENGL', 'device_type_get': 'SOFTWARE', 'vendor_get': 'Mesa', 'renderer_get': 'llvmpipe (LLVM 21.1.8, 256 bits)', 'version_get': '4.5 (Core Profile) Mesa 26.0.8-1ubuntu0.3'}}
+00:05.630  blend            | Saved session recovery to "/tmp/quit.blend"
+Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
+
+Blender quit

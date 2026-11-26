@@ -1,5 +1,0 @@
-Blender 4.3
-Preference > File Paths > Script Directories
-から
-\\wsl$\Ubuntu-22.04\home\marc2825\Blender\
-を追加すると、addonsフォルダ内のフォルダ・ファイルがアドオンとして認識され、Preference > Add-ons に表示される

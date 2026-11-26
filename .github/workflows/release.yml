@@ -1,0 +1,50 @@
+name: Release build
+
+# Builds the extension ZIP with Blender's own tooling (validate + build + audit).
+# A pushed tag "vX.Y.Z" additionally creates a *draft* GitHub release with the ZIP attached;
+# publishing it (and uploading to extensions.blender.org) stays a manual, owner-approved step.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write   # only used by the draft-release step on tag pushes
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Resolve Blender version
+        id: ver
+        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve 5.3)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/blender
+          key: blender-linux-${{ steps.ver.outputs.version }}
+      - name: Download Blender (SHA-256 verified)
+        id: blender
+        run: echo "exe=$(bash .github/scripts/fetch_blender.sh fetch ${{ steps.ver.outputs.version }} '${{ runner.temp }}/blender')" >> "$GITHUB_OUTPUT"
+      - name: Check tag matches manifest version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          manifest="$(grep -E '^version *=' viewprism/blender_manifest.toml | sed -E 's/.*"(.*)".*/\1/')"
+          test "v${manifest}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != manifest ${manifest}"; exit 1; }
+      - name: Validate, build and audit
+        run: python tools/build_extension.py --blender "${{ steps.blender.outputs.exe }}" --out dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: viewprism-extension
+          path: dist/*.zip
+      - name: Create draft release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --repo "$GITHUB_REPOSITORY" --draft --generate-notes

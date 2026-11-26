@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "blender": "5.3.0",
+  "results": [
+    {
+      "test": "package_lifecycle",
+      "status": "pass",
+      "detail": "isolated user dir <HOME>\\AppData\\Local\\Temp\\viewprism-userres-6eyeyj9y; installed + enabled from viewprism; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed"
+    }
+  ]
+}

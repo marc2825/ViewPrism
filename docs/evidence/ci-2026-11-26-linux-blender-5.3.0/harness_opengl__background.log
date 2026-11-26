@@ -1,0 +1,4 @@
+VIEWPASS_RESULT {'status': 'pass', 'mode': 'background', 'blender': '5.3.0', 'checks': ['register/unregister twice']}
+Blender 5.3.0 (hash 02f0899d78e3 built 2026-11-10 01:31:18)
+
+Blender quit

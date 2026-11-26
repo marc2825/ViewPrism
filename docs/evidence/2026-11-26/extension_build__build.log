@@ -1,0 +1,36 @@
+$ C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe --factory-startup --command extension validate <HOME>\Blender_Addon\Depth_Renderer\viewprism
+Success parsing TOML in "<HOME>\Blender_Addon\Depth_Renderer\viewprism"
+
+exit 0
+
+$ C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe --factory-startup --command extension build --source-dir <HOME>\Blender_Addon\Depth_Renderer\viewprism --output-filepath <HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\dist\viewprism-0.1.0.zip
+building: viewprism-0.1.0.zip
+complete
+created: "<HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\dist\viewprism-0.1.0.zip", 44075
+
+exit 0
+
+$ C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe --factory-startup --command extension validate <HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\dist\viewprism-0.1.0.zip
+Success parsing TOML in "<HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\dist\viewprism-0.1.0.zip"
+
+exit 0
+
+
+ZIP: <HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\dist\viewprism-0.1.0.zip (44075 bytes)
+   __init__.py
+   blender_manifest.toml
+   capture.py
+   encode.py
+   export.py
+   exr.py
+   gpu_draw.py
+   operators.py
+   png.py
+   preview.py
+   projection.py
+   props.py
+   scene_geometry.py
+   ui.py
+   viewport.py
+   writer.py
+BUILD PASS

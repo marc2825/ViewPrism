@@ -1,0 +1,38 @@
+{
+  "status": "pass",
+  "mode": "gpu",
+  "blender": "4.5.17 LTS",
+  "checks": [
+    {
+      "projection": "perspective",
+      "trial": 1,
+      "seconds": 0.08863578599999755,
+      "checks": "analytic samples, alignment, background, visibility, state, repeat"
+    },
+    {
+      "projection": "perspective",
+      "trial": 2,
+      "seconds": 0.0025770979999606425,
+      "checks": "analytic samples, alignment, background, visibility, state, repeat"
+    },
+    {
+      "projection": "orthographic",
+      "trial": 1,
+      "seconds": 0.0024495650000062597,
+      "checks": "analytic samples, alignment, background, visibility, state, repeat"
+    },
+    {
+      "projection": "orthographic",
+      "trial": 2,
+      "seconds": 0.002463436000027741,
+      "checks": "analytic samples, alignment, background, visibility, state, repeat"
+    }
+  ],
+  "gpu": {
+    "backend_type_get": "OPENGL",
+    "device_type_get": "SOFTWARE",
+    "vendor_get": "Mesa",
+    "renderer_get": "llvmpipe (LLVM 21.1.8, 256 bits)",
+    "version_get": "4.5 (Core Profile) Mesa 26.0.8-1ubuntu0.3"
+  }
+}

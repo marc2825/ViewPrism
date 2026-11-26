@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "blender": "4.5.17 LTS",
+  "results": [
+    {
+      "test": "package_lifecycle",
+      "status": "pass",
+      "detail": "isolated user dir /tmp/viewprism-userres-t93gtiys; installed + enabled from viewprism; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed"
+    }
+  ]
+}

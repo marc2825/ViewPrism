@@ -1,0 +1,181 @@
+simple 0 cold 85.7 ms, warm median 44.8 ms
+simple 1 cold 57.6 ms, warm median 41.4 ms
+simple 2 cold 59.0 ms, warm median 45.9 ms
+simple 3 cold 58.4 ms, warm median 43.6 ms
+simple 4 cold 57.9 ms, warm median 42.5 ms
+complex 0 cold 203.0 ms, warm median 181.6 ms
+complex 1 cold 209.4 ms, warm median 180.1 ms
+complex 2 cold 203.9 ms, warm median 179.2 ms
+complex 3 cold 202.5 ms, warm median 191.8 ms
+complex 4 cold 338.3 ms, warm median 303.7 ms
+{
+  "simple": {
+    "runs": 5,
+    "scene_stats": {
+      "objects": 14,
+      "mesh_instances": 13,
+      "triangles": 146
+    },
+    "capture_stats": {
+      "draw_items": 13,
+      "instances": 0,
+      "unique_meshes": 13,
+      "triangles": 146,
+      "width": 1920,
+      "height": 1080,
+      "foreground_pixels": 1927680
+    },
+    "gpu": {
+      "backend_type_get": "VULKAN",
+      "renderer_get": "NVIDIA GeForce RTX 3060 Ti",
+      "version_get": "NVIDIA 610.88"
+    },
+    "blender": "5.3.0",
+    "cold_ms": {
+      "median": 58.36909997742623,
+      "p95": 85.69720003288239,
+      "samples": [
+        85.69720003288239,
+        57.6361000421457,
+        59.016200015321374,
+        58.36909997742623,
+        57.85669997567311
+      ]
+    },
+    "warm_ms": {
+      "median": 44.94479997083545,
+      "p95": 58.4730000118725,
+      "n": 35
+    },
+    "warm_stage_median_ms": {
+      "collect": 0.8793000015430152,
+      "upload": 0.1113000325858593,
+      "gpu_draw_readback": 14.487700012978166,
+      "post": 26.844100037124008,
+      "total": 42.635600024368614
+    },
+    "encode_write_ms": {
+      "median": 138.0125999567099
+    },
+    "files_bytes": {
+      "viewprism_0001_depth.png": 10558,
+      "viewprism_0001_depth.exr": 98673,
+      "viewprism_0001_normal.png": 10623,
+      "viewprism_0001_id.png": 16257,
+      "viewprism_0001_mask.png": 4122,
+      "viewprism_0001_meta.json": 3789
+    },
+    "render_engines": {
+      "BLENDER_EEVEE": {
+        "render_s": [
+          0.28336010000202805,
+          0.18862809997517616
+        ]
+      },
+      "CYCLES": {
+        "render_s": [
+          0.2967421999783255,
+          0.26936930004740134
+        ]
+      }
+    },
+    "cycles_comparison": {
+      "foreground_pixels_ours": 1927680,
+      "foreground_pixels_cycles": 1927680,
+      "mask_disagreement_fraction": 0.0,
+      "interior_pixels": 1923840,
+      "depth_abs_err_median": 3.4332275390625e-05,
+      "depth_abs_err_p99": 0.00014495849609375,
+      "depth_rel_err_max": 0.08016763627529144,
+      "depth_rel_err_p99": 4.183343207841972e-06,
+      "normal_angle_deg_median": 0.017156399067175684,
+      "normal_angle_deg_p99": 0.027050644804046266,
+      "id_agreement_interior": 0.9999989604125084
+    }
+  },
+  "complex": {
+    "runs": 5,
+    "scene_stats": {
+      "objects": 34,
+      "mesh_instances": 2633,
+      "triangles": 1103042
+    },
+    "capture_stats": {
+      "draw_items": 2632,
+      "instances": 2601,
+      "unique_meshes": 33,
+      "triangles": 1103042,
+      "width": 1920,
+      "height": 1080,
+      "foreground_pixels": 1927680
+    },
+    "gpu": {
+      "backend_type_get": "VULKAN",
+      "renderer_get": "NVIDIA GeForce RTX 3060 Ti",
+      "version_get": "NVIDIA 610.88"
+    },
+    "blender": "5.3.0",
+    "cold_ms": {
+      "median": 203.86860001599416,
+      "p95": 338.25130003970116,
+      "samples": [
+        203.03110004169866,
+        209.41839995793998,
+        203.86860001599416,
+        202.54720002412796,
+        338.25130003970116
+      ]
+    },
+    "warm_ms": {
+      "median": 181.97660002624616,
+      "p95": 320.99929999094456,
+      "n": 35
+    },
+    "warm_stage_median_ms": {
+      "collect": 81.21159998700023,
+      "upload": 5.062200012616813,
+      "gpu_draw_readback": 65.41560002369806,
+      "post": 30.554600001778454,
+      "total": 180.21819996647537
+    },
+    "encode_write_ms": {
+      "median": 257.2045000270009
+    },
+    "files_bytes": {
+      "viewprism_0001_depth.png": 173374,
+      "viewprism_0001_depth.exr": 5911434,
+      "viewprism_0001_normal.png": 850435,
+      "viewprism_0001_id.png": 70134,
+      "viewprism_0001_mask.png": 4122,
+      "viewprism_0001_meta.json": 4276
+    },
+    "render_engines": {
+      "BLENDER_EEVEE": {
+        "render_s": [
+          0.3481558000203222,
+          0.2970809999969788
+        ]
+      },
+      "CYCLES": {
+        "render_s": [
+          0.4090307999867946,
+          0.40507109998725355
+        ]
+      }
+    },
+    "cycles_comparison": {
+      "foreground_pixels_ours": 1927680,
+      "foreground_pixels_cycles": 1927680,
+      "mask_disagreement_fraction": 0.0,
+      "interior_pixels": 1923840,
+      "depth_abs_err_median": 5.7220458984375e-06,
+      "depth_abs_err_p99": 0.000148773193359375,
+      "depth_rel_err_max": 0.12837402522563934,
+      "depth_rel_err_p99": 4.298627573007252e-06,
+      "normal_angle_deg_median": 0.014979775476324377,
+      "normal_angle_deg_p99": 0.027050644804046266,
+      "id_agreement_interior": 0.9999828468063873
+    }
+  }
+}
+Results: <HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\bench
