@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
+# gitleaks configuration used by CI (.github/workflows/ci.yml, job "Secrets and privacy").
+# Default rules plus one canary rule: CI commits a freshly generated canary value to a throw-away
+# repository and requires gitleaks to report it, so a scanner that silently finds nothing fails
+# the job. No credential-shaped value is stored anywhere in this repository.
+title = "ViewPrism"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "viewprism-ci-canary"
+description = "ViewPrism CI canary (proves the history scan detects a committed value)"
+regex = '''VIEWPRISM_CANARY_[0-9a-f]{32}'''
+keywords = ["viewprism_canary_"]

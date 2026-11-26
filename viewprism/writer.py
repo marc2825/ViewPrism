@@ -56,15 +56,17 @@ def producers(result, options):
         for fmt in outputs['depth']:
             if fmt.startswith('PNG'):
                 bits = 16 if fmt == 'PNG16' else 8
-                img, info = encode.normalize_depth(depth, mask, depth_opt['range'], depth_opt.get('near'),
-                                                   depth_opt.get('far'), depth_opt['near_white'],
-                                                   depth_opt['background'], dtype=np.float64)
+                args = (depth_opt['range'], depth_opt.get('near'), depth_opt.get('far'), depth_opt['near_white'],
+                        depth_opt['background'])
+                info = encode.depth_range(depth, mask, *args[:3])            # validates early
+                bg_value = encode.background_value(depth_opt['background'], depth_opt['near_white'])
                 enc['depth']['png'] = dict(bit_depth=bits, mapping='linear', range_mode=info['mode'],
                                            range=[info['lo'], info['hi']], flat=info['flat'],
-                                           empty=info['empty'], near_white=info['near_white'],
-                                           background_value=info['background'],
+                                           empty=info['empty'], near_white=bool(depth_opt['near_white']),
+                                           background_value=bg_value,
                                            note='display encoding; use the EXR for measurements')
-                prods[f'depth:{fmt}'] = (lambda img=img, bits=bits: png.encode(encode.quantize(img, bits)))
+                prods[f'depth:{fmt}'] = (lambda bits=bits, args=args: png.encode(
+                    encode.quantize_depth(depth, mask, bits, *args)[0]))
             else:
                 enc['depth']['exr'] = dict(channels={'Z': 'depth (NaN = background)', 'A': 'mask 0/1'},
                                            type='FLOAT', compression=exr_comp)
@@ -84,9 +86,9 @@ def producers(result, options):
                 sx, sy = ('-' if fx else '', '-' if fy else '')
                 enc['normal']['png'] = dict(bit_depth=bits, mapping=f'rgb = ({sx}n.x, {sy}n.y, n.z) * 0.5 + 0.5',
                                             flip_x=fx, flip_y=fy, background_rgb=list(bg), colour_management='none')
-                shown = normal if not (fx or fy) else normal * np.array([-1 if fx else 1, -1 if fy else 1, 1], np.float32)
-                prods[f'normal:{fmt}'] = (lambda bits=bits, bg=bg, shown=shown: png.encode(
-                    encode.quantize_normal(shown, mask, bits, bg)))
+                sign = np.array([-1 if fx else 1, -1 if fy else 1, 1], np.float32)
+                prods[f'normal:{fmt}'] = (lambda bits=bits, bg=bg, sign=sign, flip=(fx or fy): png.encode(
+                    encode.quantize_normal(normal * sign if flip else normal, mask, bits, bg)))
             else:
                 enc['normal']['exr'] = dict(channels={'R': 'n.x', 'G': 'n.y', 'B': 'n.z', 'A': 'mask 0/1'},
                                             type='FLOAT', signed=True, compression=exr_comp)

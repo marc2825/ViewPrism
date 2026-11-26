@@ -4,3 +4,4 @@ __pycache__/
 dist/
 *.viewprism-tmp
 *.blend1
+.ruff_cache/

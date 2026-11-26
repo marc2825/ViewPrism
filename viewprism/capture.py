@@ -29,6 +29,7 @@ import numpy as np
 
 from . import projection as proj
 from . import encode
+from . import resources
 
 PASSES = ('depth', 'normal', 'object_id', 'mask')
 MAX_SIDE = 16384
@@ -41,6 +42,14 @@ class CaptureError(RuntimeError):
 
 class RequestError(CaptureError, ValueError):
     pass
+
+
+class GPUCaptureError(CaptureError):
+    """The GPU could not allocate or draw (for example out of GPU memory)."""
+
+
+class ResourceLimitError(RequestError):
+    """Not enough free memory for the requested size (see resources.check)."""
 
 
 class GPUContextError(CaptureError):
@@ -136,6 +145,10 @@ def capture(context, request, *, _after_draw=None):
     t0 = time.perf_counter()
     req = validate_request(request)
     space = _view3d_space(context)
+    try:
+        mem = resources.check(req['width'], req['height'], export=False)
+    except resources.ResourceError as exc:
+        raise ResourceLimitError(str(exc)) from exc
     _ensure_gpu_context(context)
     view_layer = context.view_layer
     depsgraph = context.evaluated_depsgraph_get()
@@ -165,7 +178,7 @@ def capture(context, request, *, _after_draw=None):
             # e.g. directly after a window was closed, before Blender redraws another window
             raise GPUContextError('no active GPU context right now (for example just after closing a '
                                   'window); try again') from exc
-        raise
+        raise GPUCaptureError(f'GPU error ({exc}); try a lower resolution') from exc
     batches = None
     t_gpu = time.perf_counter()
 
@@ -183,6 +196,8 @@ def capture(context, request, *, _after_draw=None):
     geom = ident = None
     if not mask.any():
         warnings.append(('nothing visible: the capture is empty',) * 2)
+    if mem['warning']:
+        warnings.append((mem['warning'],) * 2)
     t_post = time.perf_counter()
 
     out['id_map'] = {i: k for k, i in ids.items()}

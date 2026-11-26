@@ -81,9 +81,70 @@ whose sample lands on a different surface). The p99 values confirm that ViewPris
 **planar** camera-Z as Cycles' Depth pass, and that the camera-frame projection matches Blender's render
 framing.
 
+## Resource stress (issue #5)
+
+Raw data: [`docs/evidence/2026-11-26-stress/`](evidence/2026-11-26-stress/) (`stress-vulkan.json`,
+`stress-opengl.json`). Reproduce with:
+
+```
+python tools/stress.py --blender <blender.exe> --gpu-backend vulkan|opengl --out <dir>
+```
+
+Same machine as above (16 GB RAM, RTX 3060 Ti 8 GB), Blender 5.3.0, fresh `--factory-startup` GUI
+process, nothing else running. Scene: ground plane, 20 UV spheres (96×48) and a geometry-nodes scatter of
+**40 000** icosphere instances → **3 412 562 triangles**. All passes are captured; the export writes
+depth PNG16 + EXR, normal PNG8, ID PNG16, mask PNG8 and metadata.
+"Process memory" is Windows *private bytes* of the Blender process over its value before the step;
+"GPU memory" is `nvidia-smi` for the whole GPU (includes the desktop and Blender's own viewport), so it
+is an upper bound for ViewPrism.
+
+| Size | Backend | Capture | Export (6 files) | Process peak, capture | Process peak, capture + export | Failed files |
+|---|---|---|---|---|---|---|
+| 1920 × 1080 (2.1 MP) | Vulkan | 0.57 s | 0.23 s | +457 MB | +539 MB | 0 |
+| 3840 × 2160 (8.3 MP) | Vulkan | 0.83 s | 0.83 s | +1 229 MB | +1 311 MB | 0 |
+| 7680 × 4320 (33.2 MP) | Vulkan | 2.03 s | 3.18 s | +3 706 MB | +3 706 MB | 0 |
+| 1920 × 1080 | OpenGL | 0.46 s | 0.23 s | +389 MB | +463 MB | 0 |
+| 3840 × 2160 | OpenGL | 0.64 s | 0.81 s | +907 MB | +971 MB | 0 |
+| 7680 × 4320 | OpenGL | 1.50 s | 2.92 s | +2 968 MB | +2 968 MB | 0 |
+
+- **GPU memory**, whole run (8K included): peak +1.85 GB (Vulkan) / +1.43 GB (OpenGL) over the idle
+  desktop. ViewPrism's own targets are 36 bytes/pixel (1.2 GB at 8K).
+- **Repeated 4K captures** (8 in a row, without and with redraws in between): no growth. Private
+  bytes relative to before the series never exceed +0.19 GB on either backend and do not trend upwards
+  (negative values: memory of the preceding 8K step being released); median capture 0.64–0.74 s.
+- **Failure recovery**: an injected GPU allocation failure at 4K is reported as
+  `GPU error (…); try a lower resolution`; the next capture succeeds (0.68 s, foreground present).
+- **Auto preview**: one preview capture at the default 50 % scale (787 × 444) of this scene takes
+  0.41 s (Vulkan) / 0.37 s (OpenGL), dominated by `collect` (≈ 0.25 s for 40 000 instances in Python).
+  Before issue #5 the auto refresh fired 0.2 s after the *first* change, so orbiting a heavy scene
+  triggered a blocking capture every few tenths of a second (8 captures during 2.5 s of simulated
+  navigation). It now waits until the view and the scene have been **still** for
+  max(0.2 s, last capture time), capped at 1 s, and never captures while you navigate or drag
+  (`t_preview_debounce`).
+- The chunked encoders (1 MiPx depth/normal chunks, streamed zlib for PNG, per-block EXR interleave)
+  cut the 8K export peak from +5.3 GB to +3.7 GB in this scene: the export no longer adds memory on
+  top of the capture.
+
+### Memory guard
+
+`viewprism/resources.py` estimates **220 bytes/pixel** of process memory for capture + export
+(120 capture + 100 export, rounded up from the 112 B/px capture peak measured above) and 36 B/px on the
+GPU. Policy (tests: `tests/pure/test_resources.py`, GUI `t_resource_guard`):
+
+- **refuse** with a clear message ("… lower the resolution or close other programs") when the estimate
+  exceeds 90 % of the memory that can still be committed (free RAM + page file/swap);
+- **warn** (export still runs) when it exceeds 80 % of the *free physical* memory, because the system
+  may page;
+- GPU memory cannot be queried portably from Blender's Python API; GPU allocation errors are reported as
+  errors and the capture can be retried.
+
+The 33.5 MP resolution limit is a hard sanity limit, not a memory guarantee: at 33.2 MP the export
+needs ≈ 7.3 GB by the estimate (3.7 GB measured), which a machine with 8 GB RAM and a busy desktop may
+not have. The guard decides that from the actual free memory.
+
 ## Not yet measured
 
-- Other GPUs/vendors, Metal, Linux/macOS, Blender 4.5 LTS.
-- 4K and 8K exports (resolution limit 33.5 MP; ≈ 36 bytes/pixel of GPU targets).
-- Very large scenes (> 10 M triangles); the per-instance Python overhead in `collect` (≈ 30 µs per
-  instance) dominates with tens of thousands of instances.
+- Other GPUs/vendors (AMD, Intel), Metal; Linux/macOS hardware drivers (CI uses Mesa llvmpipe, which
+  measures correctness, not speed).
+- Scenes beyond ~3.5 M triangles / 40 000 instances; `collect` costs ≈ 6 µs per instance here, so
+  100 000+ instances will take about a second per capture.

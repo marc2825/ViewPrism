@@ -13,16 +13,22 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Supply chain: every action is pinned to a full commit SHA (the tag is in the comment, Dependabot
+# keeps both up to date); Python tools are installed from hashed requirement files; checkouts do not
+# keep the token; Blender archives are verified against the official SHA-256 list on every run.
+
 jobs:
   lint:
     name: Lint (ruff)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.13'
-      - run: python -m pip install ruff==0.8.6
+      - run: python -m pip install --require-hashes -r ci/requirements-lint.txt
       - run: ruff check .
 
   pure:
@@ -34,15 +40,64 @@ jobs:
         python: ['3.11', '3.13']
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install numpy
+      - run: python -m pip install --require-hashes -r ci/requirements-pure.txt
       - name: Pure unit tests (no bpy)
         run: python -m unittest discover -v -s tests/pure -p "test_*.py"
       - name: Independent harness self-test
         run: python -m unittest discover -s viewpass-dev/harness -p "test_*.py"
+
+  secrets:
+    # gitleaks (default rules + canary) over the full history, and the repository's own privacy scan
+    # (e-mail addresses, user-home paths, credential formats, PNG metadata) over the tree and history.
+    name: Secrets and privacy scan
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - name: Install gitleaks ${{ env.GITLEAKS_VERSION }} (SHA-256 verified)
+        run: |
+          dir="$RUNNER_TEMP/gitleaks"
+          mkdir -p "$dir"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL --retry 3 -o "$dir/$tarball" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${tarball}"
+          echo "${GITLEAKS_SHA256}  $dir/$tarball" | sha256sum -c -
+          tar -xzf "$dir/$tarball" -C "$dir" gitleaks
+          echo "$dir" >> "$GITHUB_PATH"
+      - name: Canary - gitleaks must detect a freshly committed canary value
+        run: |
+          repo="$(mktemp -d)"
+          git -C "$repo" init -q
+          printf 'value = VIEWPRISM_CANARY_%s\n' "$(openssl rand -hex 16)" > "$repo/canary.txt"
+          git -C "$repo" add canary.txt
+          git -C "$repo" -c user.name=ci -c user.email=ci@example.invalid commit -qm canary
+          set +e
+          gitleaks git "$repo" --config .gitleaks.toml --redact --no-banner \
+            --report-format json --report-path "$RUNNER_TEMP/canary.json"
+          code=$?
+          set -e
+          test "$code" -eq 1 || { echo "gitleaks exit code $code, expected 1 (leak found)"; exit 1; }
+          jq -e '[.[] | select(.RuleID == "viewprism-ci-canary")] | length == 1' "$RUNNER_TEMP/canary.json"
+      - name: gitleaks - full history (all refs), values redacted
+        run: gitleaks git . --config .gitleaks.toml --redact --no-banner --log-opts="--all"
+      - name: Privacy scan - working tree
+        run: python tools/privacy_scan.py
+      - name: Privacy scan - full history (reviewed findings in tools/privacy_allowlist.txt)
+        run: python tools/privacy_scan.py --history
 
   blender:
     # Real Blender in a virtual X display with Mesa's software OpenGL (llvmpipe):
@@ -52,18 +107,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - series: '5.3'
-            steps: pure,selftest,harness,gui,build,package
-          - series: '4.5'
-            steps: pure,selftest,harness,gui,build,package
+        series: ['4.5', '5.0', '5.1', '5.2', '5.3']
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
       - name: System libraries for Blender + virtual display
@@ -75,26 +128,79 @@ jobs:
             libwayland-cursor0 libwayland-egl1 libdecor-0-0 > /dev/null
       - name: Resolve Blender version
         id: ver
-        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve ${{ matrix.series }})" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v6
+        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve '${{ matrix.series }}' linux-x64)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ${{ runner.temp }}/blender
-          key: blender-linux-${{ steps.ver.outputs.version }}
-      - name: Download Blender ${{ steps.ver.outputs.version }} (SHA-256 verified)
+          path: ${{ runner.temp }}/blender-archive
+          key: blender-archive-linux-x64-${{ steps.ver.outputs.version }}
+      - name: Download / verify Blender ${{ steps.ver.outputs.version }} (SHA-256 checked every run)
         id: blender
-        run: echo "exe=$(bash .github/scripts/fetch_blender.sh fetch ${{ steps.ver.outputs.version }} '${{ runner.temp }}/blender')" >> "$GITHUB_OUTPUT"
+        run: |
+          exe="$(bash .github/scripts/fetch_blender.sh fetch '${{ steps.ver.outputs.version }}' \
+                 "$RUNNER_TEMP/blender-archive" "$RUNNER_TEMP/blender" linux-x64)"
+          echo "exe=$exe" >> "$GITHUB_OUTPUT"
       - name: Run checks
         run: |
           "${{ steps.blender.outputs.exe }}" --version | head -n 1
           xvfb-run -a -s "-screen 0 1920x1080x24" \
             python tools/run_all_checks.py --blender "${{ steps.blender.outputs.exe }}" \
-              --backends opengl --steps ${{ matrix.steps }} --out "${{ runner.temp }}/evidence"
+              --backends opengl --steps pure,selftest,harness,gui,build,package --out "$RUNNER_TEMP/evidence"
       - name: Job summary
         if: always()
-        run: cat "${{ runner.temp }}/evidence/SUMMARY.md" >> "$GITHUB_STEP_SUMMARY" || true
-      - uses: actions/upload-artifact@v7
+        run: cat "$RUNNER_TEMP/evidence/SUMMARY.md" >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: evidence-blender-${{ steps.ver.outputs.version }}
+          name: evidence-linux-blender-${{ steps.ver.outputs.version }}
+          path: ${{ runner.temp }}/evidence
+          retention-days: 30
+
+  blender-windows:
+    # Hosted Windows runners have no GPU: the independent harness runs in background mode only and
+    # the GUI/GPU suite is NOT run here (Windows GPU coverage comes from local runs, docs/QA_REPORT.md).
+    name: Blender ${{ matrix.series }} (Windows, background only)
+    needs: pure
+    strategy:
+      fail-fast: false
+      matrix:
+        series: ['4.5', '5.3']
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: Resolve Blender version
+        id: ver
+        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve '${{ matrix.series }}' windows-x64)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/blender-archive
+          key: blender-archive-windows-x64-${{ steps.ver.outputs.version }}
+      - name: Download / verify Blender ${{ steps.ver.outputs.version }} (SHA-256 checked every run)
+        id: blender
+        run: |
+          tmp="$(cygpath -m "$RUNNER_TEMP")"
+          exe="$(bash .github/scripts/fetch_blender.sh fetch '${{ steps.ver.outputs.version }}' \
+                 "$tmp/blender-archive" "$tmp/blender" windows-x64)"
+          echo "exe=$exe" >> "$GITHUB_OUTPUT"
+      - name: Run checks (background)
+        run: |
+          "${{ steps.blender.outputs.exe }}" --version | head -n 1
+          python tools/run_all_checks.py --blender "${{ steps.blender.outputs.exe }}" --backends opengl \
+            --harness-mode background --steps pure,selftest,harness,build --out "$(cygpath -m "$RUNNER_TEMP")/evidence"
+      - name: Job summary
+        if: always()
+        run: cat "$(cygpath -u "$RUNNER_TEMP")/evidence/SUMMARY.md" >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: evidence-windows-blender-${{ steps.ver.outputs.version }}
           path: ${{ runner.temp }}/evidence
           retention-days: 30
