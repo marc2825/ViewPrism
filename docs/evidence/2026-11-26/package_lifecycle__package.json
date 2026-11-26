@@ -5,7 +5,7 @@
     {
       "test": "package_lifecycle",
       "status": "pass",
-      "detail": "isolated user dir <HOME>\\AppData\\Local\\Temp\\viewprism-userres-6eyeyj9y; installed + enabled from viewprism; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed"
+      "detail": "isolated user dir <HOME>\\AppData\\Local\\Temp\\viewprism-userres-lqnf93r0; installed + enabled from viewprism; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed"
     }
   ]
 }

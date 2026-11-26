@@ -32,8 +32,8 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def home_variants():
-    """The home directory as it can appear in logs: long and (Windows) 8.3 short form, e.g.
-    C:\\Users\\RUNNER~1 in TEMP on GitHub's Windows runners."""
+    """The home directory as it can appear in logs: long and (Windows) 8.3 short form (GitHub's
+    Windows runners put the short form, "RUNNER~1", into TEMP)."""
     home = str(Path.home())
     homes = {home}
     if os.name == 'nt':

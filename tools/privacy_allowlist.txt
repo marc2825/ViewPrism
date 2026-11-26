@@ -11,3 +11,4 @@ e7c509259021338c6b75498312d679479459f70f PNG metadata chunk eXIf (54 bytes)  # d
 eecdc4cbfae384c47674efd44f05d6c32108a5da PNG metadata chunk eXIf (54 bytes)  # docs/images/ui_preview_normal.png: Blender screenshot EXIF: X/Y resolution tags only (72 dpi), no personal data
 6dd331a5eceef7bd02090872d7f054fdba8d0dae WSL path  # docs/SECURITY_AND_RIGHTS.md: earlier version of this rights doc quoting the memo path pattern
 647c0dc59e8aa43d11ed5173515f574f5b7988f4 WSL path  # memo.txt: old memo with a WSL path naming only the public GitHub handle
+338c2594e853bf669c2feb2df9bb91e458defb87 Windows user path  # tools/run_all_checks.py: docstring example of the GitHub runner account's 8.3 short name (not personal data); reworded in the next commit
