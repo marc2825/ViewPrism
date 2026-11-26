@@ -116,7 +116,7 @@ Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender
   trademark clearance was done.
 - Git history: the published author e-mail and the old local path are **accepted**; no rewrite.
   Credential and third-party-data scanning stays mandatory in CI.
-- GitHub pre-release v0.2.0: **approved**.
+- GitHub pre-release v0.2.0: **approved**, published 2026-11-27.
 - extensions.blender.org: free distribution; the owner submits after a hands-on check. Untested OS/GPU
   combinations are stated, not a blocker.
 
