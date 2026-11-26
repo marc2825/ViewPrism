@@ -46,7 +46,7 @@ Mesa software OpenGL, and background checks on Windows for 4.5 LTS and 5.3. All 
 merging into `main`. Lint: `ruff check .` (config in `ruff.toml`).
 
 Supply-chain rules for workflow changes: pin every action to a full commit SHA with the version in a
-comment, install Python tools only from the hashed files in `ci/` (`pip install --require-hashes -r …`),
+comment, install Python tools only from the hashed files in `ci/<tool or python>/requirements.txt` (`pip install --require-hashes -r …`; one directory per Python version, because NumPy drops old Pythons),
 keep `persist-credentials: false`, and never give `contents: write` to a job that runs repository code.
 Never commit real credentials, personal paths or e-mail addresses, not even in tests: build test values
 at runtime (see `tests/pure/test_privacy_scan.py`) and run `python tools/privacy_scan.py` before pushing.
