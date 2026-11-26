@@ -5,8 +5,13 @@
 * Output names are ``<stem>_<suffix>.<ext>`` inside one user-chosen directory.
 * The whole batch is checked for collisions *before* anything is written; existing
   files are never overwritten unless the caller explicitly allows it.
-* Every file is written to a temporary sibling and moved into place with
-  ``os.replace`` (atomic on the same file system). Failures are reported per file.
+* Every file is written to a temporary sibling and then published atomically: without
+  overwrite through a hard link (fails if anything exists at the name, so a file created by
+  another writer in the meantime is never replaced), with overwrite through ``os.replace``.
+* Automatic numbering reserves its number with an exclusive lock file, so concurrent exports
+  (also from other Blender processes) never pick the same name.
+* Failures are reported per file with a stable error code and a path-free message for
+  shareable metadata; the detailed exception text stays local.
 """
 import json
 import os
@@ -23,6 +28,8 @@ FORMATS = {
 _BAD_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _RESERVED = {'CON', 'PRN', 'AUX', 'NUL', *(f'COM{i}' for i in range(1, 10)), *(f'LPT{i}' for i in range(1, 10))}
 MAX_INDEX = 99999
+TMP_SUFFIX = '.viewprism-tmp'
+LOCK_SUFFIX = '.viewprism-lock'
 
 
 class ExportError(Exception):
@@ -83,12 +90,15 @@ def file_names(stem, items, meta=True):
 
 
 def plan(directory, base, items, *, numbering='AUTO', overwrite=False, meta=True,
-         exists=os.path.exists, start=1):
-    """Choose the final stem and paths. Returns dict(stem, files=[(key, name, path)]).
+         exists=os.path.lexists, start=1, reserve=False):
+    """Choose the final stem and paths. Returns dict(stem, files=[(key, name, path)], overwrite, lock).
 
-    numbering 'AUTO': stem = f'{base}_{n:04d}' with the smallest n >= start for which no
-    output file exists (never overwrites). 'NONE': stem = base; existing files raise
-    CollisionError unless overwrite=True.
+    numbering 'AUTO': stem = f'{base}_{n:04d}' with the smallest n >= start for which no output file
+    (nor a reservation of another export) exists; it never overwrites. With reserve=True the number is
+    reserved by creating `.<stem>.viewprism-lock` exclusively, so concurrent exports (threads or other
+    Blender processes) cannot pick the same stem; call release(plan) afterwards.
+    'NONE': stem = base; existing files raise CollisionError unless overwrite=True.
+    Existence uses lexists, so dangling symlinks count as existing.
     """
     base = sanitize_stem(base)
     if not items and not meta:
@@ -107,15 +117,36 @@ def plan(directory, base, items, *, numbering='AUTO', overwrite=False, meta=True
         clash = [n for _k, n, p in files if exists(p)]
         if clash and not overwrite:
             raise CollisionError(clash)
-        return dict(stem=base, files=files, overwrite=bool(overwrite))
+        return dict(stem=base, files=files, overwrite=bool(overwrite), lock=None)
     if numbering != 'AUTO':
         raise ExportError(f'unknown numbering mode {numbering!r}')
+    if reserve:
+        os.makedirs(directory, exist_ok=True)
     for n in range(max(1, int(start)), MAX_INDEX + 1):
         stem = f'{base}_{n:04d}'
         files = build(stem)
-        if not any(exists(p) for _k, _n, p in files):
-            return dict(stem=stem, files=files, overwrite=False)
+        lock = os.path.join(directory, f'.{stem}{LOCK_SUFFIX}')
+        if exists(lock) or any(exists(p) for _k, _n, p in files):
+            continue
+        if reserve:
+            try:
+                os.close(os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            except FileExistsError:
+                continue                      # another export reserved this number just now
+            if any(exists(p) for _k, _n, p in files):
+                release(dict(lock=lock))      # files appeared meanwhile: try the next number
+                continue
+        return dict(stem=stem, files=files, overwrite=False, lock=lock if reserve else None)
     raise ExportError('no free file number left')
+
+
+def release(the_plan):
+    lock = the_plan.get('lock')
+    if lock:
+        try:
+            os.remove(lock)
+        except OSError:
+            pass
 
 
 def _inside(directory, path):
@@ -124,22 +155,59 @@ def _inside(directory, path):
     return os.path.commonpath([d, p]) == d and os.path.dirname(p) == d
 
 
-def atomic_write(path, data, *, overwrite=False):
-    """Write bytes to path via a temporary file in the same directory + os.replace."""
+class AtomicPublishUnsupported(ExportError):
+    pass
+
+
+def _publish_no_clobber(tmp, path):
+    """Move tmp to path only if path does not exist, atomically.
+
+    A hard link fails with FileExistsError if anything (even a dangling symlink) is at `path`; the
+    temporary name is then removed. If the file system has no hard links, Windows falls back to
+    os.rename, which never replaces an existing file there. On other systems there is no portable
+    atomic no-replace rename, so the export fails safely instead of risking an overwrite.
+    """
+    try:
+        os.link(tmp, path)
+    except FileExistsError:
+        raise CollisionError([os.path.basename(path)])
+    except (OSError, NotImplementedError, AttributeError) as exc:
+        if os.name == 'nt':
+            try:
+                os.rename(tmp, path)
+                return
+            except FileExistsError:
+                raise CollisionError([os.path.basename(path)])
+        raise AtomicPublishUnsupported(
+            'the output folder\'s file system cannot publish files without risking to replace existing '
+            'ones (no hard links); choose another folder or use Exact Name + Overwrite') from exc
+    os.remove(tmp)
+
+
+def atomic_write(path, data, *, overwrite=False, _before_publish=None):
+    """Write bytes to `path` through a temporary file in the same directory.
+
+    overwrite=False never replaces anything at `path`, even if another writer creates it between the
+    checks and the publication (see _publish_no_clobber). overwrite=True uses os.replace. The
+    temporary file is removed on every failure. `_before_publish` is a test seam.
+    """
     directory = os.path.dirname(path)
     if not _inside(directory, path):
         raise ExportError('refusing to write outside the output directory')
-    if not overwrite and os.path.exists(path):
+    if not overwrite and os.path.lexists(path):
         raise CollisionError([os.path.basename(path)])
-    tmp = os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}.viewprism-tmp')
+    tmp = os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}{TMP_SUFFIX}')
     try:
         with open(tmp, 'xb') as fh:
             fh.write(data)
             fh.flush()
             os.fsync(fh.fileno())
-        if not overwrite and os.path.exists(path):
-            raise CollisionError([os.path.basename(path)])
-        os.replace(tmp, path)
+        if _before_publish is not None:
+            _before_publish()
+        if overwrite:
+            os.replace(tmp, path)
+        else:
+            _publish_no_clobber(tmp, path)
     except BaseException:
         try:
             os.remove(tmp)
@@ -148,11 +216,88 @@ def atomic_write(path, data, *, overwrite=False):
         raise
 
 
+# Stable, path-free error codes for shareable metadata (details stay in the local UI report).
+_MESSAGES = {
+    'exists': 'a file with this name already exists',
+    'permission_denied': 'permission denied by the operating system',
+    'not_found': 'the folder does not exist or was removed',
+    'bad_path': 'the output path is not a usable folder',
+    'no_space': 'not enough disk space',
+    'atomic_publish_unsupported': 'the file system cannot publish files without risking overwrites',
+    'id_overflow': 'object id too large for this format',
+    'encode_failed': 'the image could not be encoded',
+    'export_failed': 'the file could not be exported',
+    'os_error': 'operating system error',
+    'internal_error': 'internal error',
+}
+
+
+def error_code(exc):
+    from .encode import EncodeError, IdOverflowError
+    import errno
+    if isinstance(exc, CollisionError) or isinstance(exc, FileExistsError):
+        return 'exists'
+    if isinstance(exc, AtomicPublishUnsupported):
+        return 'atomic_publish_unsupported'
+    if isinstance(exc, IdOverflowError):
+        return 'id_overflow'
+    if isinstance(exc, EncodeError):
+        return 'encode_failed'
+    if isinstance(exc, ExportError):
+        return 'export_failed'
+    if isinstance(exc, PermissionError):
+        return 'permission_denied'
+    if isinstance(exc, FileNotFoundError):
+        return 'not_found'
+    if isinstance(exc, (IsADirectoryError, NotADirectoryError)):
+        return 'bad_path'
+    if isinstance(exc, OSError) and exc.errno == errno.ENOSPC:
+        return 'no_space'
+    if isinstance(exc, OSError):
+        return 'os_error'
+    return 'internal_error'
+
+
+def safe_message(code):
+    return _MESSAGES.get(code, _MESSAGES['internal_error'])
+
+
+_ABS_PATHS = [
+    re.compile(r'(?:[A-Za-z]:[\\/]|\\\\)[^\s"\'<>|*?]*'),            # Windows drive or UNC paths
+    re.compile(r'(?<![\w.~-])/(?:[^\s/"\'<>]+/)+[^\s/"\'<>]*'),      # POSIX absolute paths (2+ segments)
+    re.compile(r'~[\\/][^\s"\'<>]*'),                                  # home-relative paths
+]
+
+
+def redact_paths(text):
+    """Replace absolute file system paths in free text with <path>."""
+    for rx in _ABS_PATHS:
+        text = rx.sub('<path>', text)
+    return text
+
+
+class Failure:
+    """A failed file: `code` and `message` are safe to share; `detail` is for the local report only."""
+    __slots__ = ('name', 'code', 'message', 'detail')
+
+    def __init__(self, name, exc):
+        self.name = name
+        self.code = error_code(exc)
+        self.message = safe_message(self.code)
+        self.detail = f'{type(exc).__name__}: {exc}'
+
+    def as_dict(self):
+        return dict(file=self.name, code=self.code, message=self.message)
+
+    def __iter__(self):                      # (name, detail) for callers that unpack pairs
+        return iter((self.name, self.detail))
+
+
 def write_batch(the_plan, producers, workers=4):
     """producers: dict key -> zero-argument callable returning bytes.
 
     Writes every planned file, continuing after individual failures.
-    Returns dict(written=[name], failed=[(name, message)]).
+    Returns dict(written=[name], failed=[Failure]).
     """
     written, failed = [], []
     directory = os.path.dirname(the_plan['files'][0][2]) if the_plan['files'] else None
@@ -160,7 +305,8 @@ def write_batch(the_plan, producers, workers=4):
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError as exc:
-            return dict(written=[], failed=[(n, f'cannot create directory: {exc}') for _k, n, _p in the_plan['files']])
+            return dict(written=[], failed=[Failure(n, exc) for _k, n, _p in the_plan['files']])
+
     def one(item):
         key, name, path = item
         try:
@@ -168,7 +314,7 @@ def write_batch(the_plan, producers, workers=4):
             atomic_write(path, data, overwrite=the_plan.get('overwrite', False))
             return name, None
         except Exception as exc:  # report per file, keep going
-            return name, f'{type(exc).__name__}: {exc}'
+            return name, Failure(name, exc)
 
     files = the_plan['files']
     if len(files) > 1 and workers > 1:
@@ -182,7 +328,7 @@ def write_batch(the_plan, producers, workers=4):
         if err is None:
             written.append(name)
         else:
-            failed.append((name, err))
+            failed.append(err)
     return dict(written=written, failed=failed)
 
 

@@ -154,6 +154,9 @@ class VIEWPRISM_PT_formats(bpy.types.Panel):
                 col.prop(s, r)
         layout.prop(s, 'exr_compression')
         layout.prop(s, 'write_meta')
+        row = layout.row()
+        row.active = s.write_meta
+        row.prop(s, 'metadata_privacy')
 
 
 class VIEWPRISM_PT_advanced(bpy.types.Panel):

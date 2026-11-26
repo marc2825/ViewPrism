@@ -59,6 +59,7 @@ def writer_options(settings, source, *, base_name=None, numbering=None):
         'base_name': settings.base_name if base_name is None else base_name,
         'numbering': settings.numbering if numbering is None else numbering,
         'overwrite': settings.overwrite, 'meta': settings.write_meta,
+        'privacy': settings.metadata_privacy.lower(),
         'source': source, 'version': VERSION,
     }
 
@@ -83,7 +84,9 @@ def capture_view(context, view, settings, request=None, source=None):
     with context.temp_override(**view.override()):
         result = cap.capture(bpy.context, request)
     if getattr(view.rv3d, 'use_clip_planes', False):
-        result['warnings'].append('the viewport clipping region (Alt+B) is not applied to the export')
+        msg = 'the viewport clipping region (Alt+B) is not applied to the export'
+        result['warnings'].append(msg)
+        result.setdefault('warnings_anonymous', []).append(msg)
     return result, request, source
 
 

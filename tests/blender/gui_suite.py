@@ -674,6 +674,14 @@ def t_operator_export(ctx, vp):
         check(refused(lambda: bpy.ops.viewprism.export_as('EXEC_DEFAULT', filepath=os.path.join(out, 'x')),
                       '3D Viewport'), 'export_as without invoke should fail explicitly')
     check(not any(f.startswith('x_') for f in os.listdir(out)), 'export_as wrote files')
+    # anonymized metadata through the real operator: no object names, same ids
+    s.numbering, s.base_name, s.metadata_privacy = 'AUTO', 'anon', 'ANONYMIZED'
+    with ctx.temp_override(**override(window, area, region)):
+        check(bpy.ops.viewprism.export() == {'FINISHED'}, 'anonymized export failed')
+    anon_meta = open(os.path.join(out, 'anon_0001_meta.json'), encoding='utf-8').read()
+    check('OpNear' not in anon_meta and 'OpFar' not in anon_meta, 'object names leaked in anonymized metadata')
+    check(set(json.loads(anon_meta)['id_map']) == set(meta['id_map']), 'anonymized ids differ')
+    s.metadata_privacy = 'FULL'
     check(snapshot() == before and len(bpy.data.images) == n_images, 'scene changed')
     return f'16 files, EXR/PNG equal capture, Blender loader agrees, collision refused ({out})'
 

@@ -11,10 +11,11 @@ the owner's.
 | External processes | none (`bpy.ops.wm.path_open` opens the output folder in the OS file manager on request) |
 | Dynamic code | no `eval`/`exec`/`pickle`/`__import__`, no `sys.path` changes, no downloads, no auto-update |
 | Dependencies | Python standard library (`zlib`, `struct`, `json`, `os`, `re`, `secrets`, `datetime`, `concurrent.futures`, …), NumPy bundled with Blender, Blender modules (`bpy`, `gpu`, `gpu_extras`, `mathutils`, `blf`). No wheels, no pip |
-| File writes | only inside the folder the user chose; names validated (no separators, reserved Windows names, control characters); resolved path must stay inside the folder; temporary file in the same folder + `os.replace`; never overwrites unless "Exact Name + Overwrite" is chosen; nothing written into the add-on directory |
+| File writes | no-clobber publication via hard link (Windows: no-replace rename; elsewhere a safe failure if hard
+links are unavailable), AUTO numbers reserved with an exclusive lock file; only inside the folder the user chose; names validated (no separators, reserved Windows names, control characters); resolved path must stay inside the folder; temporary file in the same folder + `os.replace`; never overwrites unless "Exact Name + Overwrite" is chosen; nothing written into the add-on directory |
 | File reads | none in the product (decoders exist for tests only) |
 | Scene / .blend | read-only use of the evaluated depsgraph; settings on the WindowManager (not saved into .blend files); no datablocks created; no undo steps |
-| Metadata JSON | contains Blender version, matrices, resolution, frame, object names (ID map), warnings, timings and file names. **No absolute paths, user names or .blend paths** (tested). Object names are user content and are written on purpose |
+| Metadata JSON | contains Blender version, matrices, resolution, frame, object names (ID map), warnings, timings and file names. **No absolute paths, user names or .blend paths** (tested). Failures are stored as error codes with fixed messages; free text is path-redacted. Object/camera names are written on purpose in *Full* mode; *Anonymized* mode replaces them (tested). Images, chosen file names and camera geometry can still reveal scene content |
 | Manifest permission | `files` only, with a one-sentence reason |
 
 ## Repository and CI
