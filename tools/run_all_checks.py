@@ -31,11 +31,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def sanitise(text):
+def home_variants():
+    """The home directory as it can appear in logs: long and (Windows) 8.3 short form, e.g.
+    C:\\Users\\RUNNER~1 in TEMP on GitHub's Windows runners."""
     home = str(Path.home())
+    homes = {home}
+    if os.name == 'nt':
+        try:
+            import ctypes
+            buf = ctypes.create_unicode_buffer(32768)
+            if ctypes.windll.kernel32.GetShortPathNameW(home, buf, len(buf)):
+                homes.add(buf.value)
+        except (OSError, AttributeError):
+            pass
+    return homes
+
+
+def sanitise(text, homes=None):
     user = os.environ.get('USERNAME') or os.environ.get('USER') or ''
-    for variant in {home, home.replace('\\', '/'), home.replace('\\', '\\\\'), home.replace('/', '\\')}:
-        text = text.replace(variant, '<HOME>')
+    variants = set()
+    for home in (home_variants() if homes is None else homes):
+        variants |= {home, home.replace('\\', '/'), home.replace('\\', '\\\\'), home.replace('/', '\\')}
+    flags = re.I if os.name == 'nt' or homes is not None else 0     # Windows paths are case-insensitive
+    for variant in sorted(variants, key=len, reverse=True):
+        text = re.sub(re.escape(variant), '<HOME>', text, flags=flags)
     if user and len(user) > 2:
         text = re.sub(rf'(?i)(?<![A-Za-z0-9]){re.escape(user)}(?![A-Za-z0-9])', '<USER>', text)
     return text

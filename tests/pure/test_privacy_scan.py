@@ -67,6 +67,25 @@ class Detects(unittest.TestCase):
         self.assertNotIn(token, out)
 
 
+class EvidenceSanitiser(unittest.TestCase):
+    def test_long_short_and_slash_forms_of_home(self):
+        import run_all_checks as rac
+        long_home = 'C:' + BS + 'Users' + BS + 'Some Body'
+        short_home = 'C:' + BS + 'Users' + BS + 'SOMEBO~1'
+        log = '\n'.join([long_home + BS + 'AppData' + BS + 'Local' + BS + 'Temp' + BS + 'x.zip',
+                         short_home + BS + 'AppData' + BS + 'Local' + BS + 'Temp' + BS + 'build',
+                         long_home.replace(BS, '/').lower() + '/blender',
+                         long_home.replace(BS, BS + BS) + BS + BS + 'y'])
+        out = rac.sanitise(log, homes=[long_home, short_home])
+        self.assertEqual(ps.scan_text(out, 'log'), [], out)
+        self.assertEqual(out.count('<HOME>'), 4, out)
+
+    def test_home_variants_include_home(self):          # + the 8.3 short form when Windows has one
+        import run_all_checks as rac
+        homes = rac.home_variants()
+        self.assertIn(os.path.expanduser('~'), homes)
+
+
 class PngMetadata(unittest.TestCase):
     def _with_text_chunk(self):
         data = png.encode(np.zeros((2, 2), np.uint8))
