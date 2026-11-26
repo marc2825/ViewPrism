@@ -8,11 +8,23 @@ updates:
     groups:
       actions:
         patterns: ['*']
-  # Hashed CI requirements (ci/requirements-*.txt).
+
+  # Hashed CI requirements: one directory per tool / Python version, so each update arrives as its
+  # own pull request and a failing one never blocks the others. Each directory's .python-version
+  # tells Dependabot which interpreter the file is installed with.
   - package-ecosystem: pip
-    directory: /ci
+    directory: /ci/lint            # ruff
     schedule:
       interval: weekly
-    groups:
-      ci-python:
-        patterns: ['*']
+  - package-ecosystem: pip
+    directory: /ci/pure            # NumPy for Python 3.13
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /ci/pure-py311      # NumPy for Python 3.11 (Blender 4.5 LTS)
+    schedule:
+      interval: weekly
+    ignore:
+      # NumPy 2.5 requires Python >= 3.12. Keep this directory on 2.4.x; patch updates still arrive.
+      - dependency-name: numpy
+        versions: ['>=2.5']

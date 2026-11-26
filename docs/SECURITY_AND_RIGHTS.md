@@ -24,12 +24,15 @@ links are unavailable), AUTO numbers reserved with an exclusive lock file; only 
   and the version comment). The default workflow token is read-only; checkouts do not persist it. Only
   the release *publish* job requests `contents: write`; it runs no repository code and only uploads the
   files the read-only build job produced, after re-verifying their checksums.
-- Python tools in CI (NumPy, ruff) are installed from hashed requirement files (`ci/`, `--require-hashes`).
+- Python tools in CI (NumPy, ruff) are installed from hashed requirement files, one directory per tool /
+  Python version (`ci/*/requirements.txt`, `--require-hashes`).
 - CI downloads official Blender builds (Linux, Windows; macOS in the manual probe) from
-  download.blender.org. Only the archive is cached. The official SHA-256 list is fetched fresh on every
-  run, and the archive is verified against it before extraction; a mismatching cache entry is deleted
-  (`.github/scripts/fetch_blender.sh`). gitleaks is downloaded with a pinned SHA-256. This is CI tooling
-  only; the add-on itself never downloads anything.
+  download.blender.org. The versions and the archives' SHA-256s are pinned in `ci/blender.lock` (taken
+  from the official checksum lists); every archive, cached or freshly downloaded, is verified against
+  the pinned hash before extraction, and a mismatching cache entry is deleted
+  (`.github/scripts/fetch_blender.sh`). A weekly read-only workflow reports newer patch releases.
+  gitleaks is downloaded with a pinned SHA-256. This is CI tooling only; the add-on itself never
+  downloads anything.
 - Secret scanning in CI (job "Secrets and privacy scan"): gitleaks over all refs with redacted output,
   proven by a freshly generated canary that it must detect, plus `tools/privacy_scan.py` over the tree
   and every reachable blob (reviewed historical findings in `tools/privacy_allowlist.txt`).
