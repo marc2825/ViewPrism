@@ -74,17 +74,19 @@ def normalize_depth(depth, mask, mode='AUTO', near=None, far=None, near_white=Tr
             raise EncodeError('background value must be within [0, 1]')
     valid = mask & np.isfinite(depth)
     info['invalid_foreground'] = int((mask & ~np.isfinite(depth)).sum())
-    out = np.full(depth.shape, bg, dtype=np.float64)
     if info['empty']:
-        pass
+        out = np.full(depth.shape, bg, dtype=dtype)
     elif info['flat']:
-        out[valid] = near_value
+        out = np.where(valid, near_value, bg).astype(dtype)
     else:
-        t = (depth[valid] - info['lo']) / (info['hi'] - info['lo'])  # 0 at lo(near), 1 at hi(far)
-        t = np.clip(t, 0.0, 1.0)
-        out[valid] = 1.0 - t if near_white else t
+        with np.errstate(invalid='ignore'):
+            t = (depth - info['lo']) * (1.0 / (info['hi'] - info['lo']))   # 0 at lo (near), 1 at hi (far)
+        np.clip(t, 0.0, 1.0, out=t)
+        if near_white:
+            np.subtract(1.0, t, out=t)
+        out = np.where(valid, t, bg).astype(dtype)
     info.update(near_white=bool(near_white), background=float(bg))
-    return out.astype(dtype), info
+    return out, info
 
 
 # --------------------------------------------------------------------------- normal / mask / id
@@ -109,6 +111,26 @@ def quantize(img01, bits):
         raise EncodeError('cannot quantize non-finite values')
     q = np.floor(np.clip(a, 0.0, 1.0) * maxv + 0.5)
     return q.astype(np.uint8 if bits == 8 else np.uint16)
+
+
+def quantize_normal(normal, mask, bits, background=(0.0, 0.0, 0.0)):
+    """Exact, fast equivalent of quantize(normal_to_rgb(...), bits).
+
+    round((n * 0.5 + 0.5) * M) == floor(n * M/2 + (M + 1)/2) and, for float32 n, the product
+    and sum are exact in float64, so ties round exactly as in the reference formula.
+    """
+    if bits not in (8, 16):
+        raise EncodeError('bit depth must be 8 or 16')
+    maxv = (1 << bits) - 1
+    q = np.asarray(normal, dtype=np.float32).astype(np.float64)
+    q *= maxv / 2.0
+    q += (maxv + 1) / 2.0
+    np.floor(q, out=q)
+    np.clip(q, 0, maxv, out=q)
+    dt = np.uint8 if bits == 8 else np.uint16
+    out = q.astype(dt)
+    out[~np.asarray(mask, dtype=bool)] = quantize(np.asarray(background, dtype=np.float64), bits)
+    return out
 
 
 def mask_to_u8(mask):

@@ -197,8 +197,9 @@ def render(width, height, view, projection, items, batches, depth_params, *, _af
                 gpu.state.depth_mask_set(prev_depth_mask)
                 gpu.state.blend_set(prev_blend)
                 gpu.state.face_culling_set('NONE')
-        geom = np.frombuffer(buf_geom, dtype=np.float32).reshape(height, width, 4)[::-1].copy()
-        ident = np.frombuffer(buf_id, dtype=np.float32).reshape(height, width, 4)[::-1].copy()
+        # Views (no copy) flipped to top-left row order; the caller builds new output arrays.
+        geom = np.frombuffer(buf_geom, dtype=np.float32).reshape(height, width, 4)[::-1]
+        ident = np.frombuffer(buf_id, dtype=np.float32).reshape(height, width, 4)[::-1]
         return geom, ident
     except BaseException:
         release_targets()      # never reuse targets after a failure

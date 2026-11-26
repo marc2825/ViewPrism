@@ -80,7 +80,7 @@ def producers(result, options):
                 enc['normal']['png'] = dict(bit_depth=bits, mapping='rgb = n * 0.5 + 0.5',
                                             background_rgb=list(bg), colour_management='none')
                 prods[f'normal:{fmt}'] = (lambda bits=bits, bg=bg: png.encode(
-                    encode.quantize(encode.normal_to_rgb(normal, mask, bg, np.float64), bits)))
+                    encode.quantize_normal(normal, mask, bits, bg)))
             else:
                 enc['normal']['exr'] = dict(channels={'R': 'n.x', 'G': 'n.y', 'B': 'n.z', 'A': 'mask 0/1'},
                                             type='FLOAT', signed=True, compression=exr_comp)

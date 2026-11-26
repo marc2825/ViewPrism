@@ -123,6 +123,32 @@ class Exr(unittest.TestCase):
                      b'screenWindowCenter\0v2f\0', b'screenWindowWidth\0float\0'):
             self.assertIn(attr, data)
 
+    def test_decode_hand_built_multipart(self):
+        # Two-part scanline file built from the OpenEXR spec (not by the product encoder).
+        def attr(n, k, v):
+            return n.encode() + b'\0' + k.encode() + b'\0' + struct.pack('<i', len(v)) + v
+
+        def header(part, chname):
+            ch = chname.encode() + b'\0' + struct.pack('<iB3xii', 2, 0, 1, 1) + b'\0'
+            box = struct.pack('<iiii', 0, 0, 1, 0)                       # 2 x 1 pixels
+            return (attr('channels', 'chlist', ch) + attr('compression', 'compression', b'\0')
+                    + attr('dataWindow', 'box2i', box) + attr('displayWindow', 'box2i', box)
+                    + attr('lineOrder', 'lineOrder', b'\0') + attr('pixelAspectRatio', 'float', struct.pack('<f', 1))
+                    + attr('screenWindowCenter', 'v2f', struct.pack('<ff', 0, 0))
+                    + attr('screenWindowWidth', 'float', struct.pack('<f', 1))
+                    + attr('name', 'string', part.encode()) + attr('type', 'string', b'scanlineimage')
+                    + attr('chunkCount', 'int', struct.pack('<i', 1)) + b'\0')
+        heads = struct.pack('<ii', 20000630, 2 | 0x1000) + header('L.Depth', 'Z') + header('L.Normal', 'X') + b'\0'
+        chunk0 = struct.pack('<iii', 0, 0, 8) + struct.pack('<ff', 3.5, 7.0)
+        chunk1 = struct.pack('<iii', 1, 0, 8) + struct.pack('<ff', -1.0, 0.25)
+        base = len(heads) + 16
+        data = heads + struct.pack('<QQ', base, base + len(chunk0)) + chunk0 + chunk1
+        out, info = exr.decode(data)
+        self.assertTrue(info['multipart'])
+        self.assertEqual(info['parts'], 2)
+        np.testing.assert_array_equal(out['L.Depth.Z'], [[3.5, 7.0]])
+        np.testing.assert_array_equal(out['L.Normal.X'], [[-1.0, 0.25]])
+
     def test_errors(self):
         with self.assertRaises(exr.ExrError):
             exr.encode({}, 'ZIP')

@@ -16,6 +16,7 @@ _LINES_PER_BLOCK = {NO_COMPRESSION: 1, ZIPS_COMPRESSION: 1, ZIP_COMPRESSION: 16}
 _COMPRESSION_NAMES = {'NONE': NO_COMPRESSION, 'ZIPS': ZIPS_COMPRESSION, 'ZIP': ZIP_COMPRESSION}
 UINT, HALF, FLOAT = 0, 1, 2
 _NP = {UINT: np.dtype('<u4'), HALF: np.dtype('<f2'), FLOAT: np.dtype('<f4')}
+ZLIB_LEVEL = 4      # speed/size balance for float data (lossless at any level)
 
 
 class ExrError(ValueError):
@@ -33,9 +34,11 @@ def _zip_pack(raw):
     tmp = np.empty(n, dtype=np.uint8)
     tmp[:half] = t[0::2]
     tmp[half:] = t[1::2]
-    d = tmp.astype(np.int16)
-    d[1:] = (tmp[1:].astype(np.int16) - tmp[:-1].astype(np.int16) + 128 + 256) & 255
-    return zlib.compress(d.astype(np.uint8).tobytes(), 6)
+    d = np.empty_like(tmp)
+    d[0] = tmp[0]
+    np.subtract(tmp[1:], tmp[:-1], out=d[1:])     # uint8 arithmetic wraps mod 256
+    d[1:] += 128
+    return zlib.compress(d.tobytes(), ZLIB_LEVEL)
 
 
 def _zip_unpack(data, expected):
@@ -124,26 +127,20 @@ def _read_str(data, pos):
     return data[pos:end].decode('latin-1'), end + 1
 
 
-def decode(data):
-    """Decode EXR bytes -> (dict name -> (H,W) array, header dict). For verification."""
-    if len(data) < 8:
-        raise ExrError('truncated file')
-    magic, version = struct.unpack('<ii', data[:8])
-    if magic != MAGIC:
-        raise ExrError('not an OpenEXR file')
-    if version & 0xFF != 2 or version & 0x1A00:   # tiled 0x200, deep 0x800, multi-part 0x1000
-        raise ExrError(f'unsupported EXR version/flags 0x{version:x} (tiled, deep, multi-part not supported)')
-    pos = 8
+def _read_header(data, pos):
     header = {}
     while True:
         name, pos = _read_str(data, pos)
         if not name:
-            break
+            return header, pos
         kind, pos = _read_str(data, pos)
         (size,) = struct.unpack('<i', data[pos:pos + 4])
         pos += 4
         header[name] = (kind, data[pos:pos + size])
         pos += size
+
+
+def _part_layout(header):
     chans = []
     raw = header['channels'][1]
     p = 0
@@ -153,29 +150,78 @@ def decode(data):
         p += 16
         if xs != 1 or ys != 1:
             raise ExrError('subsampled channels not supported')
+        if t not in _NP:
+            raise ExrError(f'unknown pixel type {t}')
         chans.append((nm, t))
     comp = header['compression'][1][0]
     if comp not in _LINES_PER_BLOCK:
-        raise ExrError(f'unsupported compression id {comp}')
+        raise ExrError(f'unsupported compression id {comp} (only NONE, ZIPS, ZIP)')
+    if 'type' in header and header['type'][1].rstrip(b'\0') != b'scanlineimage':
+        raise ExrError(f"unsupported part type {header['type'][1]!r}")
     x0, y0, x1, y1 = struct.unpack('<iiii', header['dataWindow'][1])
     w, h = x1 - x0 + 1, y1 - y0 + 1
     lpb = _LINES_PER_BLOCK[comp]
-    nblocks = (h + lpb - 1) // lpb
-    offsets = struct.unpack(f'<{nblocks}Q', data[pos:pos + 8 * nblocks])
-    line_bytes = sum(w * _NP[t].itemsize for _nm, t in chans)
-    out = {nm: np.empty((h, w), dtype=_NP[t].newbyteorder('=')) for nm, t in chans}
-    for off in offsets:
-        y, size = struct.unpack('<ii', data[off:off + 8])
-        payload = data[off + 8:off + 8 + size]
-        nlines = min(lpb, y1 - y + 1)
-        expected = nlines * line_bytes
-        block = payload if (comp == NO_COMPRESSION or size == expected) else _zip_unpack(payload, expected)
-        buf = np.frombuffer(block, dtype=np.uint8).reshape(nlines, line_bytes)
-        col = 0
-        for nm, t in chans:
-            nb = w * _NP[t].itemsize
-            out[nm][y - y0:y - y0 + nlines] = buf[:, col:col + nb].copy().view(_NP[t]).reshape(nlines, w)
-            col += nb
-    info = dict(width=w, height=h, compression=comp, channels=[c for c, _t in chans],
-                types={c: t for c, t in chans}, attributes=sorted(header))
+    return dict(chans=chans, comp=comp, x0=x0, y0=y0, x1=x1, y1=y1, w=w, h=h, lpb=lpb,
+                nblocks=(h + lpb - 1) // lpb, line_bytes=sum(w * _NP[t].itemsize for _nm, t in chans))
+
+
+def _read_chunk(data, off, lay, out, multipart):
+    if multipart:
+        off += 4                          # part number
+    y, size = struct.unpack('<ii', data[off:off + 8])
+    payload = data[off + 8:off + 8 + size]
+    nlines = min(lay['lpb'], lay['y1'] - y + 1)
+    expected = nlines * lay['line_bytes']
+    block = payload if (lay['comp'] == NO_COMPRESSION or size == expected) else _zip_unpack(payload, expected)
+    buf = np.frombuffer(block, dtype=np.uint8).reshape(nlines, lay['line_bytes'])
+    col = 0
+    w = lay['w']
+    for nm, t in lay['chans']:
+        nb = w * _NP[t].itemsize
+        out[nm][y - lay['y0']:y - lay['y0'] + nlines] = buf[:, col:col + nb].copy().view(_NP[t]).reshape(nlines, w)
+        col += nb
+
+
+def decode(data):
+    """Decode EXR bytes -> (dict name -> (H,W) array, info dict). For verification.
+
+    Supports single-part and multi-part scanline files (NONE/ZIPS/ZIP). In multi-part files
+    channel names are returned as '<part name>.<channel>'.
+    """
+    if len(data) < 8:
+        raise ExrError('truncated file')
+    magic, version = struct.unpack('<ii', data[:8])
+    if magic != MAGIC:
+        raise ExrError('not an OpenEXR file')
+    if version & 0xFF != 2 or version & 0x0A00:   # tiled 0x200, deep 0x800
+        raise ExrError(f'unsupported EXR version/flags 0x{version:x} (tiled or deep)')
+    multipart = bool(version & 0x1000)
+    pos = 8
+    headers = []
+    while True:
+        header, pos = _read_header(data, pos)
+        if not header:
+            break
+        headers.append(header)
+        if not multipart:
+            break
+    if not headers:
+        raise ExrError('no header')
+    layouts = [_part_layout(hd) for hd in headers]
+    out, types, attrs = {}, {}, set()
+    for hd, lay in zip(headers, layouts):
+        attrs.update(hd)
+        offsets = struct.unpack(f"<{lay['nblocks']}Q", data[pos:pos + 8 * lay['nblocks']])
+        pos += 8 * lay['nblocks']
+        part = {nm: np.empty((lay['h'], lay['w']), dtype=_NP[t].newbyteorder('=')) for nm, t in lay['chans']}
+        for off in offsets:
+            _read_chunk(data, off, lay, part, multipart)
+        prefix = hd['name'][1].rstrip(b'\0').decode('utf-8', 'replace') + '.' if (multipart and 'name' in hd) else ''
+        for nm, t in lay['chans']:
+            key = nm if (not prefix or nm.startswith(prefix)) else prefix + nm
+            out[key] = part[nm]
+            types[key] = t
+    lay0 = layouts[0]
+    info = dict(width=lay0['w'], height=lay0['h'], compression=lay0['comp'], channels=list(out),
+                types=types, attributes=sorted(attrs), parts=len(headers), multipart=multipart)
     return out, info

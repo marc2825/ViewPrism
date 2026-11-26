@@ -128,19 +128,18 @@ def capture(context, request, *, _after_draw=None):
     batches = None
     t_gpu = time.perf_counter()
 
-    mask = ident[..., 1] > 0.5
+    mask = ident[..., 1] > 0.5                       # coverage: the single foreground test
     out = {}
     if 'depth' in req['passes']:
-        out['depth'] = np.where(mask, geom[..., 3], np.float32(np.nan)).astype(np.float32)
+        out['depth'] = np.where(mask, geom[..., 3], np.float32(np.nan))
     if 'normal' in req['passes']:
-        n = geom[..., :3].astype(np.float64)
-        ln = np.linalg.norm(n, axis=-1, keepdims=True)
-        n = np.divide(n, ln, out=np.zeros_like(n), where=ln > 0)
-        out['normal'] = np.where(mask[..., None], n, 0.0).astype(np.float32)
+        # normalised per fragment in the shader; background forced to exactly 0
+        out['normal'] = np.where(mask[..., None], geom[..., :3], np.float32(0.0))
     if 'object_id' in req['passes']:
-        out['object_id'] = np.where(mask, np.rint(ident[..., 0]), 0).astype(np.uint32)
+        out['object_id'] = np.where(mask, ident[..., 0], np.float32(0.0)).astype(np.uint32)
     if 'mask' in req['passes']:
-        out['mask'] = mask.copy()
+        out['mask'] = mask
+    geom = ident = None
     if not mask.any():
         warnings.append('nothing visible: the capture is empty')
     t_post = time.perf_counter()

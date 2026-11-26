@@ -37,7 +37,7 @@ def _as_image(arr):
     return a
 
 
-def encode(arr, compress_level=6):
+def encode(arr, compress_level=5):
     """Encode an image array to PNG bytes. Per-row filter chosen among None/Sub/Up."""
     a = _as_image(arr)
     h, w, c = a.shape
@@ -49,8 +49,10 @@ def encode(arr, compress_level=6):
     up = raw.copy()
     up[1:] -= raw[:-1]
     cands = (raw, sub, up)
-    # libpng heuristic: minimise the sum of absolute values of the signed residuals.
-    cost = np.stack([np.abs(c_.view(np.int8).astype(np.int16)).sum(axis=1, dtype=np.int64)
+    # libpng heuristic (minimum sum of absolute signed residuals), estimated on a column
+    # subsample for speed. Only the filter choice is approximate; the output is lossless.
+    step = 4 if raw.shape[1] >= 64 else 1
+    cost = np.stack([np.abs(c_[:, ::step].view(np.int8).astype(np.int16)).sum(axis=1, dtype=np.int64)
                      for c_ in cands])                                    # (3, H)
     choice = cost.argmin(axis=0)                                           # 0 none, 1 sub, 2 up
     rows = np.where((choice == 0)[:, None], raw, np.where((choice == 1)[:, None], sub, up))

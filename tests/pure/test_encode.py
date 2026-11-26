@@ -93,6 +93,18 @@ class Others(unittest.TestCase):
         np.testing.assert_allclose(rgb[1, 0], [.5, 0, .5])
         np.testing.assert_allclose(rgb[1, 1], [.5, .5, 1])
 
+    def test_fast_normal_quantization_matches_reference(self):
+        rng = np.random.default_rng(7)
+        n = rng.normal(size=(64, 64, 3)).astype(np.float32)
+        n /= np.linalg.norm(n, axis=-1, keepdims=True)
+        # include exact tie candidates such as 0.8 -> 229.5 and axis-aligned values
+        n[0, :6] = [(0.6, 0, 0.8), (1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, 0, -1), (0.8, -0.6, 0)]
+        m = rng.random((64, 64)) > 0.2
+        for bits in (8, 16):
+            for bg in ((0, 0, 0), (0.5, 0.5, 1.0)):
+                ref = E.quantize(E.normal_to_rgb(n, m, bg, np.float64), bits)
+                np.testing.assert_array_equal(E.quantize_normal(n, m, bits, bg), ref)
+
     def test_id_roundtrip_and_overflow(self):
         ids = np.array([[0, 1], [65535, 300]], np.uint32)
         enc = E.encode_id_u16(ids)

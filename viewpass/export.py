@@ -146,7 +146,7 @@ def atomic_write(path, data, *, overwrite=False):
         raise
 
 
-def write_batch(the_plan, producers):
+def write_batch(the_plan, producers, workers=4):
     """producers: dict key -> zero-argument callable returning bytes.
 
     Writes every planned file, continuing after individual failures.
@@ -159,13 +159,28 @@ def write_batch(the_plan, producers):
             os.makedirs(directory, exist_ok=True)
         except OSError as exc:
             return dict(written=[], failed=[(n, f'cannot create directory: {exc}') for _k, n, _p in the_plan['files']])
-    for key, name, path in the_plan['files']:
+    def one(item):
+        key, name, path = item
         try:
             data = producers[key]()
             atomic_write(path, data, overwrite=the_plan.get('overwrite', False))
-            written.append(name)
+            return name, None
         except Exception as exc:  # report per file, keep going
-            failed.append((name, f'{type(exc).__name__}: {exc}'))
+            return name, f'{type(exc).__name__}: {exc}'
+
+    files = the_plan['files']
+    if len(files) > 1 and workers > 1:
+        # Encoders are pure NumPy/zlib (release the GIL); files are independent.
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=min(workers, len(files))) as pool:
+            results = list(pool.map(one, files))
+    else:
+        results = [one(f) for f in files]
+    for name, err in results:            # keep the planned order in reports
+        if err is None:
+            written.append(name)
+        else:
+            failed.append((name, err))
     return dict(written=written, failed=failed)
 
 
