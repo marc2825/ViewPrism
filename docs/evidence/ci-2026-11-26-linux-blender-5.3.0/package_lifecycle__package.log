@@ -6,9 +6,9 @@ ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
 ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
 ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
 ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
-00:11.435  blend            | Saved session recovery to "/tmp/quit.blend"
-Info: ViewPass: Saved 6 files as pkg_0001_*  (1574x952, capture 384 ms)
-Info: ViewPass: Saved 6 files as pkg_0001_*  (1574x952, capture 145 ms)
+00:06.717  blend            | Saved session recovery to "/tmp/quit.blend"
+Info: ViewPrism: Saved 6 files as pkg_0001_*  (1574x952, capture 289 ms)
+Info: ViewPrism: Saved 6 files as pkg_0001_*  (1574x952, capture 115 ms)
 Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
 Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
 

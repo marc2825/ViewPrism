@@ -1,5 +1,5 @@
-Results: /tmp/viewpass-checks-gkoxcpgs/harness_opengl
-Running background: ['/tmp/viewpass-checks-gkoxcpgs/blender_opengl.sh', '--factory-startup', '--disable-autoexec', '--background', '--python-exit-code', '1', '--python', '<HOME>/work/Depth_Renderer/Depth_Renderer/viewpass-dev/harness/blender_check.py', '--', '--repo', '<HOME>/work/Depth_Renderer/Depth_Renderer', '--result', '/tmp/viewpass-checks-gkoxcpgs/harness_opengl/background.json', '--mode', 'background']
-background: pass; log: /tmp/viewpass-checks-gkoxcpgs/harness_opengl/background.log
-Running gpu: ['/tmp/viewpass-checks-gkoxcpgs/blender_opengl.sh', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1', '--python', '<HOME>/work/Depth_Renderer/Depth_Renderer/viewpass-dev/harness/blender_check.py', '--', '--repo', '<HOME>/work/Depth_Renderer/Depth_Renderer', '--result', '/tmp/viewpass-checks-gkoxcpgs/harness_opengl/gpu.json', '--mode', 'gpu']
-gpu: pass; log: /tmp/viewpass-checks-gkoxcpgs/harness_opengl/gpu.log
+Results: /tmp/viewprism-checks-i8sim3i1/harness_opengl
+Running background: ['/tmp/viewprism-checks-i8sim3i1/blender_opengl.sh', '--factory-startup', '--disable-autoexec', '--background', '--python-exit-code', '1', '--python', '<HOME>/work/ViewPrism/ViewPrism/viewpass-dev/harness/blender_check.py', '--', '--repo', '<HOME>/work/ViewPrism/ViewPrism', '--result', '/tmp/viewprism-checks-i8sim3i1/harness_opengl/background.json', '--mode', 'background']
+background: pass; log: /tmp/viewprism-checks-i8sim3i1/harness_opengl/background.log
+Running gpu: ['/tmp/viewprism-checks-i8sim3i1/blender_opengl.sh', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1', '--python', '<HOME>/work/ViewPrism/ViewPrism/viewpass-dev/harness/blender_check.py', '--', '--repo', '<HOME>/work/ViewPrism/ViewPrism', '--result', '/tmp/viewprism-checks-i8sim3i1/harness_opengl/gpu.json', '--mode', 'gpu']
+gpu: pass; log: /tmp/viewprism-checks-i8sim3i1/harness_opengl/gpu.log

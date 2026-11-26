@@ -1,4 +1,4 @@
-# ViewPass check run 2026-11-26
+# ViewPrism check run 2026-11-26
 
 - Blender: `Blender 4.5.17 LTS`
 - Platform: `linux`
@@ -11,7 +11,7 @@
 | harness_selftest | PASS |  |
 | harness_opengl | PASS |  |
 | gui_suite_opengl | PASS | 20/20 cases |
-| extension_build | PASS | viewpass-0.1.0.zip |
+| extension_build | PASS | viewprism-0.1.0.zip |
 | package_lifecycle | PASS |  |
 
 Files in this folder are the raw logs/JSON of each step with local paths replaced by `<HOME>`/`<USER>`.

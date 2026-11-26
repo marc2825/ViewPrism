@@ -30,7 +30,7 @@
       "test": "t_visibility",
       "status": "pass",
       "detail": "hide, exclude, hidden collection, disabled, wire display",
-      "seconds": 0.003
+      "seconds": 0.002
     },
     {
       "test": "t_local_view",
@@ -71,7 +71,7 @@
           "shift": 499.9999762512755
         }
       },
-      "seconds": 0.031
+      "seconds": 0.027
     },
     {
       "test": "t_camera_view",
@@ -83,33 +83,33 @@
       "test": "t_repeat_and_leak",
       "status": "pass",
       "detail": {
-        "median_ms": 12.33,
-        "p95_ms": 18.01,
+        "median_ms": 10.14,
+        "p95_ms": 14.9,
         "memory_source": "VmRSS",
-        "mem_steady_growth_mb_last20": -0.68,
-        "new_highs_last20": 0,
-        "mem_ramp_mb": 9.45,
-        "mem_growth_mb_20_back_to_back": 9.3
+        "mem_steady_growth_mb_last20": -4.32,
+        "new_highs_last20": 2,
+        "mem_ramp_mb": 9.83,
+        "mem_growth_mb_20_back_to_back": 14.05
       },
-      "seconds": 12.311
+      "seconds": 11.151
     },
     {
       "test": "t_fault_injection",
       "status": "pass",
       "detail": "state restored, retry identical",
-      "seconds": 0.006
+      "seconds": 0.005
     },
     {
       "test": "t_sizes",
       "status": "pass",
       "detail": "1x1, 3x7, wide, tall, 1080p; oversize and singular rejected",
-      "seconds": 0.089
+      "seconds": 0.071
     },
     {
       "test": "t_multi_area",
       "status": "pass",
       "detail": "each view captured from its own matrices (centroid x 0.37 / 0.63)",
-      "seconds": 0.021
+      "seconds": 0.016
     },
     {
       "test": "t_precision",
@@ -126,8 +126,8 @@
     {
       "test": "t_operator_export",
       "status": "pass",
-      "detail": "16 files, EXR/PNG equal capture, Blender loader agrees, collision refused (/tmp/viewpass-gui-b0vy65lh)",
-      "seconds": 0.052
+      "detail": "16 files, EXR/PNG equal capture, Blender loader agrees, collision refused (/tmp/viewprism-gui-ei_yyeag)",
+      "seconds": 0.053
     },
     {
       "test": "t_view_lost",
@@ -139,19 +139,19 @@
       "test": "t_preview_lifecycle",
       "status": "pass",
       "detail": "refresh, re-encode, hide, closed view and file load release resources",
-      "seconds": 0.101
+      "seconds": 0.093
     },
     {
       "test": "t_multi_window",
       "status": "pass",
       "detail": "second main window uses its own view; same-tick capture after close works; capture after closing a window works",
-      "seconds": 0.966
+      "seconds": 0.849
     },
     {
       "test": "t_reregister_clean",
       "status": "pass",
       "detail": "unregister removes handlers, draw callbacks, timers; re-register works",
-      "seconds": 0.011
+      "seconds": 0.009
     }
   ]
 }

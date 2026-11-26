@@ -6,103 +6,103 @@ ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
 ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
 ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
 ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_registration pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_empty_scene pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_deviation_warnings pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_visibility pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_local_view pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_modifier_and_scale pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_instances pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_viewport_matrices pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_camera_view pass
-VIEWPASS_SUITE fail
-Warning: 1 × Draw window and swap: 372.6420 ms, average: 372.64204025 ms
-Warning: 1 × Draw window and swap: 362.8721 ms, average: 362.87212372 ms
-Warning: 1 × Draw window and swap: 358.8040 ms, average: 358.80398750 ms
-Warning: 1 × Draw window and swap: 358.0589 ms, average: 358.05892944 ms
-Warning: 1 × Draw window and swap: 291.9002 ms, average: 291.90015793 ms
-Warning: 1 × Draw window and swap: 289.6650 ms, average: 289.66498375 ms
-Warning: 1 × Draw window and swap: 287.9159 ms, average: 287.91594505 ms
-Warning: 1 × Draw window and swap: 288.6949 ms, average: 288.69485855 ms
-Warning: 1 × Draw window and swap: 193.6450 ms, average: 193.64500046 ms
-Warning: 1 × Draw window and swap: 194.8960 ms, average: 194.89598274 ms
-Warning: 1 × Draw window and swap: 194.9270 ms, average: 194.92697716 ms
-Warning: 1 × Draw window and swap: 194.5891 ms, average: 194.58913803 ms
-Warning: 1 × Draw window and swap: 192.5712 ms, average: 192.57116318 ms
-Warning: 1 × Draw window and swap: 194.4580 ms, average: 194.45800781 ms
-Warning: 1 × Draw window and swap: 191.9150 ms, average: 191.91503525 ms
-Warning: 1 × Draw window and swap: 260.2060 ms, average: 260.20598412 ms
-Warning: 1 × Draw window and swap: 304.7071 ms, average: 304.70705032 ms
-Warning: 1 × Draw window and swap: 317.0612 ms, average: 317.06118584 ms
-Warning: 1 × Draw window and swap: 291.1530 ms, average: 291.15295410 ms
-Warning: 1 × Draw window and swap: 332.2759 ms, average: 332.27586746 ms
-Warning: 1 × Draw window and swap: 333.4270 ms, average: 333.42695236 ms
-Warning: 1 × Draw window and swap: 337.4579 ms, average: 337.45789528 ms
-Warning: 1 × Draw window and swap: 339.8750 ms, average: 339.87498283 ms
-Warning: 1 × Draw window and swap: 308.9058 ms, average: 308.90583992 ms
-Warning: 1 × Draw window and swap: 333.7522 ms, average: 333.75215530 ms
-Warning: 1 × Draw window and swap: 317.5189 ms, average: 317.51894951 ms
-Warning: 1 × Draw window and swap: 339.1120 ms, average: 339.11204338 ms
-Warning: 1 × Draw window and swap: 336.1580 ms, average: 336.15803719 ms
-Warning: 1 × Draw window and swap: 319.5469 ms, average: 319.54693794 ms
-Warning: 1 × Draw window and swap: 305.8140 ms, average: 305.81402779 ms
-Warning: 1 × Draw window and swap: 290.3140 ms, average: 290.31395912 ms
-Warning: 1 × Draw window and swap: 200.3169 ms, average: 200.31690598 ms
-Warning: 1 × Draw window and swap: 195.8559 ms, average: 195.85585594 ms
-Warning: 1 × Draw window and swap: 193.3241 ms, average: 193.32408905 ms
-Warning: 1 × Draw window and swap: 193.6212 ms, average: 193.62115860 ms
-Warning: 1 × Draw window and swap: 194.6580 ms, average: 194.65804100 ms
-Warning: 1 × Draw window and swap: 193.6090 ms, average: 193.60899925 ms
-Warning: 1 × Draw window and swap: 196.3198 ms, average: 196.31981850 ms
-Warning: 1 × Draw window and swap: 194.8149 ms, average: 194.81492043 ms
-Warning: 1 × Draw window and swap: 194.1979 ms, average: 194.19789314 ms
-MEM noredraw MB [926, 936, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935, 935]
-MEM redraw MB [921, 922, 921, 919, 924, 928, 928, 929, 931, 920, 929, 928, 928, 927, 924, 926, 929, 921, 923, 927, 926, 926, 927, 927, 926, 926, 926, 926, 926, 925, 919, 926, 926, 926, 920, 925, 926, 926, 926, 926]
+VIEWPRISM_SUITE fail
+Warning: 1 × Draw window and swap: 291.5349 ms, average: 291.53490067 ms
+Warning: 1 × Draw window and swap: 297.2982 ms, average: 297.29819298 ms
+Warning: 1 × Draw window and swap: 296.6712 ms, average: 296.67115211 ms
+Warning: 1 × Draw window and swap: 296.6850 ms, average: 296.68498039 ms
+Warning: 1 × Draw window and swap: 240.3641 ms, average: 240.36407471 ms
+Warning: 1 × Draw window and swap: 240.5889 ms, average: 240.58890343 ms
+Warning: 1 × Draw window and swap: 241.8520 ms, average: 241.85204506 ms
+Warning: 1 × Draw window and swap: 361.1598 ms, average: 361.15980148 ms
+Warning: 1 × Draw window and swap: 267.4279 ms, average: 267.42792130 ms
+Warning: 1 × Draw window and swap: 253.7720 ms, average: 253.77202034 ms
+Warning: 1 × Draw window and swap: 293.7441 ms, average: 293.74408722 ms
+Warning: 1 × Draw window and swap: 286.9160 ms, average: 286.91601753 ms
+Warning: 1 × Draw window and swap: 276.0501 ms, average: 276.05009079 ms
+Warning: 1 × Draw window and swap: 276.3820 ms, average: 276.38196945 ms
+Warning: 1 × Draw window and swap: 276.9449 ms, average: 276.94487572 ms
+Warning: 1 × Draw window and swap: 276.6790 ms, average: 276.67903900 ms
+Warning: 1 × Draw window and swap: 275.9061 ms, average: 275.90608597 ms
+Warning: 1 × Draw window and swap: 269.4530 ms, average: 269.45304871 ms
+Warning: 1 × Draw window and swap: 277.8740 ms, average: 277.87399292 ms
+Warning: 1 × Draw window and swap: 276.1462 ms, average: 276.14617348 ms
+Warning: 1 × Draw window and swap: 276.2609 ms, average: 276.26085281 ms
+Warning: 1 × Draw window and swap: 275.1930 ms, average: 275.19297600 ms
+Warning: 1 × Draw window and swap: 269.1731 ms, average: 269.17314529 ms
+Warning: 1 × Draw window and swap: 281.7621 ms, average: 281.76212311 ms
+Warning: 1 × Draw window and swap: 274.4620 ms, average: 274.46198463 ms
+Warning: 1 × Draw window and swap: 233.7060 ms, average: 233.70599747 ms
+Warning: 1 × Draw window and swap: 163.6372 ms, average: 163.63716125 ms
+Warning: 1 × Draw window and swap: 162.6909 ms, average: 162.69087791 ms
+Warning: 1 × Draw window and swap: 167.5050 ms, average: 167.50502586 ms
+Warning: 1 × Draw window and swap: 162.2779 ms, average: 162.27793694 ms
+Warning: 1 × Draw window and swap: 164.3310 ms, average: 164.33095932 ms
+Warning: 1 × Draw window and swap: 162.2021 ms, average: 162.20211983 ms
+Warning: 1 × Draw window and swap: 163.4049 ms, average: 163.40494156 ms
+Warning: 1 × Draw window and swap: 162.6329 ms, average: 162.63294220 ms
+Warning: 1 × Draw window and swap: 168.7930 ms, average: 168.79296303 ms
+Warning: 1 × Draw window and swap: 161.6521 ms, average: 161.65208817 ms
+Warning: 1 × Draw window and swap: 162.6010 ms, average: 162.60099411 ms
+Warning: 1 × Draw window and swap: 162.6530 ms, average: 162.65296936 ms
+Warning: 1 × Draw window and swap: 162.5919 ms, average: 162.59193420 ms
+Warning: 1 × Draw window and swap: 163.0130 ms, average: 163.01298141 ms
+MEM noredraw MB [924, 939, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938, 938]
+MEM redraw MB [923, 926, 931, 931, 931, 929, 933, 930, 924, 930, 930, 930, 933, 924, 930, 925, 931, 926, 926, 924, 929, 931, 931, 920, 930, 930, 922, 921, 921, 929, 923, 921, 921, 923, 921, 921, 929, 921, 921, 919]
 TEST t_repeat_and_leak pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_fault_injection pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_sizes pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_multi_area pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_precision pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_edit_mode pass
-VIEWPASS_SUITE fail
-Info: ViewPass: Saved 8 files as gui_0001_*  (240x144, capture 2 ms)
-Info: ViewPass: Saved 8 files as gui_0002_*  (240x144, capture 1 ms)
-Error: ViewPass: files already exist: gui_0001_depth.png, gui_0001_depth.exr, gui_0001_normal.png, gui_0001_normal.exr, gui_0001_id.png, gui_0001_id.exr, gui_0001_mask.png, gui_0001_meta.json
-Error: ViewPass: Export As must be started from a 3D Viewport
+VIEWPRISM_SUITE fail
+Info: ViewPrism: Saved 8 files as gui_0001_*  (240x144, capture 1 ms)
+Info: ViewPrism: Saved 8 files as gui_0002_*  (240x144, capture 1 ms)
+Error: ViewPrism: files already exist: gui_0001_depth.png, gui_0001_depth.exr, gui_0001_normal.png, gui_0001_normal.exr, gui_0001_id.png, gui_0001_id.exr, gui_0001_mask.png, gui_0001_meta.json
+Error: ViewPrism: Export As must be started from a 3D Viewport
 TEST t_operator_export pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_view_lost pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_preview_lifecycle pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 MW: window_new
 MW: window created
 MW: capture in second window
-Warning: 1 × Draw window: 343.7989 ms, average: 343.79887581 ms
+Warning: 1 × Draw window: 255.5130 ms, average: 255.51295280 ms
 MW: window_close
 MW: closed
 MW: capture in the same tick as the close
-Warning: 1 × Draw window: 270.4580 ms, average: 270.45798302 ms
+Warning: 1 × Draw window: 210.1729 ms, average: 210.17289162 ms
 MW: capture after the event loop ran
 MW: done
 TEST t_multi_window pass
-VIEWPASS_SUITE fail
+VIEWPRISM_SUITE fail
 TEST t_reregister_clean pass
-VIEWPASS_SUITE pass
+VIEWPRISM_SUITE pass
 Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
 Saved session recovery to "/tmp/quit.blend"
 
