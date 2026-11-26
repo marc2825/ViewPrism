@@ -34,6 +34,16 @@ CI runs the same checks on every pull request (lint, pure tests on Windows/Linux
 checks on Linux for 4.5 LTS and 5.3 under Xvfb with Mesa software OpenGL); all jobs are required for
 merging into `main`. Lint: `ruff check .` (config in `ruff.toml`).
 
+## Releasing (maintainer)
+
+1. Update `version` in `viewprism/blender_manifest.toml` and `VERSION` in `viewprism/operators.py`,
+   and add a `## X.Y.Z — date` section to `CHANGELOG.md`.
+2. Merge to `main` through a PR (all checks green).
+3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The release workflow validates and builds
+   the ZIP with Blender, attaches it with its SHA-256 and publishes the release (pre-release for 0.x).
+
+Please report security issues privately (see `SECURITY.md`), not in public issues.
+
 ## Style
 
 - Code, UI text and commit messages in English. Keep functions small and side-effect free where possible.

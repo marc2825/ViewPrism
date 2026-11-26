@@ -1,9 +1,9 @@
 # Project status — 2026-11-26
 
 Product name: **ViewPrism — Viewport Pass Exporter** (decided 2026-11-26; developed as "ViewPass").
-Merged into `main` on 2026-11-26 (PR #1, merge commit, full history kept) in the private repository
-`ViewPrism` (renamed from `Depth_Renderer`). Nothing published; the repository stays private. Planned
-features: `ROADMAP.md`.
+Merged into `main` on 2026-11-26 (PR #1, merge commit, full history kept). The repository
+`ViewPrism` (renamed from `Depth_Renderer`) is **public** since 2026-11-26, and v0.1.0 is published as a
+GitHub **pre-release**. Not on extensions.blender.org yet. Planned features: `ROADMAP.md`.
 
 ## Implemented
 
@@ -65,17 +65,23 @@ crashed 4.5 after a capture from a second, later closed window.
 
 Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender.exe" --bench`.
 
-## Repository settings applied (visibility unchanged: private)
+## Repository settings applied (public repository)
 
 - Description, topics; wiki/projects off; delete branch on merge; "update branch" button; squash
-  commits use the PR title/body.
-- `main` protection: all CI jobs required (strict); no force pushes, no deletion; conversations must be
-  resolved; no required review (single maintainer); admins can bypass in an emergency.
-- Actions: only GitHub-owned actions allowed; default token read-only; workflows request write only
-  where needed (draft release).
-- Dependabot alerts + automated security fixes on; Dependabot version updates for Actions (weekly).
-- Secret scanning: **not available** for this private repository on the current plan (HTTP 422).
+  commits use the PR title/body (merges use merge commits to keep history).
+- `main` protection: changes only through pull requests (0 approvals, single maintainer); all CI jobs
+  required (strict); no force pushes or deletion; conversations must be resolved; admins can bypass in an
+  emergency.
+- Actions: only GitHub-owned actions allowed; default token read-only; only the release job requests
+  `contents: write`. Fork PRs from first-time contributors need approval before CI runs.
+- Security: secret scanning + push protection, private vulnerability reporting (`SECURITY.md`),
+  CodeQL code scanning (default setup), Dependabot alerts + security fixes, weekly Actions updates.
+- Releases: tag `vX.Y.Z` → validated ZIP + SHA-256 published by `.github/workflows/release.yml`;
+  versions < 1.0.0 or with a suffix are marked pre-release. README badges: CI, release, Blender versions,
+  tested platforms.
 - Issue templates (bug/feature, environment fields) and a PR checklist.
+- Not possible through the API: the social preview image (upload `branding/viewprism-wordmark-dark.png`
+  under Settings → General if wanted).
 
 ## Open issues / risks
 
@@ -93,9 +99,11 @@ Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender
 
 ## Decisions needed from the owner
 
-- License (candidate GPL-3.0-or-later) and adding a `LICENSE` file.
+- **License (urgent now that the repository and a pre-release are public):** candidate
+  GPL-3.0-or-later; add a `LICENSE` file. Until then no license is granted, although the manifest
+  inside the ZIP already names the candidate (the schema requires a value).
 - Trademark search for "ViewPrism" (web search only so far: `docs/NAMING.md`); logo license.
-- Publication on extensions.blender.org (and making the repository public) later.
+- Publication on extensions.blender.org.
 - Optional: history cleanup for `memo.txt`.
 
 ## Next steps (proposed order)

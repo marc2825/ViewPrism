@@ -29,8 +29,8 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 | Relative imports, `__package__` for preferences, no `sys.path` changes, nothing written to the add-on dir | ✅ |
 | `blender_version_min` = only verified versions (4.5.0) | ✅ |
 | CI on every PR (lint, pure tests, Blender 4.5 + 5.3 full checks) and protected `main` | ✅ |
-| Tag → validated ZIP in a draft GitHub release | ✅ workflow ready (no tag created yet) |
-| `website` field | 🔒 depends on the final repository name |
+| Tag → validated ZIP + SHA-256 in a GitHub (pre-)release | ✅ v0.1.0 published as pre-release |
+| `website` field | ✅ https://github.com/marc2825/ViewPrism |
 | `maintainer` field (currently the GitHub handle) | 🔒 confirm how the owner wants to be credited |
 
 ## Rights and naming
@@ -58,4 +58,5 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 | Item | State |
 |---|---|
 | Push branch / open PR / merge | ✅ PR #1 merged into `main` (merge commit) |
+| Repository public | ✅ (owner, 2026-11-26) |
 | Upload to extensions.blender.org, announcements, pricing | 🔒 not done |

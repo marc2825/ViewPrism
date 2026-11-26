@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — unreleased (branch `feature/viewprism`)
+## 0.1.0 — 2026-11-26 (pre-release)
 
 Complete rewrite of the former "Depth Renderer" add-on as **ViewPrism — Viewport Pass Exporter**
 (developed under the working name "ViewPass"; renamed on 2026-11-26).

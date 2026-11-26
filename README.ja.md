@@ -5,9 +5,16 @@
   </picture>
 </p>
 
+<p align="center">
+  <a href="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/marc2825/ViewPrism/releases"><img alt="Release" src="https://img.shields.io/github/v/release/marc2825/ViewPrism?include_prereleases&amp;sort=semver&amp;label=release"></a>
+  <img alt="Blender 4.5 LTS | 5.3" src="https://img.shields.io/badge/Blender-4.5%20LTS%20%7C%205.3-e87d0d">
+  <img alt="Platforms tested" src="https://img.shields.io/badge/tested-Windows%20%7C%20Linux-4c78dd">
+</p>
+
 # ViewPrism — Viewport Pass Exporter
 
-[English](README.md) · [ロードマップ](ROADMAP.md)
+[English](README.md)
 
 いま見ている3Dビューポートから、画素単位で揃った **Depth / Normal / Object ID / Mask** をワンクリックで書き出す Blender アドオンです。カメラもコンポジタもレンダー設定も不要で、シーンは一切変更しません。
 
@@ -29,8 +36,8 @@ Blender 標準のパスは正確ですが、カメラ、ビューレイヤーの
 
 ## インストール
 
-1. パッケージを作成（または配布ZIPを使用）:
-   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewprism-0.1.0.zip`
+1. [Releases](https://github.com/marc2825/ViewPrism/releases) から `viewprism-<version>.zip` をダウンロード（プレリリースはその旨を表示。`.sha256` ファイルも添付）。ソースからビルドする場合:
+   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewprism-<version>.zip`
 2. Blender ›「編集」›「プリファレンス」›「エクステンションを入手」› ⌄ ›「ディスクからインストール…」でZIPを選択。
 3. 3Dビューポート › サイドバー（N）› **ViewPrism** タブ。
 
@@ -87,10 +94,6 @@ CI（GitHub Actions）では、lint、Windows/Linux での純粋テスト、Linu
 - `viewprism/` — アドオン本体（`projection`、`encode`、`png`、`exr`、`export`、`writer` は `bpy` を使いません）。UI もテストも同じ入口 `viewprism.capture.capture(context, request)` を通ります。
 - `viewpass-dev/` — 独立検証ハーネスと仕様書（変更していません）。
 - 設計: [docs/decisions/0001-renderer.md](docs/decisions/0001-renderer.md) · 状況: [docs/STATUS.md](docs/STATUS.md) · テスト: [docs/TEST_MATRIX.md](docs/TEST_MATRIX.md) · [CONTRIBUTING.md](CONTRIBUTING.md)
-
-## 今後の予定
-
-未実装の機能（クリップボード出力、ControlNet プリセット、Line Art・AO、アニメーション連番出力など）は [ROADMAP.md](ROADMAP.md) にまとめています。
 
 ## ライセンス
 
