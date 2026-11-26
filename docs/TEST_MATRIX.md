@@ -16,15 +16,15 @@ Full report with untested configurations and reproduction commands: [`QA_REPORT.
 
 | Environment | Pure | Harness bg | Harness GPU | GUI suite | Build | Package | Stress / bench |
 |---|---|---|---|---|---|---|---|
-| Windows 11, Blender 5.3.0, RTX 3060 Ti, **Vulkan** | 85 PASS | PASS | PASS | 22/22 PASS | PASS | PASS | done |
-| Windows 11, Blender 5.3.0, RTX 3060 Ti, **OpenGL 4.6** | (same) | PASS | PASS | 22/22 PASS | — | — | stress done |
-| CI: Ubuntu, Blender **4.5.17 LTS**, 5.0.1, 5.1.2, 5.2.5, 5.3.0; Mesa llvmpipe **OpenGL 4.5** (software) | PASS | PASS | PASS | 22/22 PASS | PASS | PASS | — |
+| Windows 11, Blender 5.3.0, RTX 3060 Ti, **Vulkan** | 89 PASS | PASS | PASS | 26/26 PASS | PASS | PASS | done |
+| Windows 11, Blender 5.3.0, RTX 3060 Ti, **OpenGL 4.6** | (same) | PASS | PASS | 26/26 PASS | — | — | stress done |
+| CI: Ubuntu, Blender **4.5.17 LTS**, 5.0.1, 5.1.2, 5.2.5, 5.3.0; Mesa llvmpipe **OpenGL 4.5** (software) | PASS | PASS | PASS | 26/26 PASS | PASS | PASS | — |
 | CI: Windows Server, Blender **4.5.17 LTS** and 5.3.0, no GPU | PASS | PASS | NOT RUN (no GPU) | NOT RUN (no GPU) | PASS | — | — |
 | CI: pure tests on Windows + Ubuntu, Python 3.11 / 3.13 (NumPy from PyPI, hashed) | PASS | | | | | | |
 | CI: secrets (gitleaks all refs + canary) and privacy scan (tree + history) | PASS | | | | | | |
 | Windows + Blender 4.5 **with a GPU**; macOS / Metal; AMD / Intel GPUs; Linux hardware drivers | **NOT TESTED** (issue #9) | | | | | | |
 
-Evidence: local Windows run [`docs/evidence/2026-11-27/SUMMARY.md`](evidence/2026-11-27/SUMMARY.md); CI runs of the
+Evidence: local Windows run [`docs/evidence/2026-11-27-ui/SUMMARY.md`](evidence/2026-11-27-ui/SUMMARY.md) (redesigned UI; v0.2.0: [`2026-11-27`](evidence/2026-11-27/SUMMARY.md)); CI runs of the
 PR that closed issue #5 in [`docs/evidence/ci-2026-11-26/`](evidence/ci-2026-11-26/). Every CI run uploads its
 evidence as an artifact (`.github/workflows/ci.yml`).
 
@@ -58,7 +58,11 @@ evidence as an artifact (`.github/workflows/ci.yml`).
 | resources: memory guard | `test_resources.Guard.*` (hard limit on committable memory, soft warning on free RAM, unknown memory), GUI `t_resource_guard` (refusal reaches the operator, nothing written; injected GPU allocation failure → `GPUCaptureError`) |
 | resources: chunked encoders | `test_resources.ChunkedEncoders.*` (bit-identical to the unchunked reference, streamed PNG, odd EXR block heights) |
 | resources: 4K / 8K / 40 000 instances / GPU failure recovery | `tools/stress.py` → `docs/evidence/2026-11-26-stress/` |
-| preview responsiveness | `t_preview_debounce` (no capture while navigating or editing; one refresh after stillness) |
+| preview responsiveness | `t_preview_debounce` (no capture while navigating or editing; one refresh after stillness), `t_preview_stays_current` (add-on setting changes keep the preview current; scene changes mark it outdated) |
+| UI: every panel, popover and menu drawn | `t_panel_states` (10 states incl. Japanese, collisions, no pass/no file type, preview outdated; errors in `draw()` fail the test; Export disabled with a reason when it would fail) |
+| UI: files listed before exporting | `t_planned_files` (prediction == files written; next number; invalid name; unsaved .blend) |
+| UI: four-pass thumbnails and the eye button | `t_preview_thumbnails` (overlay toggle, thumbnails, cost measured), `tools/stress.py` (preview time with/without thumbnails) |
+| translations | `test_i18n.*` (every label, tooltip and message has Japanese with the same placeholders; no add-on string in Blender's default context) |
 | privacy: scanner + evidence sanitiser | `test_privacy_scan.*` (synthetic e-mails/paths/tokens, masking, PNG metadata strip, 8.3 short home path) |
 | export safety: dangling symlinks | `test_export_safety.NoClobber.*` (run on Linux/Windows CI, where symlinks are permitted) |
 | GPU: retry after GPU failure | `t_fault_injection` (exception after draw; GPU state + scene restored; retry identical) |

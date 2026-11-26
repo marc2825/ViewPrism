@@ -121,6 +121,18 @@ is an upper bound for ViewPrism.
   navigation). It now waits until the view and the scene have been **still** for
   max(0.2 s, last capture time), capped at 1 s, and never captures while you navigate or drag
   (`t_preview_debounce`).
+- **Preview thumbnails** (UI redesign, 2026-11-27, same scene, Vulkan; preview capture repeated 7×):
+
+  | | Thumbnails off | Thumbnails on |
+  |---|---|---|
+  | preview capture, median | 0.416 s | 0.410 s |
+  | preview capture, max | 0.494 s | 0.499 s |
+  | re-encode after a display change | 6.0 ms | 10.2 ms |
+
+  The difference in capture time is within run-to-run noise: one capture already holds all four
+  passes, and the thumbnails are sampled down to about 128 rows before encoding. The thumbnails are
+  therefore on by default. The 1080p/4K/8K capture and export times of the same run match the table
+  above (8K: 2.3 s + 3.2 s).
 - The chunked encoders (1 MiPx depth/normal chunks, streamed zlib for PNG, per-block EXR interleave)
   cut the 8K export peak from +5.3 GB to +3.7 GB in this scene: the export no longer adds memory on
   top of the capture.

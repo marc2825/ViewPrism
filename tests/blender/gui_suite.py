@@ -191,7 +191,7 @@ def settings_for_test(s, outdir):
 # ----------------------------------------------------------------------------- tests
 
 def t_registration(ctx, vp):
-    for op in ('export', 'export_as', 'preview', 'preview_hide', 'open_folder'):
+    for op in ('export', 'export_as', 'preview', 'preview_show', 'preview_hide', 'open_folder'):
         check(hasattr(bpy.ops.viewprism, op), f'operator {op} missing')
     check(hasattr(bpy.types, 'VIEWPRISM_PT_main'), 'panel missing')
     check(hasattr(bpy.context.window_manager, 'viewprism'), 'settings missing')
@@ -804,6 +804,281 @@ def t_preview_debounce(ctx, vp):
     return f'no capture during 2.5 s of navigation or edits; one refresh {settle:.2f} s after stillness'
 
 
+def _ui_region(area):
+    return next(r for r in area.regions if r.type == 'UI')
+
+
+def t_panel_states(ctx, vp):
+    """Blender really draws every panel, sub-panel, popover and the menu, in every state the layout
+    branches on, in English and Japanese, without a Python error (errors in draw() are otherwise
+    only printed). The real classes are subclassed into the sidebar tab that is currently shown."""
+    import traceback
+    from viewprism import ui
+    clear_scene()
+    plane('Pan', (0, 0, 0), (1, 1))
+    ctx.view_layer.update()
+    window, area, region = find_view3d()
+    set_view(area, region, distance=6)
+    area.spaces.active.show_region_ui = True
+    uir = _ui_region(area)
+    category = ''
+    for _ in range(20):                                      # wait until the sidebar has an active tab
+        area.tag_redraw()
+        yield 0.1
+        category = getattr(uir, 'active_panel_category', '') or ''
+        if category and category != 'UNSUPPORTED':
+            break
+    check(category and category != 'UNSUPPORTED', f'sidebar has no active tab ({category!r})')
+    draws, errors = {}, []
+
+    def wrap(base, name):
+        def draw(self, context):
+            try:
+                base.draw(self, context)
+                draws[name] = draws.get(name, 0) + 1
+            except Exception:
+                errors.append(f'{name}: {traceback.format_exc()}')
+        attrs = dict(bl_idname=f'VPTEST_PT_{name}', bl_label=f'test {name}', bl_space_type='VIEW_3D',
+                     bl_region_type='UI', bl_category=category, bl_options=set(), draw=draw)
+        if hasattr(base, 'draw_header_preset'):
+            attrs['draw_header_preset'] = base.draw_header_preset
+        return type(f'VPTEST_PT_{name}', (base,) if base is not ui.VIEWPRISM_MT_panel_menu else
+                    (bpy.types.Panel,), attrs)
+    bases = {'main': ui.VIEWPRISM_PT_main, 'preview': ui.VIEWPRISM_PT_preview,
+             'details': ui.VIEWPRISM_PT_output_details, 'depth': ui.VIEWPRISM_PT_depth,
+             'normal': ui.VIEWPRISM_PT_normal, 'object_id': ui.VIEWPRISM_PT_object_id,
+             'menu': ui.VIEWPRISM_MT_panel_menu}
+    temp = []
+    for name, base in bases.items():
+        cls = wrap(base, name)
+        cls.bl_parent_id = ''
+        bpy.utils.register_class(cls)
+        temp.append(cls)
+    s = vp.props.settings(ctx)
+    out = tempfile.mkdtemp(prefix='viewprism-panel-')
+    saved = {k: getattr(s, k) for k in ('output_dir', 'base_name', 'numbering', 'overwrite', 'resolution_mode',
+                                        'lock_aspect', 'depth_range', 'depth_background', 'use_depth', 'use_normal',
+                                        'use_object_id', 'use_mask', 'normal_png', 'normal_exr')}
+    prefs_view = ctx.preferences.view
+    lang = (prefs_view.language, prefs_view.use_translate_interface)
+    states = []
+
+    def drawn(label, before):
+        missing = [n for n in bases if draws.get(n, 0) <= before.get(n, 0)]
+        check(not errors, f'{label}: draw error\n' + '\n'.join(errors[:2]))
+        check(not missing, f'{label}: not drawn: {missing} (region {uir.width}x{uir.height}, tab {category})')
+        states.append(label)
+
+    def export_now():
+        with ctx.temp_override(**override(window, area, region)):
+            check(bpy.ops.viewprism.export() == {'FINISHED'}, 'export failed')
+
+    def name_only_existing():
+        vp.operators.invalidate_plan()
+        s.numbering, s.base_name = 'NONE', marks['stem']
+        vp.operators.invalidate_plan()
+        plan = vp.operators.planned_files(s)
+        check(plan['files'] and all(e for _k, _n, e in plan['files']), f'existing files not flagged: {plan}')
+        with ctx.temp_override(**override(window, area, region)):
+            check(not bpy.ops.viewprism.export.poll(), 'export must be disabled while the files exist')
+            s.overwrite = True
+            check(bpy.ops.viewprism.export.poll(), 'overwrite must enable export again')
+            s.overwrite = False
+
+    def no_file_type():
+        s.normal_png, s.normal_exr = 'NONE', False
+        with ctx.temp_override(**override(window, area, region)):
+            check(not bpy.ops.viewprism.export.poll(), 'export must be disabled without a file type')
+
+    def no_pass():
+        s.use_depth = s.use_normal = s.use_object_id = s.use_mask = False
+        with ctx.temp_override(**override(window, area, region)):
+            check(not bpy.ops.viewprism.export.poll(), 'export must be disabled without passes')
+
+    def preview_on():
+        s.use_depth = True
+        with ctx.temp_override(**override(window, area, region)):
+            check(bpy.ops.viewprism.preview_show(pass_name='normal') == {'FINISHED'}, 'eye button failed')
+
+    def japanese():
+        check('ja_JP' in bpy.app.translations.locales, f'Japanese locale missing: {bpy.app.translations.locales}')
+        prefs_view.language = 'ja_JP'
+        prefs_view.use_translate_interface = True
+        from viewprism.i18n import iface
+        check(iface('Passes') == 'パス' and iface('Depth') == '深度', f'not translated: {iface("Passes")}')
+        check(bpy.app.translations.pgettext_iface('Near is White') == 'Near is White',
+              'add-on strings leaked into the default context')
+
+    def remember_stem():
+        vp.operators.invalidate_plan()
+        marks['stem'] = vp.operators.planned_files(s)['stem']
+        export_now()
+
+    marks = {}
+    steps = [
+        ('defaults', lambda: setattr(s, 'base_name', 'pan')),
+        ('custom size, fixed depth range, grey background',
+         lambda: [setattr(s, k, v) for k, v in (('resolution_mode', 'CUSTOM'), ('lock_aspect', False),
+                                                ('depth_range', 'FIXED'), ('depth_background', 'VALUE'))]),
+        ('after a successful export', remember_stem),
+        ('name only, files exist', name_only_existing),
+        ('overwrite on', lambda: setattr(s, 'overwrite', True)),
+        ('normal pass without file type', no_file_type),
+        ('no pass selected', no_pass),
+        ('preview with overlay and thumbnails', preview_on),
+        ('preview outdated', lambda: set_view(area, region, distance=7)),
+        ('Japanese interface', japanese),
+    ]
+    try:
+        s.output_dir = out + os.sep
+        yield 0.4                                            # the newly shown sidebar gets laid out
+        for label, apply in steps:
+            apply()
+            before = dict(draws)
+            for _ in range(10):                              # let Blender redraw the sidebar
+                uir.tag_redraw()
+                yield 0.1
+                if all(draws.get(n, 0) > before.get(n, 0) for n in bases) or errors:
+                    break
+            drawn(label, before)
+    finally:
+        prefs_view.language, prefs_view.use_translate_interface = lang
+        for k, v in saved.items():
+            setattr(s, k, v)
+        with ctx.temp_override(**override(window, area, region)):
+            bpy.ops.viewprism.preview_hide()
+        vp.operators.status.update(text='', signature=None)
+        for cls in reversed(temp):
+            bpy.utils.unregister_class(cls)
+    return f'{len(states)} states drawn without errors (incl. Japanese): ' + '; '.join(states)
+
+
+def t_planned_files(ctx, vp):
+    """The file list shown before exporting is exactly what Export writes."""
+    clear_scene()
+    plane('Plan', (0, 0, 0), (1, 1))
+    ctx.view_layer.update()
+    window, area, region = find_view3d()
+    set_view(area, region, distance=6)
+    out = tempfile.mkdtemp(prefix='viewprism-plan-')
+    s = vp.props.settings(ctx)
+    settings_for_test(s, out)
+    s.base_name = 'plan'
+    vp.operators.invalidate_plan()
+    first = vp.operators.planned_files(s)
+    check(first['error'] is None and first['stem'] == 'plan_0001', f'unexpected prediction {first}')
+    with ctx.temp_override(**override(window, area, region)):
+        check(bpy.ops.viewprism.export() == {'FINISHED'}, 'export failed')
+    written = sorted(os.listdir(out))
+    predicted = sorted(n for _k, n, _e in first['files'])
+    check(written == predicted, f'prediction {predicted} != written {written}')
+    check(vp.operators.status['signature'] == vp.props.signature(s), 'status not tied to the settings')
+    second = vp.operators.planned_files(s)                   # invalidated by the export
+    check(second['stem'] == 'plan_0002' and not any(e for _k, _n, e in second['files']), f'next number {second}')
+    s.depth_exr = not s.depth_exr
+    check(vp.operators.status['signature'] != vp.props.signature(s), 'changed settings not detected')
+    s.depth_exr = not s.depth_exr
+    s.base_name = 'bad/name'
+    vp.operators.invalidate_plan()
+    check(vp.operators.planned_files(s)['error'], 'invalid name not reported')
+    s.base_name = 'plan'
+    if not bpy.data.filepath:
+        s.output_dir = '//relative/'
+        unsaved = vp.operators.planned_files(s)
+        check(unsaved['unsaved'] and unsaved['stem'] == 'plan_0001', f'unsaved .blend case {unsaved}')
+    vp.operators.status.update(text='', signature=None)
+    return f'prediction equals the written files ({len(written)}); next number and errors predicted'
+
+
+def t_preview_thumbnails(ctx, vp):
+    """Plan C preview: four thumbnails from one capture; the eye button toggles the large overlay;
+    the thumbnails add little time (measured)."""
+    clear_scene()
+    plane('Thumb', (0, 0, 0), (1, 1))
+    ctx.view_layer.update()
+    window, area, region = find_view3d()
+    set_view(area, region, distance=6)
+    pv = vp.preview
+    s = vp.props.settings(ctx)
+    thumbs_before = s.preview_thumbnails
+    s.preview_thumbnails = True
+    before = snapshot()
+    try:
+        with ctx.temp_override(**override(window, area, region)):
+            check(bpy.ops.viewprism.preview_show(pass_name='normal') == {'FINISHED'}, 'eye failed')
+        check(pv.state.overlay and s.preview_pass == 'normal' and pv.state.texture is not None, 'overlay not shown')
+        check(set(pv.state.thumbs) == set(pv.PASSES), f'thumbnails {sorted(pv.state.thumbs)}')
+        small_h = pv.state.small['mask'].shape[0]
+        check(small_h <= 2 * pv.THUMB_TEXTURE_HEIGHT, f'thumbnail source too large: {small_h}')
+        with ctx.temp_override(**override(window, area, region)):
+            bpy.ops.viewprism.preview_show(pass_name='normal')        # same eye again: overlay off
+        check(not pv.state.overlay and pv.state.texture is None and len(pv.state.thumbs) == 4,
+              'second click must hide only the overlay')
+        with ctx.temp_override(**override(window, area, region)):
+            bpy.ops.viewprism.preview_show(pass_name='depth')
+        check(pv.state.overlay and s.preview_pass == 'depth', 'switching pass failed')
+        check(pv.thumbnail_layout(1000, 600, 1600, 900, 1.0) and not pv.thumbnail_layout(60, 40, 1600, 900, 1.0),
+              'thumbnail layout must fit or disappear')
+        times = {}
+        for on in (False, True):
+            s.preview_thumbnails = on
+            samples = []
+            for _ in range(7):
+                t0 = time.perf_counter()
+                pv._rebuild_texture(s)
+                samples.append(time.perf_counter() - t0)
+            times[on] = float(np.median(samples))
+        extra = times[True] - times[False]
+        check(extra < 0.05, f'thumbnails cost {extra * 1000:.1f} ms per update')
+        s.preview_thumbnails = False
+        check(pv.state.thumbs == {}, 'thumbnails not freed when switched off')
+    finally:
+        s.preview_thumbnails = thumbs_before
+        with ctx.temp_override(**override(window, area, region)):
+            bpy.ops.viewprism.preview_hide()
+    check(snapshot() == before, 'preview changed the scene')
+    return (f'overlay toggles, 4 thumbnails; re-encode {times[False] * 1000:.1f} ms without, '
+            f'{times[True] * 1000:.1f} ms with thumbnails')
+
+
+def t_preview_stays_current(ctx, vp):
+    """Changing add-on settings (pass shown, thumbnails, opacity) must not mark the preview outdated;
+    a scene change must. Found in the UI review: the eye button showed a fresh preview as outdated."""
+    clear_scene()
+    ob = plane('Cur', (0, 0, 0), (1, 1))
+    ctx.view_layer.update()
+    window, area, region = find_view3d()
+    set_view(area, region, distance=6)
+    pv = vp.preview
+    s = vp.props.settings(ctx)
+    with ctx.temp_override(**override(window, area, region)):
+        check(bpy.ops.viewprism.preview_show(pass_name='depth') == {'FINISHED'}, 'preview failed')
+    try:
+        yield 0.3
+        check(not pv.state.stale, 'a fresh preview is marked outdated')
+        for name, value in (('preview_pass', 'normal'), ('preview_opacity', 0.5), ('preview_thumbnails', False),
+                            ('preview_thumbnails', True), ('use_mask', not s.use_mask)):
+            setattr(s, name, value)
+            yield 0.2
+            check(not pv.state.stale, f'changing {name} marked the preview outdated')
+        ob.location.x += 0.5
+        yield 0.3
+        check(pv.state.stale, 'moving an object did not mark the preview outdated')
+    finally:
+        s.preview_opacity = 1.0
+        with ctx.temp_override(**override(window, area, region)):
+            bpy.ops.viewprism.preview_hide()
+    from viewprism import ui
+    for text, width in (('Saved 6 files as shot_0001_* (1920 × 963 px, 90 ms).', 20),
+                        ('同じ名前のファイルが 6 個あります。「番号を付ける」を選ぶか、上書きをオンにしてください。', 20)):
+        lines = ui.wrap(text, width)
+        check(all(ui.text_width(line) <= width for line in lines) and ''.join(lines).replace(' ', '')
+              == text.replace(' ', ''), f'wrap lost or overflowed text: {lines}')
+    check(ui.short_folder(os.path.join('a', 'b', 'c', 'demo', 'viewprism')).endswith(
+        os.path.join('demo', 'viewprism') + os.sep), 'short folder')
+    return 'settings changes keep the preview current; scene changes mark it outdated; wrapping keeps all text'
+
+
 def t_multi_window(ctx, vp):
     clear_scene()
     plane('MW', (0, 0, 0), (1, 1))
@@ -818,7 +1093,13 @@ def t_multi_window(ctx, vp):
     check(len(new) == 1, 'second window not created')
     win2 = new[0]
     a2 = next((x for x in win2.screen.areas if x.type == 'VIEW_3D'), None)
-    check(a2 is not None, 'second window has no 3D view')
+    if a2 is None:
+        # New Window copies the editor type of the largest area; earlier tests that split and close areas
+        # can leave another editor larger than the 3D view. Make the new window a 3D view.
+        a2 = win2.screen.areas[0]
+        a2.type = 'VIEW_3D'
+        yield 0.3
+    check(a2.type == 'VIEW_3D', f'second window has no 3D view: {[x.type for x in win2.screen.areas]}')
     r2 = next(r for r in a2.regions if r.type == 'WINDOW')
     set_view(a2, r2, rotation=tuple(Euler((math.radians(30), 0, 0)).to_quaternion()), distance=7)
     s = vp.props.settings(ctx)
@@ -990,6 +1271,7 @@ def t_deviation_warnings(ctx, vp):
 TESTS = [t_registration, t_empty_scene, t_deviation_warnings, t_visibility, t_local_view, t_modifier_and_scale, t_instances,
          t_viewport_matrices, t_camera_view, t_repeat_and_leak, t_fault_injection, t_sizes, t_multi_area,
          t_precision, t_edit_mode, t_operator_export, t_view_lost, t_preview_lifecycle, t_preview_debounce,
+         t_preview_thumbnails, t_preview_stays_current, t_planned_files, t_panel_states,
          t_multi_window,
          t_resource_guard, t_reregister_clean]
 

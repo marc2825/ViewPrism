@@ -59,14 +59,24 @@ current view once on the GPU and writes the data passes directly:
 
 ![ViewPrism sidebar with the normal preview overlay](docs/images/ui_preview_normal.png)
 
-1. Toggle the passes: **Depth**, **Normal**, **Object ID**, **Mask**.
-2. Resolution: **View** (viewport size × scale, or the render size in camera view) or **Custom**
-   (width with locked aspect, or width × height as a centred crop).
-3. Optional: pick a pass and press the refresh icon for a display-only **preview** over the viewport;
-   **Auto Refresh** re-captures shortly after the view or scene changes.
-4. **Export Passes** writes to the folder (default `//viewprism/` next to the saved .blend) with
-   automatic numbering. **Export As…** chooses folder and name; the view is captured when you open the
-   file browser.
+1. **Passes**: tick what to export: **Depth**, **Normal**, **Object ID**, **Mask**. Each row shows the
+   files it writes (e.g. `PNG 8 + EXR`). The **eye** shows that pass over the viewport (display only;
+   click it again to hide it). The **gear** opens every setting of that pass: file types and bit depth,
+   depth range and colours, normal axes, ID mode.
+2. **Size**: **View** (viewport size × scale, or the render size in camera view) or **Custom**
+   (width with the view's aspect, or width × height as a centred crop). The camera button chooses
+   whether camera view exports the exact camera frame.
+3. **Output**: folder (default `//viewprism/` next to the saved .blend), name and numbering. The box
+   below lists exactly the files **Export** will write. Names that already exist are marked, and
+   Export stays disabled until you choose *Add Number*, *Overwrite* or another name.
+4. **Export N Passes** writes them. **Export As…** chooses the folder and name; the view is captured
+   when you open the file browser.
+
+The preview also shows small **thumbnails of all four passes** in the lower left corner of the
+viewport, from the same capture. When the view or the scene changes, the preview is drawn darker and
+says it is outdated. Refresh it, or turn on **Auto Refresh** (*Preview* sub-panel), which re-captures
+once the view is still. The panel is available in English and Japanese; it follows Blender's interface
+language.
 
 ## Output
 
@@ -86,12 +96,12 @@ anti-aliasing), no colour management. IDs are assigned by sorted object name per
 object by default; per instancer or per instance optional).
 
 **Metadata and privacy.** By default the JSON contains object names (that is what an ID map is for)
-and, in camera view, the camera name. *Formats → Metadata Names: Anonymized* writes neutral labels
+and, in camera view, the camera name. *Output Details → Names: Anonymized* writes neutral labels
 (`object_1`, …) instead and drops names from warnings; ids, images and camera matrices are unchanged.
 Error entries never contain file system paths. Keep in mind that the images themselves, the file names
 you choose and the camera geometry can still reveal what is in your scene.
 
-**Safe writing.** Existing files are never replaced unless you choose *Exact Name + Overwrite*, even
+**Safe writing.** Existing files are never replaced unless you choose *Name Only + Overwrite*, even
 if another program creates a file with the same name while ViewPrism is writing. Automatic numbering
 reserves its number, so several Blender instances exporting into the same folder do not collide. This
 also works on drives without hard links (FAT/exFAT USB drives, some network shares).

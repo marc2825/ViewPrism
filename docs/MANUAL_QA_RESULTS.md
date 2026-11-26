@@ -40,3 +40,23 @@ person must still do are marked **NOT TESTED (manual)**.
 4. Open the PNG/EXR files in the tools you actually use (e.g. image viewer, Krita/GIMP, Nuke, ComfyUI).
 5. Undo history and the scene should be unchanged (Edit › Undo History shows no ViewPrism entries).
 6. Note anything confusing in the panel; report back.
+
+### Additionally for the redesigned panel (main branch, after 0.2.0)
+
+Install from a ZIP built from `main` (`python tools/build_extension.py --blender <blender>`).
+
+1. Per-pass rows:
+   - The eye shows a pass large; the same eye hides it again; the four thumbnails stay in the lower
+     left corner.
+   - The gear opens that pass's settings.
+2. File list:
+   - It matches the files that Export writes.
+   - With *Name Only* and an existing name, Export is disabled and says why.
+3. The preview turns darker and says it is outdated after orbiting; Refresh or Auto Refresh updates it.
+4. Switch Blender to Japanese (Preferences › Interface › Translation), then:
+   - check that labels, tooltips and messages are understandable;
+   - check that nothing is cut off at the default sidebar width.
+
+Automated equivalents: `t_panel_states` (every panel/popover/menu drawn in 10 states incl. Japanese),
+`t_planned_files`, `t_preview_thumbnails`, `t_preview_stays_current`. Human check: **NOT TESTED
+(manual)**.

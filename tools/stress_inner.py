@@ -170,18 +170,29 @@ def run():
                          private_mb=[round((m - mem0) / 1e6) for m in mems])
         print('STRESS repeat', mode, rep[mode], flush=True)
     info['repeat_4k'] = rep
-    # preview responsiveness at the default preview scale (50 % of the region)
+    # preview responsiveness at the default preview scale (50 % of the region), without and with the
+    # four-pass thumbnails, plus the re-encode cost of a display-setting change
     s.preview_scale = 50
-    pt = []
-    for i in range(5):
-        with bpy.context.temp_override(**ov):
-            view = viewport.resolve(bpy.context)
+    info['preview'] = dict(region=[ov['region'].width, ov['region'].height])
+    for thumbs in (False, True):
+        s.preview_thumbnails = thumbs
+        pt, rt = [], []
+        for i in range(7):
+            with bpy.context.temp_override(**ov):
+                view = viewport.resolve(bpy.context)
+                t0 = time.perf_counter()
+                preview.refresh(bpy.context, view)
+                pt.append(time.perf_counter() - t0)
             t0 = time.perf_counter()
-            preview.refresh(bpy.context, view)
-            pt.append(time.perf_counter() - t0)
-    info['preview'] = dict(region=[ov['region'].width, ov['region'].height], size=list(preview.state.size),
-                           refresh_s_median=round(float(np.median(pt)), 3), refresh_s_max=round(max(pt), 3))
-    preview.clear()
+            preview._rebuild_texture(s)
+            rt.append(time.perf_counter() - t0)
+        key = 'thumbnails_on' if thumbs else 'thumbnails_off'
+        info['preview'][key] = dict(size=list(preview.state.size),
+                                    refresh_s_median=round(float(np.median(pt)), 3),
+                                    refresh_s_max=round(max(pt), 3),
+                                    reencode_ms_median=round(float(np.median(rt)) * 1000, 1))
+        preview.clear()
+    print('STRESS preview', info['preview'], flush=True)
     # recovery after an injected GPU allocation failure at 4K
     real = gpu_draw._get_targets
 

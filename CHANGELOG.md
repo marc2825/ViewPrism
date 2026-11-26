@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased
+
+### Redesigned panel
+- **One row per pass.** Export checkbox, the files it writes (e.g. `PNG 8 + EXR`), an eye button that
+  shows the pass over the viewport, and a gear button with every setting of that pass. The *Formats*
+  and *Advanced* sub-panels are gone; each setting now has one place.
+- **Files to write.** The Output section lists exactly the files Export will write: names with the
+  next free number, folder, file type. Names that already exist are marked, and Export stays disabled
+  (with the reason) until you choose *Add Number*, *Overwrite* or another name.
+- **Clearer actions and messages.**
+  - Export says what it does ("Export 2 Passes") and is disabled, with a reason, when no pass or no
+    file type is selected.
+  - Errors say how to fix them.
+  - Warnings and errors use different icons.
+  - The result of an export is dimmed (and an error hidden) once the settings change.
+  - A wait cursor shows during exports.
+- **Simpler wording.** "Add Number" / "Name Only" instead of "Auto Number" / "Exact Name", no
+  truncated or duplicated labels, the folder shown by name, and descriptions for the PNG bit depths.
+  The panel menu holds the documentation link and the defaults; the preferences now say that defaults
+  cover every setting.
+- **Japanese.** The panel, tooltips, messages and the preview text follow Blender's interface language.
+  English stays the default.
+
+### Preview
+- **Thumbnails of all four passes** in the lower left corner of the viewport, from the same capture.
+  The preview capture takes the same time; re-encoding after a display change takes about 4 ms more.
+- The eye button of a pass shows it large; the same button hides it again.
+- An outdated preview is drawn darker, with its status at the top of the viewport (no longer under the
+  header or in a corner).
+- Fixed: changing an add-on setting marked a fresh preview as outdated.
+
 ## 0.2.0 — 2026-11-26 (pre-release)
 
 Safer exports, privacy options for metadata, memory guards and a smoother auto preview. No new pass

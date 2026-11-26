@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """ViewPrism - export pixel-aligned Depth / Normal / Object ID / Mask from the current 3D viewport.
 
-Pure modules (projection, encode, png, exr, export, writer) do not import bpy, so they can be
+Pure modules (projection, encode, png, exr, export, writer, resources, i18n_data) do not import bpy, so they can be
 unit-tested outside Blender. Blender-facing modules are imported lazily in register().
 """
 
@@ -10,8 +10,8 @@ _modules = []
 
 
 def _load():
-    from . import props, operators, preview, ui
-    return [props, operators, preview, ui]
+    from . import i18n, props, operators, preview, ui
+    return [i18n, props, operators, preview, ui]
 
 
 def register():
