@@ -2,25 +2,31 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Operators. Every capture goes through capture.capture() - the same entry point as tests."""
 import os
+import sys
 import time
 
 import bpy
-from bpy.props import StringProperty
+from bpy.props import EnumProperty, StringProperty
 
 from . import capture as cap
 from . import export, preview, props, resources, viewport, writer
 from .encode import EncodeError
+from .i18n import iface, rpt
+from .i18n_data import CONTEXT
 from .projection import ProjectionError
 
 VERSION = '0.2.0'
 _ERRORS = (viewport.ViewError, cap.CaptureError, export.ExportError, EncodeError, ProjectionError, OSError)
+PASS_LABELS = {'depth': 'Depth', 'normal': 'Normal', 'object_id': 'Object ID', 'mask': 'Mask'}
 
-# Last action, shown in the panel (session only).
-status = {'text': '', 'level': 'INFO', 'warnings': [], 'time': 0.0}
+# Last export, shown in the panel (session only). `signature` = the settings it was made with, so the
+# panel can tell when the shown result no longer matches the current settings.
+status = {'text': '', 'level': 'INFO', 'warnings': [], 'time': 0.0, 'signature': None}
 
 
-def _set_status(text, level='INFO', warnings=()):
-    status.update(text=text, level=level, warnings=list(warnings), time=time.time())
+def _set_status(text, level='INFO', warnings=(), settings=None):
+    status.update(text=text, level=level, warnings=list(warnings), time=time.time(),
+                  signature=props.signature(settings) if settings is not None else None)
 
 
 def selected_passes(settings):
@@ -40,9 +46,11 @@ def output_formats(settings):
         out['mask'] = ['PNG8']
     empty = [p for p, f in out.items() if not f]
     if empty:
-        raise export.ExportError(f'no file format enabled for: {", ".join(empty)} (see Formats)')
+        names = ', '.join(iface(PASS_LABELS[p]) for p in empty)
+        raise export.ExportError(iface('No file type is selected for {}. Choose PNG or EXR in the settings of '
+                                       'that pass.').format(names))
     if not out:
-        raise export.ExportError('select at least one pass')
+        raise export.ExportError(iface('Select at least one pass to export.'))
     return out
 
 
@@ -64,20 +72,86 @@ def writer_options(settings, source, *, base_name=None, numbering=None):
     }
 
 
+class UnsavedBlendError(export.ExportError):
+    pass
+
+
 def output_directory(path):
     path = (path or '').strip()
     if not path:
-        raise export.ExportError('choose an output folder')
+        raise export.ExportError(iface('Choose an output folder.'))
     if path.startswith('//') and not bpy.data.filepath:
-        raise export.ExportError('the .blend file is not saved, so "//" has no location: '
-                                 'save the file or choose an absolute folder (Export As...)')
+        raise UnsavedBlendError(iface('The .blend file is not saved, so "//" has no location. Save the file or '
+                                      'choose a folder with Export As.'))
     return os.path.normpath(bpy.path.abspath(path))
 
+
+# ----------------------------------------------------------------------------- what Export will write
+
+_plan_cache = {'key': None, 'time': 0.0, 'value': None}
+_PLAN_TTL = 1.0         # seconds; the panel redraws often, the folder is listed at most once per second
+_CASE_INSENSITIVE = os.name == 'nt' or sys.platform == 'darwin'
+
+
+def invalidate_plan():
+    _plan_cache.update(key=None, value=None)
+
+
+def planned_files(settings):
+    """Predict what Export would write now, without writing or reserving anything.
+
+    Returns dict(files=[(key, name, exists)], directory, stem, error, unsaved). `exists` marks a file
+    that is already in the folder (only possible with Name Only). The folder is listed once and the
+    result cached briefly, so the panel stays fast on slow or network drives.
+    """
+    out = dict(files=[], directory=None, stem=None, error=None, unsaved=False)
+    try:
+        items = export.output_items(output_formats(settings))
+        base = export.sanitize_stem(settings.base_name)
+    except export.ExportError as exc:
+        out['error'] = str(exc)
+        return out
+    numbering, meta = settings.numbering, settings.write_meta
+    try:
+        directory = output_directory(settings.output_dir)
+    except UnsavedBlendError:
+        stem = f'{base}_0001' if numbering == 'AUTO' else base
+        out.update(unsaved=True, stem=stem, files=[(k, n, False) for k, n in export.file_names(stem, items, meta)])
+        return out
+    except export.ExportError as exc:
+        out['error'] = str(exc)
+        return out
+    key = (directory, base, numbering, meta, tuple(items))
+    now = time.monotonic()
+    if _plan_cache['key'] == key and now - _plan_cache['time'] < _PLAN_TTL:
+        return _plan_cache['value']
+    try:
+        present = set(os.listdir(directory)) if os.path.isdir(directory) else set()
+    except OSError:
+        present = set()
+    if _CASE_INSENSITIVE:
+        present = {n.casefold() for n in present}
+
+    def exists(path):
+        name = os.path.basename(path)
+        return (name.casefold() if _CASE_INSENSITIVE else name) in present
+    try:
+        plan = export.plan(directory, base, items, numbering=numbering, overwrite=True, meta=meta,
+                           exists=exists, reserve=False)
+        out.update(directory=directory, stem=plan['stem'],
+                   files=[(k, n, exists(p)) for k, n, p in plan['files']])
+    except export.ExportError as exc:
+        out.update(directory=directory, error=str(exc))
+    _plan_cache.update(key=key, time=now, value=out)
+    return out
+
+
+# ----------------------------------------------------------------------------- capture + export
 
 def capture_view(context, view, settings, request=None, source=None):
     passes = selected_passes(settings)
     if not passes:
-        raise export.ExportError('select at least one pass')
+        raise export.ExportError(iface('Select at least one pass to export.'))
     if request is None:
         request, source = viewport.build_request(view, context.scene, context.evaluated_depsgraph_get(),
                                                  settings, sorted(set(passes) | {'mask'}, key=cap.PASSES.index))
@@ -98,29 +172,73 @@ def capture_view(context, view, settings, request=None, source=None):
     return result, request, source
 
 
-def _finish(op, result, res, request):
+def _finish(op, result, res, request, settings):
+    invalidate_plan()
     n_ok, failed = len(res['written']), res['failed']
     ms = result['stats']['seconds']['total'] * 1000
-    size = f"{request['width']}x{request['height']}"
+    size = f"{request['width']} × {request['height']}"
     for w in result['warnings']:
         op.report({'WARNING'}, f'ViewPrism: {w}')
     if failed:
         for name, err in failed:
-            op.report({'ERROR'}, f'ViewPrism: could not write {name}: {err}')
-        _set_status(f"{len(failed)} of {n_ok + len(failed)} files failed ({res['stem']})", 'ERROR',
-                    result['warnings'] + [f'{n}: {e}' for n, e in failed])
+            op.report({'ERROR'}, rpt('ViewPrism: could not write {}: {}').format(name, err))
+        _set_status(iface('{} of {} files could not be written ({}).').format(len(failed), n_ok + len(failed),
+                                                                            res['stem']), 'ERROR',
+                    result['warnings'] + [f'{n}: {e}' for n, e in failed], settings)
         return {'CANCELLED'}
-    text = f"Saved {n_ok} files as {res['stem']}_*  ({size}, capture {ms:.0f} ms)"
+    text = iface('Saved {} files as {}_* ({} px, {:.0f} ms).').format(n_ok, res['stem'], size, ms)
     op.report({'INFO'}, f'ViewPrism: {text}')
-    _set_status(text, 'WARNING' if result['warnings'] else 'INFO', result['warnings'])
+    _set_status(text, 'WARNING' if result['warnings'] else 'INFO', result['warnings'], settings)
     return {'FINISHED'}
 
 
-def _fail(op, exc):
-    msg = str(exc) or type(exc).__name__
+def _message(exc):
+    if isinstance(exc, export.CollisionError):
+        names = exc.names
+        shown = ', '.join(names[:2]) + (', …' if len(names) > 2 else '')
+        return iface('{} files with these names already exist ({}). Choose "Add Number", turn on Overwrite or '
+                     'change the name.').format(len(names), shown)
+    return str(exc) or type(exc).__name__
+
+
+def _fail(op, exc, settings=None):
+    """Report an error. With settings (export operators) it also becomes the panel's status line."""
+    msg = _message(exc)
     op.report({'ERROR'}, f'ViewPrism: {msg}')
-    _set_status(msg, 'ERROR')
+    if settings is not None:
+        _set_status(msg, 'ERROR', (), settings)
     return {'CANCELLED'}
+
+
+def _fail_preview(op, exc):
+    msg = _message(exc)
+    op.report({'ERROR'}, f'ViewPrism: {msg}')
+    preview.state.error = msg
+    return {'CANCELLED'}
+
+
+class _WaitCursor:
+    def __init__(self, context):
+        self.window = getattr(context, 'window', None)
+
+    def __enter__(self):
+        if self.window is not None:
+            self.window.cursor_modal_set('WAIT')
+
+    def __exit__(self, *exc):
+        if self.window is not None:
+            self.window.cursor_modal_restore()
+
+
+def _export_poll(cls, context):
+    if context.area is None or context.area.type != 'VIEW_3D':
+        return False
+    try:
+        output_formats(props.settings(context))
+    except export.ExportError as exc:
+        cls.poll_message_set(str(exc))
+        return False
+    return True
 
 
 class VIEWPRISM_OT_export(bpy.types.Operator):
@@ -128,11 +246,20 @@ class VIEWPRISM_OT_export(bpy.types.Operator):
     bl_label = 'Export Passes'
     bl_description = ('Capture the selected passes from this 3D viewport and save them to the output folder. '
                       'Nothing in the scene is changed')
+    bl_translation_context = CONTEXT
     bl_options = {'REGISTER'}
 
     @classmethod
     def poll(cls, context):
-        return context.area is not None and context.area.type == 'VIEW_3D'
+        if not _export_poll(cls, context):
+            return False
+        settings = props.settings(context)
+        if settings.numbering == 'NONE' and not settings.overwrite:
+            clash = [n for _k, n, exists in planned_files(settings)['files'] if exists]
+            if clash:                       # shown in the file list; prevent the error instead of reporting it
+                cls.poll_message_set(_message(export.CollisionError(clash)))
+                return False
+        return True
 
     def invoke(self, context, event):
         settings = props.settings(context)
@@ -145,21 +272,23 @@ class VIEWPRISM_OT_export(bpy.types.Operator):
         settings = props.settings(context)
         t0 = time.perf_counter()
         try:
-            view = viewport.resolve(context)
-            directory = output_directory(settings.output_dir)
-            result, request, source = capture_view(context, view, settings)
-            options = writer_options(settings, source)
-            res = writer.export_capture(result, options, directory)
+            with _WaitCursor(context):
+                view = viewport.resolve(context)
+                directory = output_directory(settings.output_dir)
+                result, request, source = capture_view(context, view, settings)
+                options = writer_options(settings, source)
+                res = writer.export_capture(result, options, directory)
         except _ERRORS as exc:
-            return _fail(self, exc)
+            return _fail(self, exc, settings)
         res['seconds'] = time.perf_counter() - t0
-        return _finish(self, result, res, request)
+        return _finish(self, result, res, request, settings)
 
 
 class VIEWPRISM_OT_export_as(bpy.types.Operator):
     bl_idname = 'viewprism.export_as'
-    bl_label = 'Export Passes As...'
+    bl_label = 'Export As…'
     bl_description = 'Choose a folder and base name, then export the selected passes from this viewport'
+    bl_translation_context = CONTEXT
     bl_options = {'REGISTER'}
 
     filepath: StringProperty(subtype='FILE_PATH', options={'SKIP_SAVE'})
@@ -167,7 +296,7 @@ class VIEWPRISM_OT_export_as(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.area is not None and context.area.type == 'VIEW_3D'
+        return _export_poll(cls, context)
 
     def invoke(self, context, event):
         settings = props.settings(context)
@@ -180,7 +309,7 @@ class VIEWPRISM_OT_export_as(bpy.types.Operator):
                 view, context.scene, context.evaluated_depsgraph_get(), settings, passes)
             self._pointers = view.pointers()
         except _ERRORS as exc:
-            return _fail(self, exc)
+            return _fail(self, exc, settings)
         try:
             start = output_directory(settings.output_dir)
         except export.ExportError:
@@ -192,7 +321,7 @@ class VIEWPRISM_OT_export_as(bpy.types.Operator):
     def execute(self, context):
         settings = props.settings(context)
         if not getattr(self, '_pointers', None):
-            return _fail(self, viewport.ViewError('Export As must be started from a 3D Viewport'))
+            return _fail(self, viewport.ViewError(iface('Export As must be started from a 3D Viewport.')), settings)
         directory, name = os.path.split(bpy.path.abspath(self.filepath))
         stem = name
         for ext in ('.png', '.exr', '.json'):
@@ -202,21 +331,23 @@ class VIEWPRISM_OT_export_as(bpy.types.Operator):
             if stem.endswith(suffix):
                 stem = stem[:-len(suffix)]
         try:
-            view = viewport.find(self._pointers)
-            result, request, source = capture_view(context, view, settings, self._request, self._source)
-            res = writer.export_capture(result, writer_options(settings, source, base_name=stem,
-                                                               numbering='NONE'), directory)
+            with _WaitCursor(context):
+                view = viewport.find(self._pointers)
+                result, request, source = capture_view(context, view, settings, self._request, self._source)
+                res = writer.export_capture(result, writer_options(settings, source, base_name=stem,
+                                                                   numbering='NONE'), directory)
         except _ERRORS as exc:
-            return _fail(self, exc)
+            return _fail(self, exc, settings)
         settings.output_dir = directory + os.sep
         settings.base_name = stem
-        return _finish(self, result, res, request)
+        return _finish(self, result, res, request, settings)
 
 
 class VIEWPRISM_OT_preview(bpy.types.Operator):
     bl_idname = 'viewprism.preview'
     bl_label = 'Refresh Preview'
-    bl_description = 'Capture a display-only preview of the chosen pass over this viewport'
+    bl_description = 'Capture the preview again from this viewport (display only, nothing is saved)'
+    bl_translation_context = CONTEXT
     bl_options = {'REGISTER'}
 
     @classmethod
@@ -228,16 +359,40 @@ class VIEWPRISM_OT_preview(bpy.types.Operator):
             view = viewport.resolve(context)
             result = preview.refresh(context, view)
         except _ERRORS as exc:
-            return _fail(self, exc)
+            return _fail_preview(self, exc)
         for w in result['warnings']:
             self.report({'WARNING'}, f'ViewPrism: {w}')
         return {'FINISHED'}
 
 
+class VIEWPRISM_OT_preview_show(bpy.types.Operator):
+    bl_idname = 'viewprism.preview_show'
+    bl_label = 'Show Pass'
+    bl_description = ('Show this pass over the viewport (display only). Click again to hide it; '
+                      'the thumbnails stay')
+    bl_translation_context = CONTEXT
+    bl_options = {'REGISTER', 'INTERNAL'}
+
+    pass_name: EnumProperty(items=props.PASS_ITEMS, options={'SKIP_SAVE'})
+
+    @classmethod
+    def poll(cls, context):
+        return context.area is not None and context.area.type == 'VIEW_3D'
+
+    def execute(self, context):
+        try:
+            view = viewport.resolve(context)
+            preview.show_pass(context, view, self.pass_name)
+        except _ERRORS as exc:
+            return _fail_preview(self, exc)
+        return {'FINISHED'}
+
+
 class VIEWPRISM_OT_preview_hide(bpy.types.Operator):
     bl_idname = 'viewprism.preview_hide'
-    bl_label = 'Hide Preview'
-    bl_description = 'Remove the preview overlay and free its memory'
+    bl_label = 'Close Preview'
+    bl_description = 'Remove the preview and the thumbnails from the viewport and free their memory'
+    bl_translation_context = CONTEXT
     bl_options = {'REGISTER'}
 
     def execute(self, context):
@@ -250,6 +405,7 @@ class VIEWPRISM_OT_open_folder(bpy.types.Operator):
     bl_idname = 'viewprism.open_folder'
     bl_label = 'Open Output Folder'
     bl_description = 'Open the output folder in the file manager'
+    bl_translation_context = CONTEXT
     bl_options = {'REGISTER'}
 
     def execute(self, context):
@@ -258,43 +414,47 @@ class VIEWPRISM_OT_open_folder(bpy.types.Operator):
         except export.ExportError as exc:
             return _fail(self, exc)
         if not os.path.isdir(directory):
-            return _fail(self, export.ExportError('the output folder does not exist yet'))
+            return _fail(self, export.ExportError(iface('The output folder does not exist yet. It is created by '
+                                                        'the first export.')))
         bpy.ops.wm.path_open(filepath=directory)
         return {'FINISHED'}
 
 
 class VIEWPRISM_OT_settings_save_defaults(bpy.types.Operator):
     bl_idname = 'viewprism.settings_save_defaults'
-    bl_label = 'Save Current as Defaults'
-    bl_description = 'Store the current session settings in the add-on preferences'
+    bl_label = 'Save Current Settings as Defaults'
+    bl_description = 'Store the current settings in the add-on preferences; new sessions start from them'
+    bl_translation_context = CONTEXT
     bl_options = {'REGISTER'}
 
     def execute(self, context):
         prefs = props.preferences(context)
         if prefs is None:
-            return _fail(self, export.ExportError('add-on preferences are not available'))
+            return _fail(self, export.ExportError(iface('The add-on preferences are not available.')))
         props.copy_settings(props.settings(context), prefs.defaults)
         context.preferences.is_dirty = True
-        self.report({'INFO'}, 'ViewPrism: defaults saved to preferences')
+        self.report({'INFO'}, rpt('ViewPrism: defaults saved to the preferences'))
         return {'FINISHED'}
 
 
 class VIEWPRISM_OT_settings_load_defaults(bpy.types.Operator):
     bl_idname = 'viewprism.settings_load_defaults'
     bl_label = 'Load Defaults'
-    bl_description = 'Reset the session settings to the stored defaults'
+    bl_description = 'Reset the current settings to the saved defaults'
+    bl_translation_context = CONTEXT
     bl_options = {'REGISTER'}
 
     def execute(self, context):
         prefs = props.preferences(context)
         if prefs is None:
-            return _fail(self, export.ExportError('add-on preferences are not available'))
+            return _fail(self, export.ExportError(iface('The add-on preferences are not available.')))
         props.copy_settings(prefs.defaults, props.settings(context))
         return {'FINISHED'}
 
 
-classes = (VIEWPRISM_OT_export, VIEWPRISM_OT_export_as, VIEWPRISM_OT_preview, VIEWPRISM_OT_preview_hide,
-           VIEWPRISM_OT_open_folder, VIEWPRISM_OT_settings_save_defaults, VIEWPRISM_OT_settings_load_defaults)
+classes = (VIEWPRISM_OT_export, VIEWPRISM_OT_export_as, VIEWPRISM_OT_preview, VIEWPRISM_OT_preview_show,
+           VIEWPRISM_OT_preview_hide, VIEWPRISM_OT_open_folder, VIEWPRISM_OT_settings_save_defaults,
+           VIEWPRISM_OT_settings_load_defaults)
 
 
 def register():

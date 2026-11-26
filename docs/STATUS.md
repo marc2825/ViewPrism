@@ -20,7 +20,7 @@ untested hardware).
 | Resources (`resources.py`) | memory estimate per pixel; refuse above 90 % of committable memory, warn above 80 % of free RAM; chunked/streamed encoders (8K export adds no memory beyond the capture) |
 | View → request (`viewport.py`) | operating region; camera frame in camera view; custom size with aspect lock or centred crop; positive ortho depth; quad view uses the main region; re-find view after the file browser |
 | Encoding / files (`encode.py`, `png.py`, `exr.py`, `export.py`, `writer.py`) | PNG 8/16, EXR float32/uint32 (ZIP/NONE), metadata JSON (full or anonymized names, path-free error codes), collision pre-check, numbering with exclusive reservation, no-clobber atomic publication, symlink handling, per-file errors, parallel encoding, no colour management |
-| UI (`ui.py`, `operators.py`, `props.py`, `preview.py`) | N-panel, Export / Export As, preview overlay (manual + auto refresh after stillness), formats & advanced sub-panels, status box, View menu entry, defaults in preferences |
+| UI (`ui.py`, `operators.py`, `props.py`, `preview.py`, `i18n.py`) | N panel redesigned after the UI review (2026-11-27): one row per pass (export checkbox, file summary, eye = large preview, gear = popover with all settings of the pass), Size, Output with the list of files Export will write (collisions marked; Export disabled with a reason), Export / Export As, result tied to the settings it was made with; Preview and Output Details sub-panels; panel menu (documentation, defaults). Preview: large overlay + thumbnails of all four passes, darker when outdated, auto refresh after stillness. English and Japanese (follows Blender's interface language) |
 | Warnings | viewport/render modifier differences, shader displacement, transparency, unsupported types, Wire/Bounds, Alt+B clipping, empty capture, low memory |
 | Packaging | extension manifest (min Blender 4.5.0, GPL-3.0-or-later), validate/build/audit tool (ZIP privacy scan, LICENSE included), install lifecycle test |
 | CI/CD (GitHub Actions) | lint; pure tests (Windows/Linux × Python 3.11/3.13); Blender 4.5 LTS, 5.0, 5.1, 5.2, 5.3 on Linux (Xvfb + Mesa llvmpipe OpenGL) with harness, GUI/GPU suite, build and package lifecycle; Blender 4.5 LTS and 5.3 on Windows (background); secrets job (gitleaks + canary, privacy scan of tree and history); manual macOS probe; tag → validated ZIP + SHA-256 as a GitHub (pre-)release from an isolated publish job |
@@ -58,17 +58,17 @@ after a capture from a second, later closed window.
 
 ## Test results
 
-- Local (Windows): [`docs/evidence/2026-11-27/SUMMARY.md`](evidence/2026-11-27/SUMMARY.md) (v0.2.0 branch), stress:
+- Local (Windows): [`docs/evidence/2026-11-27-ui/SUMMARY.md`](evidence/2026-11-27-ui/SUMMARY.md) (redesigned UI; v0.2.0: [`2026-11-27`](evidence/2026-11-27/SUMMARY.md)) (v0.2.0 branch), stress:
   [`docs/evidence/2026-11-26-stress/`](evidence/2026-11-26-stress/)
 - CI: [`docs/evidence/ci-2026-11-26/`](evidence/ci-2026-11-26/) (PR #10); every CI run also uploads its
   evidence as an artifact.
 
 | Suite | Count | Result |
 |---|---|---|
-| Pure unit tests | 85 | PASS (local + CI on Windows/Linux, Python 3.11/3.13; symlink cases run in CI) |
+| Pure unit tests | 89 | PASS (local + CI on Windows/Linux, Python 3.11/3.13; symlink cases run in CI) |
 | Independent harness self-test | 2 | PASS |
 | Independent harness (background registration + GPU analytic cases) | per environment above | PASS |
-| GUI/GPU suite | 22 cases per environment | PASS |
+| GUI/GPU suite | 26 cases per environment | PASS |
 | Extension validate + build + ZIP audit | 1 | PASS |
 | Package lifecycle (isolated user dir) | 1 per Blender version | PASS |
 | Secrets (gitleaks all refs + canary) and privacy scan (tree + history) | CI | PASS |

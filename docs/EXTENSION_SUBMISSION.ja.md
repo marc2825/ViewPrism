@@ -51,7 +51,10 @@
    - **Description**: `EXTENSION_LISTING.md` の「Description」の Markdown をそのまま貼る。
    - **Icon**（必須）: `branding/viewprism-icon-256.png`
    - **Featured image**（必須）: `branding/viewprism-featured-1920x1080.png`
-   - **Previews**: `docs/images/ui_preview_normal.png`、`docs/images/ui_panel.png`、`docs/images/passes_grid.png`（任意で `ui_preview_depth.png`）。
+   - **Previews**: `docs/listing/0.2.0/ui_preview_normal.png`、`docs/listing/0.2.0/ui_panel.png`、`docs/listing/0.2.0/passes_grid.png`（任意で `docs/listing/0.2.0/ui_preview_depth.png`）。
+   - これらは **0.2.0 のパネル**の画像です。
+     - main ブランチでは UI を刷新済みです（パスごとの行、書き出すファイル一覧、サムネイル、日本語対応）。
+     - 刷新後のバージョンで申請する場合は、`docs/images/` の新しい画像を使い、`EXTENSION_LISTING.md` の説明文を更新してください。
    - 画像の推奨サイズ・形式はアップロード画面の表示に従ってください。
      - 用意した画像: アイコン 256×256、featured 1920×1080、プレビュー約 16:9、いずれも PNG。
      - 一度アップロードした画像は、プラットフォーム上で再利用できません。

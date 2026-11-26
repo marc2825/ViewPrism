@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'viewprism'
 LICENSE = ROOT / 'LICENSE'
-ALLOWED = re.compile(r'^(blender_manifest\.toml|LICENSE|[a-z_]+\.py)$')
+ALLOWED = re.compile(r'^(blender_manifest\.toml|LICENSE|[a-z_][a-z0-9_]*\.py)$')
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from privacy_scan import scan_text  # noqa: E402

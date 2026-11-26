@@ -1,10 +1,13 @@
 # SPDX-FileCopyrightText: 2026 marc2825
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Display-only preview overlay in the 3D viewport the capture came from.
+"""Display-only preview in the 3D viewport the capture came from.
 
-The preview is drawn by a POST_PIXEL handler from a GPU texture owned by this module;
-no image datablocks are created. Raw preview arrays are never used for export: exports
-always capture again at export resolution.
+One preview capture holds all four passes. They are shown as
+* a strip of small thumbnails in the lower left corner (all passes side by side), and
+* optionally one pass large over the whole viewport (the "eye" button of that pass).
+Both are drawn by a POST_PIXEL handler from GPU textures owned by this module; no image
+datablocks are created. Raw preview arrays are never used for export: exports always capture
+again at export resolution.
 """
 import time
 
@@ -12,11 +15,17 @@ import bpy
 import numpy as np
 
 from . import encode, viewport
+from .i18n import iface
 
 DEBOUNCE = 0.2          # seconds of stillness (no view change, no depsgraph update) before an auto refresh
 TICK = 0.1
 SLOW_CAPTURE = 0.25     # back off when a preview capture is slower than this
 MAX_SETTLE = 1.0        # upper bound of the stillness wait for slow scenes
+PASSES = ('depth', 'normal', 'object_id', 'mask')
+LABELS = {'depth': 'Depth', 'normal': 'Normal', 'object_id': 'Object ID', 'mask': 'Mask'}
+THUMB_TEXTURE_HEIGHT = 128   # thumbnails are sampled down to about this many rows before encoding
+THUMB_HEIGHT = 56            # drawn height in UI units (scaled by the UI scale)
+STALE_DIM = 0.35             # opacity factor of an outdated preview
 
 
 class _State:
@@ -26,7 +35,10 @@ class _State:
     def reset(self):
         self.pointers = None       # (window, area, region) pointers of the source view
         self.raw = None            # last preview capture result
-        self.texture = None
+        self.small = None          # the same passes sampled down for the thumbnails
+        self.texture = None        # large overlay of settings.preview_pass (only while overlay is on)
+        self.thumbs = {}           # pass -> thumbnail texture
+        self.overlay = False       # large overlay shown
         self.size = (0, 0)
         self.signature = None
         self.capture_modes = None  # (normal_mode, id_mode) used for raw
@@ -36,6 +48,7 @@ class _State:
         self.busy = False
         self.error = ''
         self.message = ''
+        self.warnings = []
         self.last_seconds = 0.0
         self.stale = False
         self.windows = frozenset()
@@ -52,24 +65,25 @@ _batch = None
 
 
 def _image_shader():
+    """Draws a texture into a rectangle given in normalized device coordinates (push constant)."""
     global _shader, _batch
     if _shader is None:
         import gpu
         from gpu_extras.batch import batch_for_shader
-        iface = gpu.types.GPUStageInterfaceInfo('viewprism_preview_iface')
-        iface.smooth('VEC2', 'v_uv')
+        iface_ = gpu.types.GPUStageInterfaceInfo('viewprism_preview_iface')
+        iface_.smooth('VEC2', 'v_uv')
         info = gpu.types.GPUShaderCreateInfo()
+        info.push_constant('VEC4', 'rect')
         info.push_constant('FLOAT', 'opacity')
+        info.push_constant('FLOAT', 'gain')
         info.sampler(0, 'FLOAT_2D', 'image')
-        info.vertex_in(0, 'VEC2', 'pos')
-        info.vertex_in(1, 'VEC2', 'uv')
-        info.vertex_out(iface)
+        info.vertex_in(0, 'VEC2', 'uv')
+        info.vertex_out(iface_)
         info.fragment_out(0, 'VEC4', 'color')
-        info.vertex_source('void main() { v_uv = uv; gl_Position = vec4(pos, 0.0, 1.0); }')
-        info.fragment_source('void main() { color = vec4(texture(image, v_uv).rgb, opacity); }')
+        info.vertex_source('void main() { v_uv = uv; gl_Position = vec4(mix(rect.xy, rect.zw, uv), 0.0, 1.0); }')
+        info.fragment_source('void main() { color = vec4(texture(image, v_uv).rgb * gain, opacity); }')
         _shader = gpu.shader.create_from_info(info)
-        _batch = batch_for_shader(_shader, 'TRI_FAN', {
-            'pos': ((-1, -1), (1, -1), (1, 1), (-1, 1)), 'uv': ((0, 0), (1, 0), (1, 1), (0, 1))})
+        _batch = batch_for_shader(_shader, 'TRI_FAN', {'uv': ((0, 0), (1, 0), (1, 1), (0, 1))})
     return _shader, _batch
 
 
@@ -91,6 +105,13 @@ def display_image(result, pass_name, settings):
     return np.repeat(mask.astype(np.float32)[..., None], 3, axis=-1)
 
 
+def downsample(result, rows=THUMB_TEXTURE_HEIGHT):
+    """Every n-th pixel of each pass (nearest neighbour keeps IDs and masks exact)."""
+    h = result['mask'].shape[0]
+    step = max(1, h // rows)
+    return {p: result[p][::step, ::step] for p in PASSES}
+
+
 def _upload(rgb):
     import gpu
     h, w = rgb.shape[:2]
@@ -99,19 +120,30 @@ def _upload(rgb):
     return gpu.types.GPUTexture((w, h), format='RGBA8', data=buf)
 
 
-def _rebuild_texture(settings):
-    if state.raw is None:
-        state.texture = None
-        return
+def _encoded(result, pass_name, settings):
     try:
-        rgb = display_image(state.raw, settings.preview_pass, settings)
-        state.error = ''
+        return display_image(result, pass_name, settings)
     except encode.EncodeError as exc:
         state.error = str(exc)
-        rgb = np.zeros(state.raw['mask'].shape + (3,), np.float32)
-    state.texture = _upload(rgb)
-    if hasattr(state.texture, 'filter_mode'):      # Blender 5.x; cosmetic only
-        state.texture.filter_mode(settings.preview_pass in ('depth', 'normal'))
+        return np.zeros(result['mask'].shape + (3,), np.float32)
+
+
+def _rebuild_texture(settings):
+    """Re-encode the cached capture for the current display settings (no new capture)."""
+    if state.raw is None:
+        state.texture, state.thumbs = None, {}
+        return
+    state.error = ''
+    if state.overlay:
+        state.texture = _upload(_encoded(state.raw, settings.preview_pass, settings))
+        if hasattr(state.texture, 'filter_mode'):      # Blender 5.x; cosmetic only
+            state.texture.filter_mode(settings.preview_pass in ('depth', 'normal'))
+    else:
+        state.texture = None
+    if settings.preview_thumbnails and state.small is not None:
+        state.thumbs = {p: _upload(_encoded(state.small, p, settings)) for p in PASSES}
+    else:
+        state.thumbs = {}
 
 
 def _tag_redraw():
@@ -124,20 +156,25 @@ def _tag_redraw():
 
 
 def refresh(context, view):
-    """Capture at preview resolution for `view` and show it."""
+    """Capture at preview resolution for `view` and show it. A new preview starts with the large
+    overlay of settings.preview_pass; an existing one keeps its overlay state."""
     from . import capture as cap
     from . import props
     settings = props.settings(context)
+    starting = not is_showing(view.area)
     state.busy = True
     try:
         request, _src = viewport.build_request(view, context.scene, context.evaluated_depsgraph_get(),
-                                               settings, ('depth', 'normal', 'object_id', 'mask'), preview=True)
+                                               settings, PASSES, preview=True)
         with context.temp_override(**view.override()):
             result = cap.capture(bpy.context, request)
     finally:
         state.busy = False
+    if starting:
+        state.overlay = True
     state.pointers = view.pointers()
     state.raw = result
+    state.small = downsample(result)
     state.size = (request['width'], request['height'])
     state.signature = viewport.view_signature(view)
     state.capture_modes = (settings.normal_mode, settings.id_mode)
@@ -146,14 +183,40 @@ def refresh(context, view):
     state.pending_signature = None
     state.stale = False
     state.last_seconds = result['stats']['seconds']['total']
-    n_warn = len(result['warnings'])
-    state.message = (f"Preview {request['width']}x{request['height']}, {state.last_seconds * 1000:.0f} ms"
-                     + (f", {n_warn} warning(s)" if n_warn else ''))
+    state.warnings = list(result['warnings'])
+    state.message = iface('{} × {} px, {:.0f} ms').format(request['width'], request['height'],
+                                                         state.last_seconds * 1000)
     _rebuild_texture(settings)
     _ensure_draw_handler()
     _ensure_timer()
     view.area.tag_redraw()
     return result
+
+
+def show_pass(context, view, pass_name):
+    """The eye button of a pass: show it large; the same button again hides the large overlay
+    (the thumbnails stay). Starts a preview first if this view has none."""
+    from . import props
+    settings = props.settings(context)
+    if not is_showing(view.area):
+        settings.preview_pass = pass_name
+        refresh(context, view)
+        return
+    if state.overlay and settings.preview_pass == pass_name:
+        state.overlay = False
+    else:
+        state.overlay = True
+        settings.preview_pass = pass_name
+    _rebuild_texture(settings)
+    _tag_redraw()
+
+
+def overlay_pass(area):
+    """The pass shown large in `area`, or None."""
+    from . import props
+    if not (is_showing(area) and state.overlay):
+        return None
+    return props.settings(bpy.context).preview_pass
 
 
 def clear():
@@ -189,63 +252,145 @@ def is_showing(area):
 
 # ----------------------------------------------------------------------------- drawing
 
+def _ndc(x, y, w, h, rw, rh):
+    return (2 * x / rw - 1, 2 * y / rh - 1, 2 * (x + w) / rw - 1, 2 * (y + h) / rh - 1)
+
+
+def _draw_image(texture, rect_ndc, opacity, gain=1.0):
+    shader, batch = _image_shader()
+    shader.bind()
+    shader.uniform_float('rect', rect_ndc)
+    shader.uniform_float('opacity', opacity)
+    shader.uniform_float('gain', gain)
+    shader.uniform_sampler('image', texture)
+    batch.draw(shader)
+
+
+def _top_inset(ctx):
+    """Height of header regions that float over the top of the viewport (transparent headers)."""
+    region = ctx.region
+    top = region.y + region.height
+    inset = 0
+    for r in ctx.area.regions:          # header and tool header, stacked at the top edge
+        if r.type in {'HEADER', 'TOOL_HEADER'} and r.height > 1 and region.y < r.y < top and top - r.y < 200:
+            inset = max(inset, top - r.y)
+    return inset
+
+
+def _rect(x, y, w, h, rw, rh, color):
+    """Filled rectangle in region pixels (converted to NDC; no gpu.matrix state is assumed)."""
+    import gpu
+    from gpu_extras.batch import batch_for_shader
+    from mathutils import Matrix
+    x0, y0, x1, y1 = _ndc(x, y, w, h, rw, rh)
+    sh = gpu.shader.from_builtin('UNIFORM_COLOR')
+    batch = batch_for_shader(sh, 'TRI_FAN', {'pos': ((x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0))})
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_identity()
+        with gpu.matrix.push_pop_projection():
+            gpu.matrix.load_projection_matrix(Matrix.Identity(4))
+            sh.uniform_float('color', color)
+            batch.draw(sh)
+
+
+def _left_inset(ctx):
+    """Width of the toolbar when it floats over the viewport (Region Overlap)."""
+    if not ctx.preferences.system.use_region_overlap:
+        return 0
+    space = ctx.area.spaces.active
+    if not getattr(space, 'show_region_toolbar', False):
+        return 0
+    tools = next((r for r in ctx.area.regions if r.type == 'TOOLS'), None)
+    return tools.width if tools is not None and tools.width > 1 else 0
+
+
+def thumbnail_layout(region_w, region_h, image_w, image_h, ui, left=0):
+    """Pixel rectangles (x, y, w, h) of the four thumbnail images, lower left, or [] if they do not fit."""
+    margin, gap, label_h = 10 * ui, 6 * ui, 18 * ui
+    th = THUMB_HEIGHT * ui
+    tw = min(th * image_w / max(1, image_h), 2.2 * th)
+    room = region_w - left - 2 * margin
+    if 4 * tw + 3 * gap > room:                     # shrink to the available width
+        tw = max(0.0, (room - 3 * gap) / 4)
+        th = tw * image_h / max(1, image_w)
+    if tw < 24 * ui or th + label_h + 2 * margin > region_h:
+        return []
+    return [(left + margin + i * (tw + gap), margin + label_h, tw, th) for i in range(4)]
+
+
 def _draw():
-    if not state.active or state.texture is None:
+    if not state.active:
         return
     ctx = bpy.context
     if ctx.area is None or ctx.region is None:
         return
     if ctx.area.as_pointer() != state.pointers[1] or ctx.region.as_pointer() != state.pointers[2]:
         return
+    import blf
     import gpu
     from . import props
     settings = props.settings(ctx)
-    shader, batch = _image_shader()
+    rw, rh = ctx.region.width, ctx.region.height
+    ui = ctx.preferences.system.ui_scale
+    sig_now = (tuple(round(x, 7) for row in ctx.region_data.view_matrix for x in row),
+               tuple(round(x, 7) for row in ctx.region_data.window_matrix for x in row),
+               rw, rh, ctx.region_data.view_perspective)
+    stale = state.stale or sig_now != state.signature
+    gain = STALE_DIM if stale else 1.0                  # an outdated preview is drawn darker
     prev_blend = gpu.state.blend_get()
     try:
         gpu.state.blend_set('ALPHA')
-        shader.bind()
-        shader.uniform_float('opacity', settings.preview_opacity)
-        shader.uniform_sampler('image', state.texture)
-        batch.draw(shader)
+        if state.overlay and state.texture is not None:
+            _draw_image(state.texture, (-1.0, -1.0, 1.0, 1.0), settings.preview_opacity, gain)
+        if state.thumbs:
+            _draw_thumbnails(ctx, settings, rw, rh, ui, gain)
+        if stale:
+            text = iface('Preview updating…') if settings.preview_auto else \
+                iface('Preview outdated: click Refresh or turn on Auto Refresh')
+        elif state.overlay:
+            text = iface('Preview: {} (display only)').format(iface(LABELS[settings.preview_pass]))
+        else:
+            text = ''
+        if text:
+            font = 0
+            blf.size(font, 13 * ui)
+            tw, th = blf.dimensions(font, text)
+            x, y = (rw - tw) / 2, rh - _top_inset(ctx) - th - 14 * ui
+            _rect(x - 8 * ui, y - 6 * ui, tw + 16 * ui, th + 12 * ui, rw, rh, (0.0, 0.0, 0.0, 0.65))
+            blf.color(font, 1.0, 0.82 if stale else 1.0, 0.25 if stale else 1.0, 1.0)
+            blf.position(font, x, y, 0)
+            blf.draw(font, text)
     finally:
         gpu.state.blend_set(prev_blend)
-    sig_now = (tuple(round(x, 7) for row in ctx.region_data.view_matrix for x in row),
-               tuple(round(x, 7) for row in ctx.region_data.window_matrix for x in row),
-               ctx.region.width, ctx.region.height, ctx.region_data.view_perspective)
-    stale = state.stale or sig_now != state.signature
+
+
+def _draw_thumbnails(ctx, settings, rw, rh, ui, gain):
     import blf
+    w, h = state.size
+    rects = thumbnail_layout(rw, rh, w, h, ui, _left_inset(ctx))
+    shown = settings.preview_pass if state.overlay else None
+    exported = {'depth': settings.use_depth, 'normal': settings.use_normal,
+                'object_id': settings.use_object_id, 'mask': settings.use_mask}
     font = 0
-    blf.size(font, 12 * ctx.preferences.system.ui_scale)
-    label = f'ViewPrism preview ({settings.preview_pass}) - display only'
-    if stale:
-        label += ' - OUTDATED, press Refresh' if not settings.preview_auto else ' - updating...'
-    ui = ctx.preferences.system.ui_scale
-    tw, th = blf.dimensions(font, label)
-    _backdrop(8 * ui, 8 * ui, tw + 8 * ui, th + 8 * ui, ctx.region.width, ctx.region.height)
-    blf.color(font, 1.0, 0.85 if stale else 1.0, 0.2 if stale else 1.0, 1.0)
-    blf.position(font, 12 * ui, 12 * ui, 0)
-    blf.draw(font, label)
-
-
-def _backdrop(x, y, w, h, rw, rh):
-    """Dark translucent box behind the overlay label (pixel coords -> NDC, no gpu.matrix use)."""
-    import gpu
-    from gpu_extras.batch import batch_for_shader
-    from mathutils import Matrix
-    x0, y0 = 2 * x / rw - 1, 2 * y / rh - 1
-    x1, y1 = 2 * (x + w) / rw - 1, 2 * (y + h) / rh - 1
-    sh = gpu.shader.from_builtin('UNIFORM_COLOR')
-    batch = batch_for_shader(sh, 'TRI_FAN', {'pos': ((x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0))})
-    prev = gpu.state.blend_get()
-    gpu.state.blend_set('ALPHA')
-    with gpu.matrix.push_pop():
-        gpu.matrix.load_identity()
-        with gpu.matrix.push_pop_projection():
-            gpu.matrix.load_projection_matrix(Matrix.Identity(4))
-            sh.uniform_float('color', (0.0, 0.0, 0.0, 0.6))
-            batch.draw(sh)
-    gpu.state.blend_set(prev)
+    blf.size(font, 11 * ui)
+    for p, (x, y, tw, th) in zip(PASSES, rects):
+        pad = 2 * ui
+        frame = (0.96, 0.76, 0.31, 0.95) if p == shown else (0.0, 0.0, 0.0, 0.6)
+        _rect(x - pad, y - 18 * ui, tw + 2 * pad, th + 18 * ui + pad, rw, rh, frame)
+        tex = state.thumbs.get(p)
+        if tex is not None:
+            _draw_image(tex, _ndc(x, y, tw, th, rw, rh), 1.0, gain)
+        label = iface(LABELS[p])
+        lw, _lh = blf.dimensions(font, label)
+        if lw > tw - 6 * ui:                        # very narrow thumbnails: shorten the label
+            label = label[:max(1, int(len(label) * (tw - 6 * ui) / lw))]
+        on = exported[p]
+        if p == shown:
+            blf.color(font, 0.1, 0.1, 0.1, 1.0)
+        else:
+            blf.color(font, 1.0, 1.0, 1.0, 1.0 if on else 0.55)
+        blf.position(font, x + 4 * ui, y - 13 * ui, 0)
+        blf.draw(font, label)
 
 
 def _ensure_draw_handler():
@@ -302,14 +447,19 @@ def _tick():
         return 0.5                  # transient (e.g. a window was just closed): retry later
     except Exception as exc:  # never leave a broken timer running
         settings.preview_auto = False
-        state.error = f'Auto refresh stopped: {exc}'
+        state.error = iface('Auto Refresh stopped: {}').format(exc)
         _tag_redraw()
         return 0.5
     return max(TICK, min(1.0, state.last_seconds * 4)) if state.last_seconds > SLOW_CAPTURE else TICK
 
 
 @bpy.app.handlers.persistent
-def _on_depsgraph_update(_scene, _depsgraph):
+def _on_depsgraph_update(_scene, depsgraph):
+    # Changing an add-on setting (a WindowManager property) also fires this handler, with no updated
+    # datablocks: that does not change the scene, so the preview stays current.
+    updates = getattr(depsgraph, 'updates', None)
+    if updates is not None and len(updates) == 0:
+        return
     if state.active and not state.busy:
         state.dirty = True
         state.stale = True

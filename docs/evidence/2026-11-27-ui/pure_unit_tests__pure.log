@@ -1,0 +1,97 @@
+test_decode_hand_built_multipart (test_codecs.Exr.test_decode_hand_built_multipart) ... ok
+test_errors (test_codecs.Exr.test_errors) ... ok
+test_roundtrip (test_codecs.Exr.test_roundtrip) ... ok
+test_uncompressed_layout_matches_spec (test_codecs.Exr.test_uncompressed_layout_matches_spec) ... ok
+test_zip_actually_compresses_smooth_data (test_codecs.Exr.test_zip_actually_compresses_smooth_data) ... ok
+test_decode_reference_filters (test_codecs.Png.test_decode_reference_filters) ... ok
+test_gray_2d_and_errors (test_codecs.Png.test_gray_2d_and_errors) ... ok
+test_header_layout_matches_spec (test_codecs.Png.test_header_layout_matches_spec) ... ok
+test_roundtrip_all_layouts (test_codecs.Png.test_roundtrip_all_layouts) ... ok
+test_smooth_gradient_compresses (test_codecs.Png.test_smooth_gradient_compresses) ... ok
+test_auto_far_white (test_encode.DepthNormalize.test_auto_far_white) ... ok
+test_auto_near_white (test_encode.DepthNormalize.test_auto_near_white) ... ok
+test_background_independent (test_encode.DepthNormalize.test_background_independent) ... ok
+test_constant (test_encode.DepthNormalize.test_constant) ... ok
+test_empty (test_encode.DepthNormalize.test_empty) ... ok
+test_fixed_clamps_and_reversed (test_encode.DepthNormalize.test_fixed_clamps_and_reversed) ... ok
+test_nonfinite_foreground_is_background (test_encode.DepthNormalize.test_nonfinite_foreground_is_background) ... ok
+test_raw_not_modified (test_encode.DepthNormalize.test_raw_not_modified) ... ok
+test_fast_normal_quantization_matches_reference (test_encode.Others.test_fast_normal_quantization_matches_reference) ... ok
+test_id_roundtrip_and_overflow (test_encode.Others.test_id_roundtrip_and_overflow) ... ok
+test_mask_and_colors (test_encode.Others.test_mask_and_colors) ... ok
+test_normal_rgb (test_encode.Others.test_normal_rgb) ... ok
+test_quantize (test_encode.Others.test_quantize) ... ok
+test_all_outputs_roundtrip (test_export.EndToEnd.test_all_outputs_roundtrip) ... ok
+test_id_overflow_fails_only_that_file (test_export.EndToEnd.test_id_overflow_fails_only_that_file) ... ok
+test_missing_pass_is_an_error_not_a_silent_skip (test_export.EndToEnd.test_missing_pass_is_an_error_not_a_silent_skip) ... ok
+test_normal_flip_only_changes_png (test_export.EndToEnd.test_normal_flip_only_changes_png) ... ok
+test_unicode_directory_and_name (test_export.EndToEnd.test_unicode_directory_and_name) ... ok
+test_items (test_export.Names.test_items) ... ok
+test_plan_auto_and_none (test_export.Names.test_plan_auto_and_none) ... ok
+test_sanitize (test_export.Names.test_sanitize) ... ok
+test_atomic_no_overwrite (test_export.Writing.test_atomic_no_overwrite) ... ok
+test_batch_partial_failure_reports_each_file (test_export.Writing.test_batch_partial_failure_reports_each_file) ... ok
+test_directory_is_a_file (test_export.Writing.test_directory_is_a_file) ... ok
+test_unwritable_directory (test_export.Writing.test_unwritable_directory) ... ok
+test_anonymized_mode (test_export_safety.MetadataPrivacy.test_anonymized_mode) ... ok
+test_failure_metadata_has_no_paths (test_export_safety.MetadataPrivacy.test_failure_metadata_has_no_paths) ... ok
+test_full_mode_keeps_names (test_export_safety.MetadataPrivacy.test_full_mode_keeps_names) ... ok
+test_redact_paths (test_export_safety.MetadataPrivacy.test_redact_paths) ... ok
+test_unknown_privacy_mode (test_export_safety.MetadataPrivacy.test_unknown_privacy_mode) ... ok
+test_warnings_are_path_redacted (test_export_safety.MetadataPrivacy.test_warnings_are_path_redacted) ... ok
+test_concurrent_auto_numbering_across_processes (test_export_safety.NoClobber.test_concurrent_auto_numbering_across_processes) ... ok
+test_dangling_symlink_is_not_written_through (test_export_safety.NoClobber.test_dangling_symlink_is_not_written_through) ... skipped 'symlinks not permitted on this system (OSError); covered on Linux CI'
+test_dangling_symlink_takes_its_number (test_export_safety.NoClobber.test_dangling_symlink_takes_its_number) ... skipped 'symlinks not permitted on this system (OSError); covered on Linux CI'
+test_long_names_fit_the_temporary_name (test_export_safety.NoClobber.test_long_names_fit_the_temporary_name) ... skipped 'Windows MAX_PATH (260) is shorter than this test path; covered on Linux CI'
+test_overwrite_is_explicit (test_export_safety.NoClobber.test_overwrite_is_explicit) ... ok
+test_partial_failure_cleans_up (test_export_safety.NoClobber.test_partial_failure_cleans_up) ... ok
+test_placeholder_publication (test_export_safety.NoClobber.test_placeholder_publication)
+The no-hard-link path itself, on every OS: exclusive placeholder, then atomic replace. ... ok
+test_published_file_is_not_reported_failed_if_temp_cleanup_fails (test_export_safety.NoClobber.test_published_file_is_not_reported_failed_if_temp_cleanup_fails)
+After the file is published, failing to remove the temporary name (e.g. a scanner holds it) ... ok
+test_race_file_created_just_before_publication (test_export_safety.NoClobber.test_race_file_created_just_before_publication) ... ok
+test_symlink_pointing_outside_is_refused (test_export_safety.NoClobber.test_symlink_pointing_outside_is_refused) ... skipped 'symlinks not permitted on this system (OSError); covered on Linux CI'
+test_threads_same_numbering (test_export_safety.NoClobber.test_threads_same_numbering) ... ok
+test_without_hard_links (test_export_safety.NoClobber.test_without_hard_links)
+FAT/exFAT and some network shares have no hard links: exports still work and stay no-clobber ... ok
+test_every_ui_string_is_translated (test_i18n.Translations.test_every_ui_string_is_translated) ... ok
+test_no_unused_entries (test_i18n.Translations.test_no_unused_entries) ... ok
+test_placeholders_match (test_i18n.Translations.test_placeholders_match) ... ok
+test_table_shape (test_i18n.Translations.test_table_shape) ... ok
+test_allowed_addresses (test_privacy_scan.Detects.test_allowed_addresses) ... ok
+test_credential_formats (test_privacy_scan.Detects.test_credential_formats) ... ok
+test_emails_any_provider (test_privacy_scan.Detects.test_emails_any_provider) ... ok
+test_placeholders_are_fine (test_privacy_scan.Detects.test_placeholders_are_fine) ... ok
+test_user_paths (test_privacy_scan.Detects.test_user_paths) ... ok
+test_values_are_masked (test_privacy_scan.Detects.test_values_are_masked) ... ok
+test_home_variants_include_home (test_privacy_scan.EvidenceSanitiser.test_home_variants_include_home) ... ok
+test_long_short_and_slash_forms_of_home (test_privacy_scan.EvidenceSanitiser.test_long_short_and_slash_forms_of_home) ... ok
+test_detect_and_strip (test_privacy_scan.PngMetadata.test_detect_and_strip) ... ok
+test_own_encoder_writes_no_metadata (test_privacy_scan.PngMetadata.test_own_encoder_writes_no_metadata) ... ok
+test_generic (test_projection.ClassifyAndClip.test_generic) ... ok
+test_infinite_far (test_projection.ClassifyAndClip.test_infinite_far) ... ok
+test_invalid (test_projection.ClassifyAndClip.test_invalid) ... ok
+test_off_center_perspective (test_projection.ClassifyAndClip.test_off_center_perspective) ... ok
+test_orthographic_negative_near (test_projection.ClassifyAndClip.test_orthographic_negative_near) ... ok
+test_perspective (test_projection.ClassifyAndClip.test_perspective) ... ok
+test_crop_keeps_square_pixels_and_centre (test_projection.CropAndShift.test_crop_keeps_square_pixels_and_centre) ... ok
+test_locked_height (test_projection.CropAndShift.test_locked_height) ... ok
+test_ortho_shift (test_projection.CropAndShift.test_ortho_shift) ... ok
+test_linear_mapping_ortho (test_projection.DepthMapping.test_linear_mapping_ortho) ... ok
+test_log_mapping_endpoints (test_projection.DepthMapping.test_log_mapping_endpoints) ... ok
+test_log_mapping_resolves_millimetres_at_100m (test_projection.DepthMapping.test_log_mapping_resolves_millimetres_at_100m) ... ok
+test_pixel_centres_top_left (test_projection.ProjectPixels.test_pixel_centres_top_left) ... ok
+test_exr_blocks_roundtrip_odd_height (test_resources.ChunkedEncoders.test_exr_blocks_roundtrip_odd_height) ... ok
+test_png_streaming_roundtrip (test_resources.ChunkedEncoders.test_png_streaming_roundtrip) ... ok
+test_quantize_depth_matches_reference (test_resources.ChunkedEncoders.test_quantize_depth_matches_reference) ... ok
+test_quantize_normal_chunked (test_resources.ChunkedEncoders.test_quantize_normal_chunked) ... ok
+test_available_memory_on_this_system (test_resources.Guard.test_available_memory_on_this_system) ... ok
+test_estimate (test_resources.Guard.test_estimate) ... ok
+test_hard_limit_uses_committable_memory (test_resources.Guard.test_hard_limit_uses_committable_memory) ... ok
+test_soft_limit_warns_about_paging (test_resources.Guard.test_soft_limit_warns_about_paging) ... ok
+test_unknown_memory_does_not_block (test_resources.Guard.test_unknown_memory_does_not_block) ... ok
+
+----------------------------------------------------------------------
+Ran 89 tests in 1.002s
+
+OK (skipped=4)

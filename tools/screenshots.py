@@ -20,7 +20,7 @@ env = dict(os.environ, BLENDER_USER_RESOURCES=tempfile.mkdtemp(prefix='viewprism
 cmd = [a.blender, '--factory-startup', '--disable-autoexec', '--enable-event-simulate',
        '--python', str(ROOT / 'tools' / 'make_screenshots.py'), '--',
        '--repo', str(ROOT), '--out', str(ROOT / 'docs' / 'images')]
-proc = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=300)
+proc = subprocess.run(cmd, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
 print(proc.stdout[-3000:], proc.stderr[-2000:])
 if 'SHOTS OK' not in proc.stdout:
     sys.exit(1)
