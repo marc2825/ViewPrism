@@ -121,22 +121,30 @@ def _idle_release():
 
 
 def _get_targets(width, height):
+    """Textures are reused between same-size captures; the framebuffer is not.
+
+    OpenGL framebuffer objects belong to the GL context they were created in (one per window), so a
+    cached framebuffer must never outlive or cross contexts (Blender 4.5 crashed after the window
+    that created it was closed). Textures are shared between contexts, so only they are cached and a
+    small framebuffer is created and freed within each capture.
+    """
     import time
     import gpu
     global _targets
     if _targets is not None and _targets[0] == (width, height):
         _targets = _targets[:5] + (time.monotonic(),)
-        return _targets[1:5]
-    _targets = None
-    tex_geom = gpu.types.GPUTexture((width, height), format='RGBA32F')
-    tex_id = gpu.types.GPUTexture((width, height), format='RGBA32F')
-    tex_depth = gpu.types.GPUTexture((width, height), format='DEPTH_COMPONENT32F')
+        tex_geom, tex_id, tex_depth = _targets[2:5]
+    else:
+        _targets = None
+        tex_geom = gpu.types.GPUTexture((width, height), format='RGBA32F')
+        tex_id = gpu.types.GPUTexture((width, height), format='RGBA32F')
+        tex_depth = gpu.types.GPUTexture((width, height), format='DEPTH_COMPONENT32F')
+        if width * height <= KEEP_MAX_PIXELS:
+            import bpy
+            _targets = ((width, height), None, tex_geom, tex_id, tex_depth, time.monotonic())
+            if not bpy.app.timers.is_registered(_idle_release):
+                bpy.app.timers.register(_idle_release, first_interval=IDLE_RELEASE, persistent=True)
     fb = gpu.types.GPUFrameBuffer(depth_slot=tex_depth, color_slots=(tex_geom, tex_id))
-    if width * height <= KEEP_MAX_PIXELS:
-        import bpy
-        _targets = ((width, height), fb, tex_geom, tex_id, tex_depth, time.monotonic())
-        if not bpy.app.timers.is_registered(_idle_release):
-            bpy.app.timers.register(_idle_release, first_interval=IDLE_RELEASE, persistent=True)
     return fb, tex_geom, tex_id, tex_depth
 
 

@@ -117,6 +117,8 @@ def _ensure_gpu_context(context):
     wm = context.window_manager
     current = frozenset(w.as_pointer() for w in wm.windows)
     if _known_windows is not None and current != _known_windows and len(wm.windows):
+        from . import gpu_draw
+        gpu_draw.release_targets()          # never carry GPU objects across a window change
         win = context.window if context.window is not None else wm.windows[0]
         with context.temp_override(window=win, screen=win.screen):
             bpy.ops.wm.redraw_timer(type='DRAW_WIN', iterations=1)

@@ -781,19 +781,14 @@ def t_multi_window(ctx, vp):
         check(name_at(res, r_, c_) == 'MW_front' and abs(res['depth'][r_, c_] - 4) < 1e-4, f'{label}: wrong capture')
 
     notes = []
-    if bpy.app.version >= (5, 0, 0):
-        # Same tick as the close: no current GPU context until Blender redraws. ViewPass redraws
-        # first (5.x would otherwise raise). Blender 4.5 + Mesa crashed in this same-tick case even
-        # with the redraw, so it is a documented 4.5 limitation for scripts (see docs/STATUS.md).
-        print('MW: capture in the same tick as the close', flush=True)
-        capture_ok('same tick as window close')
-        notes.append('same-tick capture after close works')
+    # Same tick as the close: no current GPU context until Blender redraws, and GPU objects made
+    # in the closed window's context are gone. ViewPass must redraw first and must not reuse a
+    # framebuffer from the closed window (Blender 4.5 crashed on that).
+    print('MW: capture in the same tick as the close', flush=True)
+    capture_ok('same tick as window close')
+    notes.append('same-tick capture after close works')
     # Realistic sequence: Blender processes events and redraws, then the user/timer captures.
     yield 0.5
-    print('MW: guard (redraw) after the event loop ran', flush=True)
-    w_, a_, g_ = find_view3d()
-    with bpy.context.temp_override(**override(w_, a_, g_)):
-        vp.capture._ensure_gpu_context(bpy.context)
     print('MW: capture after the event loop ran', flush=True)
     capture_ok('after window close')
     print('MW: done', flush=True)
