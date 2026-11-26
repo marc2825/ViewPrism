@@ -1,0 +1,115 @@
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+VIEWPRISM_SUITE fail
+TEST t_registration pass
+VIEWPRISM_SUITE fail
+TEST t_empty_scene pass
+VIEWPRISM_SUITE fail
+TEST t_deviation_warnings pass
+VIEWPRISM_SUITE fail
+TEST t_visibility pass
+VIEWPRISM_SUITE fail
+TEST t_local_view pass
+VIEWPRISM_SUITE fail
+TEST t_modifier_and_scale pass
+VIEWPRISM_SUITE fail
+TEST t_instances pass
+VIEWPRISM_SUITE fail
+TEST t_viewport_matrices pass
+VIEWPRISM_SUITE fail
+TEST t_camera_view pass
+VIEWPRISM_SUITE fail
+Warning: 1 × Draw window and swap: 260.3371 ms, average: 260.33711433 ms
+Warning: 1 × Draw window and swap: 248.5909 ms, average: 248.59094620 ms
+Warning: 1 × Draw window and swap: 209.5530 ms, average: 209.55300331 ms
+Warning: 1 × Draw window and swap: 205.7290 ms, average: 205.72900772 ms
+Warning: 1 × Draw window and swap: 167.7721 ms, average: 167.77205467 ms
+Warning: 1 × Draw window and swap: 169.3530 ms, average: 169.35300827 ms
+Warning: 1 × Draw window and swap: 169.3671 ms, average: 169.36707497 ms
+Warning: 1 × Draw window and swap: 167.2201 ms, average: 167.22011566 ms
+Warning: 1 × Draw window and swap: 113.9781 ms, average: 113.97814751 ms
+Warning: 1 × Draw window and swap: 115.2968 ms, average: 115.29684067 ms
+Warning: 1 × Draw window and swap: 115.8819 ms, average: 115.88191986 ms
+Warning: 1 × Draw window and swap: 113.6611 ms, average: 113.66105080 ms
+Warning: 1 × Draw window and swap: 113.6720 ms, average: 113.67201805 ms
+Warning: 1 × Draw window and swap: 113.1520 ms, average: 113.15202713 ms
+Warning: 1 × Draw window and swap: 113.9729 ms, average: 113.97290230 ms
+Warning: 1 × Draw window and swap: 116.3762 ms, average: 116.37616158 ms
+Warning: 1 × Draw window and swap: 113.6031 ms, average: 113.60311508 ms
+Warning: 1 × Draw window and swap: 114.0311 ms, average: 114.03107643 ms
+Warning: 1 × Draw window and swap: 115.7939 ms, average: 115.79394341 ms
+Warning: 1 × Draw window and swap: 116.0059 ms, average: 116.00589752 ms
+Warning: 1 × Draw window and swap: 113.5571 ms, average: 113.55710030 ms
+Warning: 1 × Draw window and swap: 113.5411 ms, average: 113.54112625 ms
+Warning: 1 × Draw window and swap: 113.3442 ms, average: 113.34419250 ms
+Warning: 1 × Draw window and swap: 115.7432 ms, average: 115.74316025 ms
+Warning: 1 × Draw window and swap: 116.3340 ms, average: 116.33396149 ms
+Warning: 1 × Draw window and swap: 116.7779 ms, average: 116.77789688 ms
+Warning: 1 × Draw window and swap: 114.8479 ms, average: 114.84789848 ms
+Warning: 1 × Draw window and swap: 113.2669 ms, average: 113.26694489 ms
+Warning: 1 × Draw window and swap: 114.8000 ms, average: 114.79997635 ms
+Warning: 1 × Draw window and swap: 114.4848 ms, average: 114.48478699 ms
+Warning: 1 × Draw window and swap: 114.8119 ms, average: 114.81189728 ms
+Warning: 1 × Draw window and swap: 114.4180 ms, average: 114.41802979 ms
+Warning: 1 × Draw window and swap: 114.2719 ms, average: 114.27187920 ms
+Warning: 1 × Draw window and swap: 116.4861 ms, average: 116.48607254 ms
+Warning: 1 × Draw window and swap: 115.0591 ms, average: 115.05913734 ms
+Warning: 1 × Draw window and swap: 113.2131 ms, average: 113.21306229 ms
+Warning: 1 × Draw window and swap: 114.2771 ms, average: 114.27712440 ms
+Warning: 1 × Draw window and swap: 115.2732 ms, average: 115.27323723 ms
+Warning: 1 × Draw window and swap: 114.7130 ms, average: 114.71295357 ms
+Warning: 1 × Draw window and swap: 114.4500 ms, average: 114.44997787 ms
+MEM noredraw MB [942, 954, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953, 953]
+MEM redraw MB [937, 940, 940, 937, 948, 943, 939, 937, 937, 947, 951, 936, 936, 936, 936, 936, 943, 943, 943, 943, 943, 943, 943, 943, 943, 943, 943, 936, 943, 943, 936, 942, 942, 942, 942, 942, 937, 943, 943, 943]
+TEST t_repeat_and_leak pass
+VIEWPRISM_SUITE fail
+TEST t_fault_injection pass
+VIEWPRISM_SUITE fail
+TEST t_sizes pass
+VIEWPRISM_SUITE fail
+TEST t_multi_area pass
+VIEWPRISM_SUITE fail
+TEST t_precision pass
+VIEWPRISM_SUITE fail
+TEST t_edit_mode pass
+VIEWPRISM_SUITE fail
+Info: ViewPrism: Saved 8 files as gui_0001_*  (240x144, capture 2 ms)
+Info: ViewPrism: Saved 8 files as gui_0002_*  (240x144, capture 2 ms)
+Error: ViewPrism: files already exist: gui_0001_depth.png, gui_0001_depth.exr, gui_0001_normal.png, gui_0001_normal.exr, gui_0001_id.png, gui_0001_id.exr, gui_0001_mask.png, gui_0001_meta.json
+Error: ViewPrism: Export As must be started from a 3D Viewport
+Info: ViewPrism: Saved 8 files as anon_0001_*  (240x144, capture 2 ms)
+TEST t_operator_export pass
+VIEWPRISM_SUITE fail
+TEST t_view_lost pass
+VIEWPRISM_SUITE fail
+TEST t_preview_lifecycle pass
+VIEWPRISM_SUITE fail
+TEST t_preview_debounce pass
+VIEWPRISM_SUITE fail
+MW: window_new
+MW: window created
+MW: capture in second window
+Warning: 1 × Draw window: 199.7271 ms, average: 199.72705841 ms
+MW: window_close
+MW: closed
+MW: capture in the same tick as the close
+Warning: 1 × Draw window: 152.3309 ms, average: 152.33087540 ms
+MW: capture after the event loop ran
+MW: done
+TEST t_multi_window pass
+VIEWPRISM_SUITE fail
+Error: ViewPrism: a 240x72 capture and export needs about 0.0 GB of memory but only 0.0 GB can still be allocated; lower the resolution or close other programs
+TEST t_resource_guard pass
+VIEWPRISM_SUITE fail
+TEST t_reregister_clean pass
+VIEWPRISM_SUITE pass
+Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
+Saved session recovery to "/tmp/quit.blend"
+
+Blender quit

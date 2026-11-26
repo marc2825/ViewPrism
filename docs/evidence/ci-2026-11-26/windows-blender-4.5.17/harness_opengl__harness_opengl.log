@@ -1,0 +1,3 @@
+Results: <HOME>\AppData\Local\Temp\viewprism-checks-60aq6q0f\harness_opengl
+Running background: ['<HOME>\\AppData\\Local\\Temp\\viewprism-checks-60aq6q0f\\blender_opengl.cmd', '--factory-startup', '--disable-autoexec', '--background', '--python-exit-code', '1', '--python', 'D:\\a\\ViewPrism\\ViewPrism\\viewpass-dev\\harness\\blender_check.py', '--', '--repo', 'D:\\a\\ViewPrism\\ViewPrism', '--result', '<HOME>\\AppData\\Local\\Temp\\viewprism-checks-60aq6q0f\\harness_opengl\\background.json', '--mode', 'background']
+background: pass; log: <HOME>\AppData\Local\Temp\viewprism-checks-60aq6q0f\harness_opengl\background.log

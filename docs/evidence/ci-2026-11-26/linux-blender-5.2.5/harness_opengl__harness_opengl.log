@@ -1,0 +1,5 @@
+Results: /tmp/viewprism-checks-18b0kr6v/harness_opengl
+Running background: ['/tmp/viewprism-checks-18b0kr6v/blender_opengl.sh', '--factory-startup', '--disable-autoexec', '--background', '--python-exit-code', '1', '--python', '<HOME>/work/ViewPrism/ViewPrism/viewpass-dev/harness/blender_check.py', '--', '--repo', '<HOME>/work/ViewPrism/ViewPrism', '--result', '/tmp/viewprism-checks-18b0kr6v/harness_opengl/background.json', '--mode', 'background']
+background: pass; log: /tmp/viewprism-checks-18b0kr6v/harness_opengl/background.log
+Running gpu: ['/tmp/viewprism-checks-18b0kr6v/blender_opengl.sh', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1', '--python', '<HOME>/work/ViewPrism/ViewPrism/viewpass-dev/harness/blender_check.py', '--', '--repo', '<HOME>/work/ViewPrism/ViewPrism', '--result', '/tmp/viewprism-checks-18b0kr6v/harness_opengl/gpu.json', '--mode', 'gpu']
+gpu: pass; log: /tmp/viewprism-checks-18b0kr6v/harness_opengl/gpu.log

@@ -1,0 +1,38 @@
+$ <HOME>/work/_temp/blender/blender-5.2.5-linux-x64/blender --factory-startup --command extension validate /tmp/viewprism-stage-wv7c3x8g
+Success parsing TOML in "/tmp/viewprism-stage-wv7c3x8g"
+
+exit 0
+
+$ <HOME>/work/_temp/blender/blender-5.2.5-linux-x64/blender --factory-startup --command extension build --source-dir /tmp/viewprism-stage-wv7c3x8g --output-filepath /tmp/viewprism-checks-18b0kr6v/dist/viewprism-0.1.0.zip
+building: viewprism-0.1.0.zip
+complete
+created: "/tmp/viewprism-checks-18b0kr6v/dist/viewprism-0.1.0.zip", 63288
+
+exit 0
+
+$ <HOME>/work/_temp/blender/blender-5.2.5-linux-x64/blender --factory-startup --command extension validate /tmp/viewprism-checks-18b0kr6v/dist/viewprism-0.1.0.zip
+Success parsing TOML in "/tmp/viewprism-checks-18b0kr6v/dist/viewprism-0.1.0.zip"
+
+exit 0
+
+
+ZIP: /tmp/viewprism-checks-18b0kr6v/dist/viewprism-0.1.0.zip (63288 bytes)
+   LICENSE
+   __init__.py
+   blender_manifest.toml
+   capture.py
+   encode.py
+   export.py
+   exr.py
+   gpu_draw.py
+   operators.py
+   png.py
+   preview.py
+   projection.py
+   props.py
+   resources.py
+   scene_geometry.py
+   ui.py
+   viewport.py
+   writer.py
+BUILD PASS

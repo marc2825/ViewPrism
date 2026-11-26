@@ -1,0 +1,4 @@
+Results: /tmp/viewprism-checks-18b0kr6v/package
+Running package ['<HOME>/work/_temp/blender/blender-5.2.5-linux-x64/blender', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1', '--python', '<HOME>/work/ViewPrism/ViewPrism/tests/blender/package_suite.py', '--', '--repo', '<HOME>/work/ViewPrism/ViewPrism', '--result', '/tmp/viewprism-checks-18b0kr6v/package/package.json', '--zip', '/tmp/viewprism-checks-18b0kr6v/dist/viewprism-0.1.0.zip']
+  PASS package_lifecycle  s  isolated user dir /tmp/viewprism-userres-ba02h6m7; installed + enabled from viewprism; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed
+package: PASS (exit 0, gpu None); log /tmp/viewprism-checks-18b0kr6v/package/package.log
