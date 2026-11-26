@@ -127,20 +127,25 @@ is an upper bound for ViewPrism.
 
 ### Memory guard
 
-`viewprism/resources.py` estimates **220 bytes/pixel** of process memory for capture + export
-(120 capture + 100 export, rounded up from the 112 B/px capture peak measured above) and 36 B/px on the
-GPU. Policy (tests: `tests/pure/test_resources.py`, GUI `t_resource_guard`):
+`viewprism/resources.py` estimates **160 bytes/pixel** of process memory for capture + export and
+36 B/px on the GPU. The 160 B/px are 120 for the capture (112 B/px peak measured above) plus 40 for the
+export. Encoding and writing all files added at most 36 B/px on top of the memory held after the capture;
+the process peak of the whole 8K export never exceeded the capture peak. Policy (tests:
+`tests/pure/test_resources.py`, GUI `t_resource_guard`):
 
 - **refuse** with a clear message ("… lower the resolution or close other programs") when the estimate
   exceeds 90 % of the memory that can still be committed (free RAM + page file/swap);
 - **warn** (export still runs) when it exceeds 80 % of the *free physical* memory, because the system
   may page;
 - GPU memory cannot be queried portably from Blender's Python API; GPU allocation errors are reported as
-  errors and the capture can be retried.
+  errors and the capture can be retried;
+- the resolution limits (16 384 px per side, 33.5 MP) are checked first, so an oversized request gets the
+  size message rather than a memory message, and the low-memory warning appears once per export.
 
 The 33.5 MP resolution limit is a hard sanity limit, not a memory guarantee: at 33.2 MP the export
-needs ≈ 7.3 GB by the estimate (3.7 GB measured), which a machine with 8 GB RAM and a busy desktop may
-not have. The guard decides that from the actual free memory.
+needs ≈ 5.3 GB by the estimate (3.7 GB measured), which a machine with 8 GB RAM and a busy desktop may
+not have. The guard decides that from the actual free memory. (Before the independent review of
+2026-11-27 the export estimate was 100 B/px, i.e. 7.3 GB at 8K; it refused exports that fit.)
 
 ## Not yet measured
 

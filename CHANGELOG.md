@@ -6,9 +6,9 @@ Safer exports, privacy options for metadata, memory guards and a smoother auto p
 types; files written by 0.1.0 and 0.2.0 have the same format (metadata `format_version` 1).
 
 ### Export safety and metadata privacy (#4)
-- No-clobber publication: without overwrite, files are published through a hard link (Windows: a
-  rename that never replaces). A file created by another writer in the meantime is never replaced.
-  File systems without hard links (outside Windows) fail safely with an explanation.
+- No-clobber publication: without overwrite, files are published with a rename that never replaces
+  (Windows) or a hard link (elsewhere). A file created by another writer in the meantime is never
+  replaced. Drives without hard links (FAT/exFAT, some network shares) use an exclusive placeholder.
 - Automatic numbering reserves its number with an exclusive lock file (safe across processes).
 - Dangling symlinks count as existing files; symlinks pointing outside the folder are refused.
 - Failed files are recorded in metadata as stable error codes with fixed messages (no paths). Free
@@ -37,6 +37,15 @@ types; files written by 0.1.0 and 0.2.0 have the same format (metadata `format_v
 - Fixed: dangling-symlink collisions on Windows were reported as "outside the folder" (still refused).
 - CI Python dependencies are kept per Python version (NumPy 2.5 dropped Python 3.11), so dependency
   updates cannot break the Python 3.11 tests again.
+
+### Fixed after the pre-release code review
+- A file that was written could be reported as failed on Windows when a scanner or sync client held
+  the temporary name (publication is now a single no-replace rename there).
+- Exports without overwrite no longer fail on macOS/Linux drives without hard links.
+- The memory estimate matches the measurements (160 instead of 220 bytes per pixel), so exports that
+  fit are no longer refused; size limits are checked before memory; the low-memory warning appears once.
+- Very long base names are rejected up front instead of failing every file (temporary-name length).
+- An unknown metadata privacy mode is rejected before anything is written (API use only).
 
 ### License and rights (#6)
 - License confirmed as GPL-3.0-or-later. `LICENSE` is now included in the extension ZIP; SPDX headers

@@ -136,7 +136,9 @@ def _ensure_gpu_context(context):
     remember_windows(context)
 
 
-def capture(context, request, *, _after_draw=None):
+def capture(context, request, *, memory_checked=False, _after_draw=None):
+    """memory_checked=True: the caller already ran the (stricter) capture + export memory check and
+    reports its warning, so the capture-only check is skipped instead of warning twice."""
     import bpy
     from . import gpu_draw, scene_geometry
 
@@ -145,10 +147,12 @@ def capture(context, request, *, _after_draw=None):
     t0 = time.perf_counter()
     req = validate_request(request)
     space = _view3d_space(context)
-    try:
-        mem = resources.check(req['width'], req['height'], export=False)
-    except resources.ResourceError as exc:
-        raise ResourceLimitError(str(exc)) from exc
+    mem = dict(warning=None)
+    if not memory_checked:
+        try:
+            mem = resources.check(req['width'], req['height'], export=False)
+        except resources.ResourceError as exc:
+            raise ResourceLimitError(str(exc)) from exc
     _ensure_gpu_context(context)
     view_layer = context.view_layer
     depsgraph = context.evaluated_depsgraph_get()

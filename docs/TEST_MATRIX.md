@@ -16,7 +16,7 @@ Full report with untested configurations and reproduction commands: [`QA_REPORT.
 
 | Environment | Pure | Harness bg | Harness GPU | GUI suite | Build | Package | Stress / bench |
 |---|---|---|---|---|---|---|---|
-| Windows 11, Blender 5.3.0, RTX 3060 Ti, **Vulkan** | 82 PASS | PASS | PASS | 22/22 PASS | PASS | PASS | done |
+| Windows 11, Blender 5.3.0, RTX 3060 Ti, **Vulkan** | 85 PASS | PASS | PASS | 22/22 PASS | PASS | PASS | done |
 | Windows 11, Blender 5.3.0, RTX 3060 Ti, **OpenGL 4.6** | (same) | PASS | PASS | 22/22 PASS | — | — | stress done |
 | CI: Ubuntu, Blender **4.5.17 LTS**, 5.0.1, 5.1.2, 5.2.5, 5.3.0; Mesa llvmpipe **OpenGL 4.5** (software) | PASS | PASS | PASS | 22/22 PASS | PASS | PASS | — |
 | CI: Windows Server, Blender **4.5.17 LTS** and 5.3.0, no GPU | PASS | PASS | NOT RUN (no GPU) | NOT RUN (no GPU) | PASS | — | — |
@@ -24,7 +24,7 @@ Full report with untested configurations and reproduction commands: [`QA_REPORT.
 | CI: secrets (gitleaks all refs + canary) and privacy scan (tree + history) | PASS | | | | | | |
 | Windows + Blender 4.5 **with a GPU**; macOS / Metal; AMD / Intel GPUs; Linux hardware drivers | **NOT TESTED** (issue #9) | | | | | | |
 
-Evidence: local Windows run [`docs/evidence/2026-11-26/SUMMARY.md`](evidence/2026-11-26/SUMMARY.md); CI runs of the
+Evidence: local Windows run [`docs/evidence/2026-11-27/SUMMARY.md`](evidence/2026-11-27/SUMMARY.md); CI runs of the
 PR that closed issue #5 in [`docs/evidence/ci-2026-11-26/`](evidence/ci-2026-11-26/). Every CI run uploads its
 evidence as an artifact (`.github/workflows/ci.yml`).
 

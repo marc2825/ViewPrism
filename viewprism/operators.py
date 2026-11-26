@@ -81,13 +81,14 @@ def capture_view(context, view, settings, request=None, source=None):
     if request is None:
         request, source = viewport.build_request(view, context.scene, context.evaluated_depsgraph_get(),
                                                  settings, sorted(set(passes) | {'mask'}, key=cap.PASSES.index))
+    cap.validate_request(request)          # size limits first, so their message wins over the memory one
     try:                                   # capture + export peak, checked before any GPU work
         mem = resources.check(request['width'], request['height'], export=True)
     except resources.ResourceError as exc:
         raise cap.ResourceLimitError(str(exc)) from exc
     with context.temp_override(**view.override()):
-        result = cap.capture(bpy.context, request)
-    if mem['warning'] and mem['warning'] not in result['warnings']:
+        result = cap.capture(bpy.context, request, memory_checked=True)
+    if mem['warning']:
         result['warnings'].append(mem['warning'])
         result.setdefault('warnings_anonymous', []).append(mem['warning'])
     if getattr(view.rv3d, 'use_clip_planes', False):
