@@ -1,7 +1,7 @@
 # Project status — 2026-11-26
 
-Branch `feature/viewprism`, pushed to the private repository, with pull request #1 to `main` open
-(not merged). Product name: **ViewPrism — Viewport Pass Exporter** (decided 2026-11-26; developed as
+Merged into `main` on 2026-11-26 (PR #1, merge commit, full history kept) in the private
+repository `ViewPrism` (renamed from `Depth_Renderer`).
 "ViewPass"). Nothing published, and the repository stays private. Planned features: `ROADMAP.md`.
 
 ## Implemented
@@ -94,12 +94,12 @@ Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender
 
 - License (candidate GPL-3.0-or-later) and adding a `LICENSE` file.
 - Trademark search for "ViewPrism" (web search only so far: `docs/NAMING.md`); logo license.
-- Merging PR #1; publication on extensions.blender.org (and making the repository public) later.
+- Publication on extensions.blender.org (and making the repository public) later.
 - Optional: history cleanup for `memo.txt`.
 
 ## Next steps (proposed order)
 
-1. Hands-on QA (`docs/MANUAL_QA_RESULTS.md`, ~15 min), then merge PR #1.
+1. Hands-on QA (`docs/MANUAL_QA_RESULTS.md`, ~15 min).
 2. Collect feedback from 3–5 target users (illustration/compositing/AI-guide users) before adding
    features.
 3. If requested by users: frame-range export, ControlNet presets (verified conventions), mesh cache for
