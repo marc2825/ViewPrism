@@ -23,7 +23,7 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 | ZIP contains only add-on files + `LICENSE`; privacy scan of the ZIP | ✅ |
 | Install / enable / export / disable / re-enable / uninstall in a clean user dir | ✅ `tests/blender/package_suite.py` (CI, all versions) |
 | `permissions`: `files` only, with reason; no network, wheels or binaries | ✅ |
-| Tag → validated ZIP + SHA-256 as GitHub pre-release | ✅ v0.1.0, v0.2.0 (released ZIP re-downloaded: SHA-256, contents, privacy and install/export/uninstall checked); v0.3.0: same checks after publishing |
+| Tag → validated ZIP + SHA-256 as GitHub pre-release | ✅ v0.1.0, v0.2.0 (released ZIP re-downloaded: SHA-256, contents, privacy and install/export/uninstall checked); v0.3.0 (2026-11-27): same checks passed on the released ZIP |
 
 ## Rights and naming
 
