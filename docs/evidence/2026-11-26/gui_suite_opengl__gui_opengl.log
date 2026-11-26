@@ -1,23 +1,23 @@
-Results: <HOME>\AppData\Local\Temp\viewpass-checks-7r2f4dqi\gui_opengl
-Running gui ['C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe', '--factory-startup', '--disable-autoexec', '--gpu-backend', 'opengl', '--python-exit-code', '1', '--python', '<HOME>\\Blender_Addon\\Depth_Renderer\\tests\\blender\\gui_suite.py', '--', '--repo', '<HOME>\\Blender_Addon\\Depth_Renderer', '--result', '<HOME>\\AppData\\Local\\Temp\\viewpass-checks-7r2f4dqi\\gui_opengl\\gui.json']
+Results: <HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\gui_opengl
+Running gui ['C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe', '--factory-startup', '--disable-autoexec', '--gpu-backend', 'opengl', '--python-exit-code', '1', '--python', '<HOME>\\Blender_Addon\\Depth_Renderer\\tests\\blender\\gui_suite.py', '--', '--repo', '<HOME>\\Blender_Addon\\Depth_Renderer', '--result', '<HOME>\\AppData\\Local\\Temp\\viewprism-checks-tpntakew\\gui_opengl\\gui.json']
   PASS t_registration  0.0s  operators, panel, settings registered
-  PASS t_empty_scene  0.007s  all background, warning present
+  PASS t_empty_scene  0.006s  all background, warning present
   PASS t_deviation_warnings  0.005s  1 object(s) have different viewport/render modifier settings (viewport result exported): SubdivDiff | 1 object(s) use shader displacement (not included: geometry only): Displaced | 1 object(s) may use transparency (exported as opaque surfaces): AlphaMat
   PASS t_visibility  0.003s  hide, exclude, hidden collection, disabled, wire display
-  PASS t_local_view  0.003s  only local-view objects captured
+  PASS t_local_view  0.002s  only local-view objects captured
   PASS t_modifier_and_scale  0.003s  array modifier evaluated, mirrored outward normals, inverse-transpose normals
   PASS t_instances  0.006s  collection + GN instances; ids {'OBJECT': ['SrcPlane', 'SrcPlane', 'SrcPlane', 'SrcPlane'], 'INSTANCER': ['CI_0', 'CI_1', 'Scatter', 'Scatter'], 'INSTANCE': ['CI_0|SrcPlane|0', 'CI_1|SrcPlane|0', 'Scatter|SrcPlane|0.0', 'Scatter|SrcPlane|0.1']}
-  PASS t_viewport_matrices  0.024s  {'PERSP': {'size': [787, 444], 'depth': 6.369513511657715, 'shift': 0.0}, 'ORTHO': {'size': [787, 444], 'depth': 499.3676452636719, 'shift': 499.9999762512755}}
+  PASS t_viewport_matrices  0.025s  {'PERSP': {'size': [787, 444], 'depth': 6.369513511657715, 'shift': 0.0}, 'ORTHO': {'size': [787, 444], 'depth': 499.3676452636719, 'shift': 499.9999762512755}}
   PASS t_camera_view  0.005s  camera frame matches world_to_camera_view (with lens shift)
-  PASS t_repeat_and_leak  0.994s  {'median_ms': 9.05, 'p95_ms': 11.64, 'memory_source': 'private bytes', 'mem_steady_growth_mb_last20': 0.0, 'new_highs_last20': 0, 'mem_ramp_mb': 21.34, 'mem_growth_mb_20_back_to_back': 1.05}
+  PASS t_repeat_and_leak  0.977s  {'median_ms': 9.75, 'p95_ms': 11.84, 'memory_source': 'private bytes', 'mem_steady_growth_mb_last20': 0.0, 'new_highs_last20': 0, 'mem_ramp_mb': 21.34, 'mem_growth_mb_20_back_to_back': 1.05}
   PASS t_fault_injection  0.007s  state restored, retry identical
-  PASS t_sizes  0.081s  1x1, 3x7, wide, tall, 1080p; oversize and singular rejected
-  PASS t_multi_area  0.02s  each view captured from its own matrices (centroid x 0.37 / 0.63)
+  PASS t_sizes  0.092s  1x1, 3x7, wide, tall, 1080p; oversize and singular rejected
+  PASS t_multi_area  0.018s  each view captured from its own matrices (centroid x 0.37 / 0.63)
   PASS t_precision  0.004s  surfaces 5 mm apart at 100 m ordered correctly (clip 0.01..1000)
   PASS t_edit_mode  0.004s  edit-mode edits captured, mode untouched
-  PASS t_operator_export  0.095s  16 files, EXR/PNG equal capture, Blender loader agrees, collision refused (<HOME>\AppData\Local\Temp\viewpass-gui-u5a8ouwz)
+  PASS t_operator_export  0.082s  16 files, EXR/PNG equal capture, Blender loader agrees, collision refused (<HOME>\AppData\Local\Temp\viewprism-gui-3o1sko6k)
   PASS t_view_lost  0.0s  closed view -> explicit ViewError
-  PASS t_preview_lifecycle  0.089s  refresh, re-encode, hide, closed view and file load release resources
-  PASS t_multi_window  0.12s  second main window uses its own view; same-tick capture after close works; capture after closing a window works
-  PASS t_reregister_clean  0.013s  unregister removes handlers, draw callbacks, timers; re-register works
-gui: PASS (exit 0, gpu {'backend_type_get': 'OPENGL', 'vendor_get': 'NVIDIA Corporation', 'renderer_get': 'NVIDIA GeForce RTX 3060 Ti/PCIe/SSE2', 'version_get': '4.6.0 NVIDIA 610.88'}); log <HOME>\AppData\Local\Temp\viewpass-checks-7r2f4dqi\gui_opengl\gui.log
+  PASS t_preview_lifecycle  0.093s  refresh, re-encode, hide, closed view and file load release resources
+  PASS t_multi_window  0.126s  second main window uses its own view; same-tick capture after close works; capture after closing a window works
+  PASS t_reregister_clean  0.012s  unregister removes handlers, draw callbacks, timers; re-register works
+gui: PASS (exit 0, gpu {'backend_type_get': 'OPENGL', 'vendor_get': 'NVIDIA Corporation', 'renderer_get': 'NVIDIA GeForce RTX 3060 Ti/PCIe/SSE2', 'version_get': '4.6.0 NVIDIA 610.88'}); log <HOME>\AppData\Local\Temp\viewprism-checks-tpntakew\gui_opengl\gui.log

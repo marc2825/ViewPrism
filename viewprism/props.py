@@ -29,7 +29,7 @@ def _redraw(_self, context):
     preview.settings_changed(context)
 
 
-class ViewPassSettings(bpy.types.PropertyGroup):
+class ViewPrismSettings(bpy.types.PropertyGroup):
     use_depth: BoolProperty(name='Depth', default=True, description='Export the depth pass', update=_redraw)
     use_normal: BoolProperty(name='Normal', default=True, description='Export the normal pass', update=_redraw)
     use_object_id: BoolProperty(name='Object ID', default=False, description='Export the object ID pass', update=_redraw)
@@ -100,10 +100,10 @@ class ViewPassSettings(bpy.types.PropertyGroup):
     write_meta: BoolProperty(name='Metadata', default=True,
                              description='Write <name>_meta.json (matrices, ranges, ID map, warnings)')
 
-    output_dir: StringProperty(name='Folder', default='//viewpass/', subtype='DIR_PATH',
+    output_dir: StringProperty(name='Folder', default='//viewprism/', subtype='DIR_PATH',
                                options=_path_options(),
                                description='Output folder ("//" is relative to the saved .blend file)')
-    base_name: StringProperty(name='Name', default='viewpass', description='Base file name')
+    base_name: StringProperty(name='Name', default='viewprism', description='Base file name')
     numbering: EnumProperty(name='Numbering', default='AUTO',
                             items=[('AUTO', 'Auto Number', 'Append the next free number (never overwrites)'),
                                    ('NONE', 'Exact Name', 'Use the name as is')])
@@ -119,16 +119,16 @@ class ViewPassSettings(bpy.types.PropertyGroup):
                                description='Re-capture the preview shortly after the view or scene changes')
 
 
-class ViewPassPreferences(bpy.types.AddonPreferences):
+class ViewPrismPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
-    defaults: PointerProperty(type=ViewPassSettings)
+    defaults: PointerProperty(type=ViewPrismSettings)
 
     def draw(self, context):
         layout = self.layout
         layout.label(text='Session settings start from these defaults. Settings are never stored in .blend files.')
         row = layout.row()
-        row.operator('viewpass.settings_save_defaults', icon='FILE_TICK')
-        row.operator('viewpass.settings_load_defaults', icon='LOOP_BACK')
+        row.operator('viewprism.settings_save_defaults', icon='FILE_TICK')
+        row.operator('viewprism.settings_load_defaults', icon='LOOP_BACK')
         col = layout.column()
         col.use_property_split = True
         d = self.defaults
@@ -152,7 +152,7 @@ def copy_settings(src, dst):
 
 def settings(context=None):
     context = context or bpy.context
-    return context.window_manager.viewpass
+    return context.window_manager.viewprism
 
 
 _initialized_wm = set()
@@ -169,21 +169,21 @@ def init_session_settings(context=None):
         return
     prefs = preferences(context)
     if prefs is not None:
-        copy_settings(prefs.defaults, wm.viewpass)
+        copy_settings(prefs.defaults, wm.viewprism)
     _initialized_wm.add(key)
 
 
-classes = (ViewPassSettings, ViewPassPreferences)
+classes = (ViewPrismSettings, ViewPrismPreferences)
 
 
 def register():
     for c in classes:
         bpy.utils.register_class(c)
-    bpy.types.WindowManager.viewpass = PointerProperty(type=ViewPassSettings)
+    bpy.types.WindowManager.viewprism = PointerProperty(type=ViewPrismSettings)
 
 
 def unregister():
-    del bpy.types.WindowManager.viewpass
+    del bpy.types.WindowManager.viewprism
     _initialized_wm.clear()
     for c in reversed(classes):
         bpy.utils.unregister_class(c)

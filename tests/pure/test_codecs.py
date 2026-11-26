@@ -7,7 +7,7 @@ import zlib
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from viewpass import exr, png  # noqa: E402
+from viewprism import exr, png  # noqa: E402
 
 rng = np.random.default_rng(1234)
 

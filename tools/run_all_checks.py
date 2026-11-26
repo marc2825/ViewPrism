@@ -1,4 +1,4 @@
-"""Run every ViewPass check and store sanitised evidence in docs/evidence/<date>/.
+"""Run every ViewPrism check and store sanitised evidence in docs/evidence/<date>/.
 
     python tools/run_all_checks.py --blender <blender.exe> [--backends vulkan,opengl] [--bench]
 
@@ -6,7 +6,7 @@ Steps (each must pass; skips are reported as NOT RUN, never as PASS):
   1. pure unit tests (Blender's bundled Python, no bpy)
   2. independent harness self-test (system Python)
   3. independent harness, background + GPU, once per GPU backend
-  4. ViewPass GUI/GPU suite, once per GPU backend
+  4. ViewPrism GUI/GPU suite, once per GPU backend
   5. extension validate/build/audit
   6. package install/enable/export/disable/uninstall in an isolated user directory
   7. (optional) benchmark + Cycles/EEVEE comparison
@@ -79,7 +79,7 @@ def main():
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
-    tmp = Path(tempfile.mkdtemp(prefix='viewpass-checks-'))
+    tmp = Path(tempfile.mkdtemp(prefix='viewprism-checks-'))
     summary = []
 
     def record(name, ok, detail='', files=()):
@@ -144,7 +144,7 @@ def main():
     if 'build' in steps or 'package' in steps:
         log = tmp / 'build.log'
         code = run([sys.executable, str(ROOT / 'tools' / 'build_extension.py'), '--blender', a.blender, '--out', str(dist)], log, cwd=ROOT)
-        zips = sorted(dist.glob('viewpass-*.zip'))
+        zips = sorted(dist.glob('viewprism-*.zip'))
         record('extension_build', code == 0 and bool(zips), zips[0].name if zips else '', [log])
         if a.out and zips:
             shutil.copy2(zips[0], out / zips[0].name)
@@ -166,7 +166,7 @@ def main():
         code = run([sys.executable, str(ROOT / 'tools' / 'benchmark.py'), '--blender', a.blender, '--runs', '5',
                     '--out', str(bout)], log, cwd=ROOT, timeout=3600)
         record('benchmark', code == 0, '', [log, bout / 'summary.json'])
-    lines = [f'# ViewPass check run {stamp}', '', f'- Blender: `{ver}`', f'- Platform: `{sys.platform}`',
+    lines = [f'# ViewPrism check run {stamp}', '', f'- Blender: `{ver}`', f'- Platform: `{sys.platform}`',
              f'- Backends: {", ".join(backends)}', f'- Selected steps: {", ".join(s for s in STEPS if s in steps)}',
              '', '| Step | Result | Detail |', '|---|---|---|']
     lines += [f"| {s['step']} | {s['result']} | {s['detail']} |" for s in summary]

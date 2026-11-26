@@ -27,10 +27,10 @@ person must still do are marked **NOT TESTED (manual)**.
 
 ## Hands-on checklist for the owner (≈15 minutes)
 
-1. Install `viewpass-0.1.0.zip` (Edit › Preferences › Get Extensions › Install from Disk) in Blender 4.5 or 5.3.
-2. Open a real project, N-panel › ViewPass: toggle passes, press the preview refresh icon, try
+1. Install `viewprism-0.1.0.zip` (Edit › Preferences › Get Extensions › Install from Disk) in Blender 4.5 or 5.3.
+2. Open a real project, N-panel › ViewPrism: toggle passes, press the preview refresh icon, try
    Depth / Normal / Object ID / Mask previews and Auto Refresh while orbiting.
-3. Export Passes on a saved file (`//viewpass/`), then Export As… and cancel once.
+3. Export Passes on a saved file (`//viewprism/`), then Export As… and cancel once.
 4. Open the PNG/EXR files in the tools you actually use (e.g. image viewer, Krita/GIMP, Nuke, ComfyUI).
-5. Undo history and the scene should be unchanged (Edit › Undo History shows no ViewPass entries).
+5. Undo history and the scene should be unchanged (Edit › Undo History shows no ViewPrism entries).
 6. Note anything confusing in the panel; report back.

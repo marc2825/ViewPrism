@@ -1,4 +1,4 @@
-"""Run the ViewPass Blender test suites in fresh Blender processes.
+"""Run the ViewPrism Blender test suites in fresh Blender processes.
 
     python tests/run_blender_tests.py --blender <blender.exe> [--suite gui|package|all] [--gpu-backend vulkan|opengl]
 
@@ -26,7 +26,7 @@ def run(blender, suite, out, timeout, backend, only, extra):
     env = None
     if suite == 'package':
         # Isolated, empty user directory: never install into the real Blender configuration.
-        env = dict(os.environ, BLENDER_USER_RESOURCES=tempfile.mkdtemp(prefix='viewpass-userres-'))
+        env = dict(os.environ, BLENDER_USER_RESOURCES=tempfile.mkdtemp(prefix='viewprism-userres-'))
     cmd += ['--python-exit-code', '1', '--python', str(SUITES[suite]), '--',
             '--repo', str(HERE.parent), '--result', str(result)]
     if only:
@@ -68,7 +68,7 @@ def main():
     ap.add_argument('--out', type=Path)
     ap.add_argument('--timeout', type=int, default=600)
     a = ap.parse_args()
-    out = a.out.resolve() if a.out else Path(tempfile.mkdtemp(prefix='viewpass-tests-'))
+    out = a.out.resolve() if a.out else Path(tempfile.mkdtemp(prefix='viewprism-tests-'))
     out.mkdir(parents=True, exist_ok=True)
     print('Results:', out)
     suites = ['gui', 'package'] if a.suite == 'all' else [a.suite]

@@ -1,6 +1,13 @@
-# ViewPass — Viewport Pass Exporter *(working name)*
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="branding/viewprism-wordmark-dark.png">
+    <img alt="ViewPrism - Viewport Pass Exporter" src="branding/viewprism-wordmark-light.png" width="560">
+  </picture>
+</p>
 
-[日本語](README.ja.md)
+# ViewPrism — Viewport Pass Exporter
+
+[日本語](README.ja.md) · [Roadmap](ROADMAP.md)
 
 Export pixel-aligned **Depth**, **Normal**, **Object ID** and **Mask** images from the 3D viewport you
 are looking at, in one click. No camera, no compositor, no render settings, and nothing in your scene
@@ -19,7 +26,7 @@ changes.
 ## Why
 
 Blender's own passes are accurate but need a camera, view-layer passes, compositor or output setup and
-a render, and they leave those changes in your file. ViewPass draws the evaluated geometry of the
+a render, and they leave those changes in your file. ViewPrism draws the evaluated geometry of the
 current view once on the GPU and writes the data passes directly:
 
 - **Current view, no camera.** Perspective, orthographic and camera views; when you look through a
@@ -34,20 +41,20 @@ current view once on the GPU and writes the data passes directly:
 ## Install
 
 1. Build the package (or use a provided ZIP):
-   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewpass-0.1.0.zip`
+   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewprism-0.1.0.zip`
 2. Blender › Edit › Preferences › Get Extensions › ⌄ › **Install from Disk…** › choose the ZIP.
-3. 3D Viewport › Sidebar (N) › **ViewPass** tab.
+3. 3D Viewport › Sidebar (N) › **ViewPrism** tab.
 
 ## Use
 
-![ViewPass sidebar with the normal preview overlay](docs/images/ui_preview_normal.png)
+![ViewPrism sidebar with the normal preview overlay](docs/images/ui_preview_normal.png)
 
 1. Toggle the passes: **Depth**, **Normal**, **Object ID**, **Mask**.
 2. Resolution: **View** (viewport size × scale, or the render size in camera view) or **Custom**
    (width with locked aspect, or width × height as a centred crop).
 3. Optional: pick a pass and press the refresh icon for a display-only **preview** over the viewport;
    **Auto Refresh** re-captures shortly after the view or scene changes.
-4. **Export Passes** writes to the folder (default `//viewpass/` next to the saved .blend) with
+4. **Export Passes** writes to the folder (default `//viewprism/` next to the saved .blend) with
    automatic numbering. **Export As…** chooses folder and name; the view is captured when you open the
    file browser.
 
@@ -76,7 +83,7 @@ normals 0.02°.
 ## Limitations
 
 - Geometry only: shader displacement, bump/normal maps, alpha transparency, volumes, hair/curves, point
-  clouds and Grease Pencil are not represented. ViewPass warns about displacement, transparency and
+  clouds and Grease Pencil are not represented. ViewPrism warns about displacement, transparency and
   objects whose viewport and render modifiers differ, and lists unsupported visible objects.
 - Objects displayed as Wire/Bounds are skipped. The viewport clipping region (Alt+B) is not applied.
 - Aliased edges (single sample per pixel), like Cycles' data passes.
@@ -91,7 +98,7 @@ normals 0.02°.
 If you already have a camera and a compositor setup, Blender's own passes are the reference (and also
 cover shading effects). Many AI-oriented add-ons render via the camera and compositor, and some
 change or wipe compositor setups. See [docs/COMPETITORS.md](docs/COMPETITORS.md) for a sourced
-comparison, including where ViewPass is *not* better.
+comparison, including where ViewPrism is *not* better.
 
 ## Development
 
@@ -106,14 +113,20 @@ CI (GitHub Actions) runs lint, the pure tests on Windows/Linux, and the full Ble
 for Blender 4.5 LTS and 5.3 (Xvfb + Mesa software OpenGL). A `vX.Y.Z` tag builds the validated ZIP
 into a draft release.
 
-- `viewpass/` — the add-on (pure modules `projection`, `encode`, `png`, `exr`, `export`, `writer` do not
-  import `bpy`). The UI and the tests use the same entry point: `viewpass.capture.capture(context, request)`.
+- `viewprism/` — the add-on (pure modules `projection`, `encode`, `png`, `exr`, `export`, `writer` do not
+  import `bpy`). The UI and the tests use the same entry point: `viewprism.capture.capture(context, request)`.
 - `viewpass-dev/` — the independent verification harness and specification (kept unchanged).
 - Design: [docs/decisions/0001-renderer.md](docs/decisions/0001-renderer.md) · Status:
   [docs/STATUS.md](docs/STATUS.md) · Tests: [docs/TEST_MATRIX.md](docs/TEST_MATRIX.md) ·
   [CONTRIBUTING.md](CONTRIBUTING.md)
 
+## Roadmap
+
+Planned but not implemented yet: clipboard image output, ControlNet/ComfyUI presets, Line Art and AO
+approximations, animation/frame-range export and more. See [ROADMAP.md](ROADMAP.md).
+
 ## License
 
 Not decided yet. The candidate is GPL-3.0-or-later (required for add-ons on extensions.blender.org).
-Until the owner decides, no license is granted beyond what applies by default.
+Until the owner decides, no license is granted beyond what applies by default. The same applies to the
+logo (`branding/`).

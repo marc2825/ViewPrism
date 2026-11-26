@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from viewpass import projection as P  # noqa: E402
+from viewprism import projection as P  # noqa: E402
 
 
 def gl_persp(l, r, b, t, n, f):

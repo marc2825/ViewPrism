@@ -1,10 +1,10 @@
 schema_version = "1.0.0"
 
-# Working name; not final (see docs/STATUS.md). Do not publish without the owner's approval.
-id = "viewpass"
+# ViewPrism - Viewport Pass Exporter. Do not publish without the owner's approval.
+id = "viewprism"
 version = "0.1.0"
-name = "ViewPass"
-tagline = "Aligned depth, normal, ID and mask passes from the 3D viewport"
+name = "ViewPrism"
+tagline = "Viewport Pass Exporter: aligned depth, normal, ID and mask"
 maintainer = "marc2825"
 type = "add-on"
 
@@ -26,5 +26,5 @@ paths_exclude_pattern = [
   "__pycache__/",
   "*.pyc",
   "/.git/",
-  "*.vptmp",
+  "*.viewprism-tmp",
 ]

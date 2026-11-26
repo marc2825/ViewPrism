@@ -1,4 +1,4 @@
-"""Validate and build the ViewPass extension ZIP with Blender's own tooling, then audit it.
+"""Validate and build the ViewPrism extension ZIP with Blender's own tooling, then audit it.
 
     python tools/build_extension.py --blender <blender.exe> [--out dist]
 
@@ -13,7 +13,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / 'viewpass'
+SRC = ROOT / 'viewprism'
 ALLOWED = re.compile(r'^(blender_manifest\.toml|[a-z_]+\.py)$')
 PRIVATE = [re.compile(p, re.I) for p in (r'[A-Z]:\\Users\\', r'/home/[a-z]', r'/Users/[A-Za-z]', r'wsl\$', r'@gmail\.com')]
 
@@ -32,7 +32,7 @@ def main():
     out = a.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     version = re.search(r'^version\s*=\s*"([^"]+)"', (SRC / 'blender_manifest.toml').read_text(encoding='utf-8'), re.M).group(1)
-    zpath = out / f'viewpass-{version}.zip'
+    zpath = out / f'viewprism-{version}.zip'
     if zpath.exists():
         zpath.unlink()
     logp = out / 'build.log'

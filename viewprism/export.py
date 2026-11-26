@@ -129,7 +129,7 @@ def atomic_write(path, data, *, overwrite=False):
         raise ExportError('refusing to write outside the output directory')
     if not overwrite and os.path.exists(path):
         raise CollisionError([os.path.basename(path)])
-    tmp = os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}.vptmp')
+    tmp = os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}.viewprism-tmp')
     try:
         with open(tmp, 'xb') as fh:
             fh.write(data)

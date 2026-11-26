@@ -30,7 +30,7 @@ the owner's.
 
 ## Code and asset origin
 
-- All product and test code in `viewpass/`, `tests/`, `tools/` was written for this project in this
+- All product and test code in `viewprism/`, `tests/`, `tools/` was written for this project in this
   branch. Competitors were studied from public pages and source **to describe approaches only**; no
   code or assets were copied (see `docs/COMPETITORS.md`).
 - PNG and OpenEXR encoders/decoders were implemented from the public format specifications (PNG spec;
@@ -64,5 +64,6 @@ No secrets, tokens or credentials were found in the tree or history file list.
 
 - Rasterising depth/normal/ID buffers is a long-established technique (used in Blender, game engines and
   research code). No specific risk was identified (not a legal search).
-- The name "ViewPass" is a working name. A web search found no 3D/graphics product with that name; no
+- The product name "ViewPrism" was chosen by the owner. A web search found no product with that name
+  (closest: Accusoft "Prizm Viewer", a document viewer); no
   trademark database was checked (see `docs/COMPETITORS.md`).

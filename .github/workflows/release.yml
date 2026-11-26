@@ -35,13 +35,13 @@ jobs:
       - name: Check tag matches manifest version
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          manifest="$(grep -E '^version *=' viewpass/blender_manifest.toml | sed -E 's/.*"(.*)".*/\1/')"
+          manifest="$(grep -E '^version *=' viewprism/blender_manifest.toml | sed -E 's/.*"(.*)".*/\1/')"
           test "v${manifest}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != manifest ${manifest}"; exit 1; }
       - name: Validate, build and audit
         run: python tools/build_extension.py --blender "${{ steps.blender.outputs.exe }}" --out dist
       - uses: actions/upload-artifact@v7
         with:
-          name: viewpass-extension
+          name: viewprism-extension
           path: dist/*.zip
       - name: Create draft release
         if: startsWith(github.ref, 'refs/tags/v')

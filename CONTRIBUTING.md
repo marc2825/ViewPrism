@@ -9,9 +9,9 @@ Thanks for helping! The project values correct output over features, so please k
   suite compares a `snapshot()` before and after; extend it if you touch new state.
 - **No network access, no pip/wheels, no writing into the add-on directory.**
 - Pure modules (`projection`, `encode`, `png`, `exr`, `export`, `writer`) must not import `bpy`.
-- UI and tests must go through the same entry point: `viewpass.capture.capture(context, request)`.
+- UI and tests must go through the same entry point: `viewprism.capture.capture(context, request)`.
 - Tests compare against **independent** expectations (analytic geometry or Blender's own functions).
-  Never derive expected values from ViewPass output, never weaken a threshold to make a test pass,
+  Never derive expected values from ViewPrism output, never weaken a threshold to make a test pass,
   never turn a failure into a skip. If behaviour changes on purpose, document why in the ADR/CHANGELOG
   and update the test with the new independent expectation.
 - `viewpass-dev/harness` is the independent harness from the specification; do not edit it to make

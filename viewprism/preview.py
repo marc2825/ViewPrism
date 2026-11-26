@@ -52,7 +52,7 @@ def _image_shader():
     if _shader is None:
         import gpu
         from gpu_extras.batch import batch_for_shader
-        iface = gpu.types.GPUStageInterfaceInfo('viewpass_preview_iface')
+        iface = gpu.types.GPUStageInterfaceInfo('viewprism_preview_iface')
         iface.smooth('VEC2', 'v_uv')
         info = gpu.types.GPUShaderCreateInfo()
         info.push_constant('FLOAT', 'opacity')
@@ -212,7 +212,7 @@ def _draw():
     import blf
     font = 0
     blf.size(font, 12 * ctx.preferences.system.ui_scale)
-    label = f'ViewPass preview ({settings.preview_pass}) - display only'
+    label = f'ViewPrism preview ({settings.preview_pass}) - display only'
     if stale:
         label += ' - OUTDATED, press Refresh' if not settings.preview_auto else ' - updating...'
     ui = ctx.preferences.system.ui_scale

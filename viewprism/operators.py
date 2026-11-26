@@ -90,28 +90,28 @@ def _finish(op, result, res, request):
     ms = result['stats']['seconds']['total'] * 1000
     size = f"{request['width']}x{request['height']}"
     for w in result['warnings']:
-        op.report({'WARNING'}, f'ViewPass: {w}')
+        op.report({'WARNING'}, f'ViewPrism: {w}')
     if failed:
         for name, err in failed:
-            op.report({'ERROR'}, f'ViewPass: could not write {name}: {err}')
+            op.report({'ERROR'}, f'ViewPrism: could not write {name}: {err}')
         _set_status(f"{len(failed)} of {n_ok + len(failed)} files failed ({res['stem']})", 'ERROR',
                     result['warnings'] + [f'{n}: {e}' for n, e in failed])
         return {'CANCELLED'}
     text = f"Saved {n_ok} files as {res['stem']}_*  ({size}, capture {ms:.0f} ms)"
-    op.report({'INFO'}, f'ViewPass: {text}')
+    op.report({'INFO'}, f'ViewPrism: {text}')
     _set_status(text, 'WARNING' if result['warnings'] else 'INFO', result['warnings'])
     return {'FINISHED'}
 
 
 def _fail(op, exc):
     msg = str(exc) or type(exc).__name__
-    op.report({'ERROR'}, f'ViewPass: {msg}')
+    op.report({'ERROR'}, f'ViewPrism: {msg}')
     _set_status(msg, 'ERROR')
     return {'CANCELLED'}
 
 
-class VIEWPASS_OT_export(bpy.types.Operator):
-    bl_idname = 'viewpass.export'
+class VIEWPRISM_OT_export(bpy.types.Operator):
+    bl_idname = 'viewprism.export'
     bl_label = 'Export Passes'
     bl_description = ('Capture the selected passes from this 3D viewport and save them to the output folder. '
                       'Nothing in the scene is changed')
@@ -125,7 +125,7 @@ class VIEWPASS_OT_export(bpy.types.Operator):
         settings = props.settings(context)
         if settings.output_dir.strip().startswith('//') and not bpy.data.filepath:
             # Unsaved file + relative folder: ask for a folder instead of failing.
-            return bpy.ops.viewpass.export_as('INVOKE_DEFAULT')
+            return bpy.ops.viewprism.export_as('INVOKE_DEFAULT')
         return self.execute(context)
 
     def execute(self, context):
@@ -143,8 +143,8 @@ class VIEWPASS_OT_export(bpy.types.Operator):
         return _finish(self, result, res, request)
 
 
-class VIEWPASS_OT_export_as(bpy.types.Operator):
-    bl_idname = 'viewpass.export_as'
+class VIEWPRISM_OT_export_as(bpy.types.Operator):
+    bl_idname = 'viewprism.export_as'
     bl_label = 'Export Passes As...'
     bl_description = 'Choose a folder and base name, then export the selected passes from this viewport'
     bl_options = {'REGISTER'}
@@ -200,8 +200,8 @@ class VIEWPASS_OT_export_as(bpy.types.Operator):
         return _finish(self, result, res, request)
 
 
-class VIEWPASS_OT_preview(bpy.types.Operator):
-    bl_idname = 'viewpass.preview'
+class VIEWPRISM_OT_preview(bpy.types.Operator):
+    bl_idname = 'viewprism.preview'
     bl_label = 'Refresh Preview'
     bl_description = 'Capture a display-only preview of the chosen pass over this viewport'
     bl_options = {'REGISTER'}
@@ -217,12 +217,12 @@ class VIEWPASS_OT_preview(bpy.types.Operator):
         except _ERRORS as exc:
             return _fail(self, exc)
         for w in result['warnings']:
-            self.report({'WARNING'}, f'ViewPass: {w}')
+            self.report({'WARNING'}, f'ViewPrism: {w}')
         return {'FINISHED'}
 
 
-class VIEWPASS_OT_preview_hide(bpy.types.Operator):
-    bl_idname = 'viewpass.preview_hide'
+class VIEWPRISM_OT_preview_hide(bpy.types.Operator):
+    bl_idname = 'viewprism.preview_hide'
     bl_label = 'Hide Preview'
     bl_description = 'Remove the preview overlay and free its memory'
     bl_options = {'REGISTER'}
@@ -233,8 +233,8 @@ class VIEWPASS_OT_preview_hide(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class VIEWPASS_OT_open_folder(bpy.types.Operator):
-    bl_idname = 'viewpass.open_folder'
+class VIEWPRISM_OT_open_folder(bpy.types.Operator):
+    bl_idname = 'viewprism.open_folder'
     bl_label = 'Open Output Folder'
     bl_description = 'Open the output folder in the file manager'
     bl_options = {'REGISTER'}
@@ -250,8 +250,8 @@ class VIEWPASS_OT_open_folder(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class VIEWPASS_OT_settings_save_defaults(bpy.types.Operator):
-    bl_idname = 'viewpass.settings_save_defaults'
+class VIEWPRISM_OT_settings_save_defaults(bpy.types.Operator):
+    bl_idname = 'viewprism.settings_save_defaults'
     bl_label = 'Save Current as Defaults'
     bl_description = 'Store the current session settings in the add-on preferences'
     bl_options = {'REGISTER'}
@@ -262,12 +262,12 @@ class VIEWPASS_OT_settings_save_defaults(bpy.types.Operator):
             return _fail(self, export.ExportError('add-on preferences are not available'))
         props.copy_settings(props.settings(context), prefs.defaults)
         context.preferences.is_dirty = True
-        self.report({'INFO'}, 'ViewPass: defaults saved to preferences')
+        self.report({'INFO'}, 'ViewPrism: defaults saved to preferences')
         return {'FINISHED'}
 
 
-class VIEWPASS_OT_settings_load_defaults(bpy.types.Operator):
-    bl_idname = 'viewpass.settings_load_defaults'
+class VIEWPRISM_OT_settings_load_defaults(bpy.types.Operator):
+    bl_idname = 'viewprism.settings_load_defaults'
     bl_label = 'Load Defaults'
     bl_description = 'Reset the session settings to the stored defaults'
     bl_options = {'REGISTER'}
@@ -280,8 +280,8 @@ class VIEWPASS_OT_settings_load_defaults(bpy.types.Operator):
         return {'FINISHED'}
 
 
-classes = (VIEWPASS_OT_export, VIEWPASS_OT_export_as, VIEWPASS_OT_preview, VIEWPASS_OT_preview_hide,
-           VIEWPASS_OT_open_folder, VIEWPASS_OT_settings_save_defaults, VIEWPASS_OT_settings_load_defaults)
+classes = (VIEWPRISM_OT_export, VIEWPRISM_OT_export_as, VIEWPRISM_OT_preview, VIEWPRISM_OT_preview_hide,
+           VIEWPRISM_OT_open_folder, VIEWPRISM_OT_settings_save_defaults, VIEWPRISM_OT_settings_load_defaults)
 
 
 def register():

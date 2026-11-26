@@ -1,4 +1,15 @@
-# Name proposals (2026-11-26)
+# Product name
+
+**Decision (owner, 2026-11-26): ViewPrism — Viewport Pass Exporter.** Extension id `viewprism`,
+Python package `viewprism`, repository `ViewPrism`.
+
+Collision check (web search only, 2026-11-26): no product named "ViewPrism" found. The closest are
+Accusoft "Prizm Viewer" (document/image viewer) and other "…View…" XR/BIM viewers, all in different
+categories. **Still to do before publishing:** J-PlatPat / USPTO / EUIPO search (classes 9 and 42).
+
+The proposals below were prepared before the decision and are kept for the record.
+
+## Name proposals (2026-11-26, before the decision)
 
 Status: **proposal for the owner's decision**. Web search only. This is not a legal clearance.
 J-PlatPat, USPTO, EUIPO and WIPO were not searched. Do that for the chosen name before publishing.

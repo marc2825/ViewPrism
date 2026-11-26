@@ -1,6 +1,13 @@
-# ViewPass — Viewport Pass Exporter *（仮称）*
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="branding/viewprism-wordmark-dark.png">
+    <img alt="ViewPrism - Viewport Pass Exporter" src="branding/viewprism-wordmark-light.png" width="560">
+  </picture>
+</p>
 
-[English](README.md)
+# ViewPrism — Viewport Pass Exporter
+
+[English](README.md) · [ロードマップ](ROADMAP.md)
 
 いま見ている3Dビューポートから、画素単位で揃った **Depth / Normal / Object ID / Mask** をワンクリックで書き出す Blender アドオンです。カメラもコンポジタもレンダー設定も不要で、シーンは一切変更しません。
 
@@ -13,7 +20,7 @@
 
 ## 特長
 
-Blender 標準のパスは正確ですが、カメラ、ビューレイヤーのパス、コンポジタまたは出力設定、レンダリングが必要で、その変更はファイルに残ります。ViewPass は現在のビューの評価済みジオメトリを GPU で一度だけ描画し、データパスを直接書き出します。
+Blender 標準のパスは正確ですが、カメラ、ビューレイヤーのパス、コンポジタまたは出力設定、レンダリングが必要で、その変更はファイルに残ります。ViewPrism は現在のビューの評価済みジオメトリを GPU で一度だけ描画し、データパスを直接書き出します。
 
 - **現在の視点から、カメラ不要。** 透視・平行投影・カメラビューに対応。カメラビューではレンダーと同じカメラ枠をそのまま書き出します。
 - **シーンを変更しない。** オブジェクト、カメラ、マテリアル、ノード、パス、レンダー設定を作成・変更せず、アンドゥ履歴も増やしません。設定は .blend に保存されません。
@@ -23,18 +30,18 @@ Blender 標準のパスは正確ですが、カメラ、ビューレイヤーの
 ## インストール
 
 1. パッケージを作成（または配布ZIPを使用）:
-   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewpass-0.1.0.zip`
+   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewprism-0.1.0.zip`
 2. Blender ›「編集」›「プリファレンス」›「エクステンションを入手」› ⌄ ›「ディスクからインストール…」でZIPを選択。
-3. 3Dビューポート › サイドバー（N）› **ViewPass** タブ。
+3. 3Dビューポート › サイドバー（N）› **ViewPrism** タブ。
 
 ## 使い方
 
-![ViewPass サイドバーと法線プレビュー](docs/images/ui_preview_normal.png)
+![ViewPrism サイドバーと法線プレビュー](docs/images/ui_preview_normal.png)
 
 1. 書き出すパス（**Depth / Normal / Object ID / Mask**）を選択。
 2. 解像度: **View**（ビューポートサイズ×倍率。カメラビューではレンダー解像度）または **Custom**（縦横比ロック、またはロック解除で中央トリミング）。
 3. 任意: パスを選び更新アイコンで表示専用の**プレビュー**をビューポートに重ねて表示。**Auto Refresh** で視点やシーンの変更後に自動更新。
-4. **Export Passes** で出力フォルダ（既定は保存済み .blend の隣の `//viewpass/`）へ連番付きで保存。**Export As…** ではフォルダと名前を指定できます（視点はファイルブラウザを開いた時点で確定）。
+4. **Export Passes** で出力フォルダ（既定は保存済み .blend の隣の `//viewprism/`）へ連番付きで保存。**Export As…** ではフォルダと名前を指定できます（視点はファイルブラウザを開いた時点で確定）。
 
 ## 出力
 
@@ -64,7 +71,7 @@ Blender 標準のパスは正確ですが、カメラ、ビューレイヤーの
 
 ## 他の方法との比較
 
-カメラとコンポジタを既に用意しているなら、Blender 標準のパスが基準です（シェーディング効果も反映されます）。AI向けアドオンの多くはカメラとコンポジタでレンダリングし、コンポジタ設定を書き換えたり消したりするものもあります。ViewPass が優れていない点も含めた比較は [docs/COMPETITORS.md](docs/COMPETITORS.md) を参照してください。
+カメラとコンポジタを既に用意しているなら、Blender 標準のパスが基準です（シェーディング効果も反映されます）。AI向けアドオンの多くはカメラとコンポジタでレンダリングし、コンポジタ設定を書き換えたり消したりするものもあります。ViewPrism が優れていない点も含めた比較は [docs/COMPETITORS.md](docs/COMPETITORS.md) を参照してください。
 
 ## 開発
 
@@ -77,10 +84,14 @@ python tools/run_all_checks.py --blender "<path>/blender.exe"
 
 CI（GitHub Actions）では、lint、Windows/Linux での純粋テスト、Linux 上の Blender 4.5 LTS と 5.3（Xvfb + Mesa ソフトウェア OpenGL）による全検証を実行します。`vX.Y.Z` タグを push すると、検証済みZIPを添付した下書きリリースを作成します。
 
-- `viewpass/` — アドオン本体（`projection`、`encode`、`png`、`exr`、`export`、`writer` は `bpy` を使いません）。UI もテストも同じ入口 `viewpass.capture.capture(context, request)` を通ります。
+- `viewprism/` — アドオン本体（`projection`、`encode`、`png`、`exr`、`export`、`writer` は `bpy` を使いません）。UI もテストも同じ入口 `viewprism.capture.capture(context, request)` を通ります。
 - `viewpass-dev/` — 独立検証ハーネスと仕様書（変更していません）。
 - 設計: [docs/decisions/0001-renderer.md](docs/decisions/0001-renderer.md) · 状況: [docs/STATUS.md](docs/STATUS.md) · テスト: [docs/TEST_MATRIX.md](docs/TEST_MATRIX.md) · [CONTRIBUTING.md](CONTRIBUTING.md)
 
+## 今後の予定
+
+未実装の機能（クリップボード出力、ControlNet プリセット、Line Art・AO、アニメーション連番出力など）は [ROADMAP.md](ROADMAP.md) にまとめています。
+
 ## ライセンス
 
-未決定です。候補は GPL-3.0-or-later（extensions.blender.org のアドオンに必須）。所有者が決定するまで、既定で適用されるもの以外のライセンスは付与されません。
+未決定です。候補は GPL-3.0-or-later（extensions.blender.org のアドオンに必須）。所有者が決定するまで、既定で適用されるもの以外のライセンスは付与されません。ロゴ（`branding/`）も同様に未決定です。

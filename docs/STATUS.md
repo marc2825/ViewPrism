@@ -1,13 +1,14 @@
 # Project status — 2026-11-26
 
-Branch `feature/viewpass`, pushed to the private repository, with pull request #1 to `main` open
-(not merged). Working name **ViewPass**; nothing published, and the repository stays private.
+Branch `feature/viewprism`, pushed to the private repository, with pull request #1 to `main` open
+(not merged). Product name: **ViewPrism — Viewport Pass Exporter** (decided 2026-11-26; developed as
+"ViewPass"). Nothing published, and the repository stays private. Planned features: `ROADMAP.md`.
 
 ## Implemented
 
 | Area | State |
 |---|---|
-| Capture core (`viewpass/capture.py`, `gpu_draw.py`, `scene_geometry.py`) | single MRT GPU pass; depth / normal / ID / mask; perspective, orthographic and generic matrices; log/linear visibility depth; evaluated depsgraph with instances and viewport visibility; deterministic IDs (3 modes); texture reuse; per-capture framebuffer; GPU state restore; redraw before capturing after window changes; explicit errors |
+| Capture core (`viewprism/capture.py`, `gpu_draw.py`, `scene_geometry.py`) | single MRT GPU pass; depth / normal / ID / mask; perspective, orthographic and generic matrices; log/linear visibility depth; evaluated depsgraph with instances and viewport visibility; deterministic IDs (3 modes); texture reuse; per-capture framebuffer; GPU state restore; redraw before capturing after window changes; explicit errors |
 | View → request (`viewport.py`) | operating region; camera frame in camera view; custom size with aspect lock or centred crop; positive ortho depth; quad view uses the main region; re-find view after the file browser |
 | Encoding / files (`encode.py`, `png.py`, `exr.py`, `export.py`, `writer.py`) | PNG 8/16, EXR float32/uint32 (ZIP/NONE), metadata JSON, collision pre-check, numbering, atomic writes, per-file errors, parallel encoding, no colour management |
 | UI (`ui.py`, `operators.py`, `props.py`, `preview.py`) | N-panel, Export / Export As, preview overlay (manual + auto refresh), formats & advanced sub-panels, status box, View menu entry, defaults in preferences |
@@ -41,7 +42,7 @@ Branch `feature/viewpass`, pushed to the private repository, with pull request #
 
 `blender_version_min` is 4.5.0, based on the 4.5.17 CI verification. Blender 4.5 needed two fixes,
 both found by CI: a flat readback buffer (4.5 exports a non-contiguous buffer protocol), and never
-reusing an OpenGL framebuffer across window contexts. The second one was a real ViewPass bug that
+reusing an OpenGL framebuffer across window contexts. The second one was a real ViewPrism bug that
 crashed 4.5 after a capture from a second, later closed window.
 
 ## Test results
@@ -87,12 +88,12 @@ Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender
    reused, so GPU memory is freed only at frame boundaries.
 6. `memo.txt` with a local WSL path remains in old commits; rewriting history is the owner's decision.
 7. Blender prints "push constants … 144 bytes" warnings from its own built-in drawing (seen on 4.5 and
-   5.3, also without ViewPass shaders). The ViewPass capture shader uses exactly 128 bytes.
+   5.3, also without ViewPrism shaders). The ViewPrism capture shader uses exactly 128 bytes.
 
 ## Decisions needed from the owner
 
 - License (candidate GPL-3.0-or-later) and adding a `LICENSE` file.
-- Final name / extension id / repository rename; trademark search (proposals: `docs/NAMING.md`).
+- Trademark search for "ViewPrism" (web search only so far: `docs/NAMING.md`); logo license.
 - Merging PR #1; publication on extensions.blender.org (and making the repository public) later.
 - Optional: history cleanup for `memo.txt`.
 

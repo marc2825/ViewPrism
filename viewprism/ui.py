@@ -26,12 +26,12 @@ def _view_size_hint(context, settings):
     return (ow, oh), camera
 
 
-class VIEWPASS_PT_main(bpy.types.Panel):
-    bl_label = 'ViewPass'
-    bl_idname = 'VIEWPASS_PT_main'
+class VIEWPRISM_PT_main(bpy.types.Panel):
+    bl_label = 'ViewPrism'
+    bl_idname = 'VIEWPRISM_PT_main'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'ViewPass'
+    bl_category = 'ViewPrism'
 
     def draw(self, context):
         props.init_session_settings(context)
@@ -78,9 +78,9 @@ class VIEWPASS_PT_main(bpy.types.Panel):
         pcol = layout.column(align=True)
         row = pcol.row(align=True)
         row.prop(s, 'preview_pass', text='')
-        row.operator('viewpass.preview', text='', icon='FILE_REFRESH')
+        row.operator('viewprism.preview', text='', icon='FILE_REFRESH')
         if preview.is_showing(context.area):
-            row.operator('viewpass.preview_hide', text='', icon='HIDE_ON')
+            row.operator('viewprism.preview_hide', text='', icon='HIDE_ON')
             row = pcol.row(align=True)
             row.prop(s, 'preview_auto', toggle=True, icon='TIME')
             row.prop(s, 'preview_opacity', slider=True)
@@ -101,10 +101,10 @@ class VIEWPASS_PT_main(bpy.types.Panel):
 
         row = layout.row(align=True)
         row.scale_y = 1.4
-        row.operator('viewpass.export', icon='EXPORT')
+        row.operator('viewprism.export', icon='EXPORT')
         row = layout.row(align=True)
-        row.operator('viewpass.export_as', text='Export As...', icon='FILEBROWSER')
-        row.operator('viewpass.open_folder', text='', icon='FILE_FOLDER')
+        row.operator('viewprism.export_as', text='Export As...', icon='FILEBROWSER')
+        row.operator('viewprism.open_folder', text='', icon='FILE_FOLDER')
 
         st = operators.status
         if st['text']:
@@ -131,12 +131,12 @@ def _wrap(text, width):
     return lines or ['']
 
 
-class VIEWPASS_PT_formats(bpy.types.Panel):
+class VIEWPRISM_PT_formats(bpy.types.Panel):
     bl_label = 'Formats'
-    bl_parent_id = 'VIEWPASS_PT_main'
+    bl_parent_id = 'VIEWPRISM_PT_main'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'ViewPass'
+    bl_category = 'ViewPrism'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -154,12 +154,12 @@ class VIEWPASS_PT_formats(bpy.types.Panel):
         layout.prop(s, 'write_meta')
 
 
-class VIEWPASS_PT_advanced(bpy.types.Panel):
+class VIEWPRISM_PT_advanced(bpy.types.Panel):
     bl_label = 'Advanced'
-    bl_parent_id = 'VIEWPASS_PT_main'
+    bl_parent_id = 'VIEWPRISM_PT_main'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'ViewPass'
+    bl_category = 'ViewPrism'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -179,16 +179,16 @@ class VIEWPASS_PT_advanced(bpy.types.Panel):
             layout.prop(s, 'depth_background_value')
         layout.prop(s, 'preview_scale')
         row = layout.row(align=True)
-        row.operator('viewpass.settings_save_defaults', text='Save as Defaults', icon='FILE_TICK')
-        row.operator('viewpass.settings_load_defaults', text='Load Defaults', icon='LOOP_BACK')
+        row.operator('viewprism.settings_save_defaults', text='Save as Defaults', icon='FILE_TICK')
+        row.operator('viewprism.settings_load_defaults', text='Load Defaults', icon='LOOP_BACK')
 
 
 def menu_func(self, context):
     self.layout.separator()
-    self.layout.operator('viewpass.export', icon='EXPORT')
+    self.layout.operator('viewprism.export', icon='EXPORT')
 
 
-classes = (VIEWPASS_PT_main, VIEWPASS_PT_formats, VIEWPASS_PT_advanced)
+classes = (VIEWPRISM_PT_main, VIEWPRISM_PT_formats, VIEWPRISM_PT_advanced)
 
 
 def register():

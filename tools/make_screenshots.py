@@ -1,4 +1,4 @@
-"""Generate README images from real ViewPass output in a sandboxed GUI Blender.
+"""Generate README images from real ViewPrism output in a sandboxed GUI Blender.
 
     set BLENDER_USER_RESOURCES=<empty temp dir>   (no recent-files list -> no private names)
     blender --factory-startup --enable-event-simulate --python tools/make_screenshots.py -- --repo . --out docs/images
@@ -6,7 +6,7 @@
 Use tools/screenshots.py, which sets this up.
 
 Builds a procedural scene (Blender primitives only, no third-party assets), exports the
-passes with the ViewPass operator and takes screenshots of the 3D viewport with the
+passes with the ViewPrism operator and takes screenshots of the 3D viewport with the
 sidebar and preview overlay. Nothing is saved to a .blend file.
 """
 import argparse
@@ -88,7 +88,7 @@ def scene():
 
 def grid_image(stem_dir, stem):
     import numpy as np
-    from viewpass import encode, png
+    from viewprism import encode, png
     rd = lambda n: png.decode(open(os.path.join(stem_dir, f'{stem}_{n}'), 'rb').read())[0]
     depth = rd('depth.png')[..., 0]
     normal = rd('normal.png')
@@ -115,28 +115,28 @@ def steps():
     """Generator driven by a timer so simulated events get processed between steps."""
     assert os.environ.get('BLENDER_USER_RESOURCES'), 'run with an isolated BLENDER_USER_RESOURCES'
     os.makedirs(OUT, exist_ok=True)
-    import viewpass
-    viewpass.register()
+    import viewprism
+    viewprism.register()
     ov = scene()
     win = ov['window']
     win.event_simulate(type='ESC', value='PRESS')          # dismiss the splash screen
     win.event_simulate(type='ESC', value='RELEASE')
     yield 0.5
-    s = bpy.context.window_manager.viewpass
-    tmp = tempfile.mkdtemp(prefix='viewpass-shots-')
-    # Save the throwaway scene in a temp folder so the default '//viewpass/' folder resolves.
+    s = bpy.context.window_manager.viewprism
+    tmp = tempfile.mkdtemp(prefix='viewprism-shots-')
+    # Save the throwaway scene in a temp folder so the default '//viewprism/' folder resolves.
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(tmp, 'demo.blend'), check_existing=False)
     yield 0.3
-    s.output_dir, s.base_name, s.numbering = '//viewpass/', 'shot', 'NONE'
+    s.output_dir, s.base_name, s.numbering = '//viewprism/', 'shot', 'NONE'
     s.use_depth = s.use_normal = s.use_object_id = s.use_mask = True
     s.resolution_mode, s.width, s.lock_aspect = 'CUSTOM', 640, True
     s.id_mode = 'INSTANCER'
     with bpy.context.temp_override(**ov):
-        assert bpy.ops.viewpass.export() == {'FINISHED'}
-    grid_image(os.path.join(tmp, 'viewpass'), 'shot')
+        assert bpy.ops.viewprism.export() == {'FINISHED'}
+    grid_image(os.path.join(tmp, 'viewprism'), 'shot')
     for ob in bpy.context.scene.objects:
         ob.select_set(False)
-    # Click the ViewPass sidebar tab (tab position is found by scanning the tab strip).
+    # Click the ViewPrism sidebar tab (tab position is found by scanning the tab strip).
     ui = ui_region(ov['area'])
     x = ui.x + ui.width - 9
     for y in range(ui.y + ui.height - 20, ui.y + ui.height - 400, -12):
@@ -144,9 +144,9 @@ def steps():
         win.event_simulate(type='LEFTMOUSE', value='PRESS', x=x, y=y)
         win.event_simulate(type='LEFTMOUSE', value='RELEASE', x=x, y=y)
         yield 0.15
-        if ui.active_panel_category == 'ViewPass':
+        if ui.active_panel_category == 'ViewPrism':
             break
-    assert ui.active_panel_category == 'ViewPass', f'tab not activated: {ui.active_panel_category}'
+    assert ui.active_panel_category == 'ViewPrism', f'tab not activated: {ui.active_panel_category}'
     cx, cy = ov['region'].x + 40, ov['region'].y + 40         # park the mouse in the viewport
     win.event_simulate(type='MOUSEMOVE', value='NOTHING', x=cx, y=cy)
     yield 0.3
@@ -154,16 +154,16 @@ def steps():
         s.preview_pass = pass_name
         s.preview_scale = 100
         with bpy.context.temp_override(**ov):
-            bpy.ops.viewpass.preview()
+            bpy.ops.viewprism.preview()
         yield 0.5
         with bpy.context.temp_override(**ov):
             bpy.ops.screen.screenshot_area(filepath=os.path.join(OUT, fname))
     with bpy.context.temp_override(**ov):
-        bpy.ops.viewpass.preview_hide()
+        bpy.ops.viewprism.preview_hide()
     yield 0.5
     with bpy.context.temp_override(**ov):
         bpy.ops.screen.screenshot_area(filepath=os.path.join(OUT, 'ui_panel.png'))
-    viewpass.unregister()
+    viewprism.unregister()
     print('SHOTS OK', OUT)
 
 

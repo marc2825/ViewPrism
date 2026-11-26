@@ -1,8 +1,8 @@
-"""ViewPass GUI/GPU test suite. Runs only in a fresh GUI Blender started by tests/run_blender_tests.py.
+"""ViewPrism GUI/GPU test suite. Runs only in a fresh GUI Blender started by tests/run_blender_tests.py.
 
 Expected values come from analytic geometry or from Blender's own functions
 (RegionView3D.perspective_matrix, bpy_extras.object_utils.world_to_camera_view,
-bpy.data.images.load), never from ViewPass output.
+bpy.data.images.load), never from ViewPrism output.
 """
 import argparse
 import ctypes
@@ -190,9 +190,9 @@ def settings_for_test(s, outdir):
 
 def t_registration(ctx, vp):
     for op in ('export', 'export_as', 'preview', 'preview_hide', 'open_folder'):
-        check(hasattr(bpy.ops.viewpass, op), f'operator {op} missing')
-    check(hasattr(bpy.types, 'VIEWPASS_PT_main'), 'panel missing')
-    check(hasattr(bpy.context.window_manager, 'viewpass'), 'settings missing')
+        check(hasattr(bpy.ops.viewprism, op), f'operator {op} missing')
+    check(hasattr(bpy.types, 'VIEWPRISM_PT_main'), 'panel missing')
+    check(hasattr(bpy.context.window_manager, 'viewprism'), 'settings missing')
     return 'operators, panel, settings registered'
 
 
@@ -450,7 +450,7 @@ def t_repeat_and_leak(ctx, vp):
     big = req(np.eye(4), persp(math.radians(60), 16 / 9, .1, 100), 2560, 1440)
     with bpy.context.temp_override(**ov):
         vp.capture.capture(bpy.context, big)
-    from viewpass import gpu_draw
+    from viewprism import gpu_draw
     check(gpu_draw._targets is None, 'large render targets must not be kept')
     detail = dict(median_ms=round(1000 * float(np.median(times)), 2),
                   p95_ms=round(1000 * float(np.percentile(times, 95)), 2))
@@ -495,7 +495,7 @@ def t_fault_injection(ctx, vp):
     after = (gpu.state.depth_test_get(), gpu.state.depth_mask_get(), gpu.state.blend_get(), gpu.state.viewport_get())
     check(before == after, f'GPU state not restored: {before} -> {after}')
     check(snapshot() == snap, 'scene changed after failure')
-    from viewpass import gpu_draw
+    from viewprism import gpu_draw
     check(gpu_draw._targets is None, 'targets kept after a failure')
     again = vp.capture.capture(ctx, r)
     for k in ('depth', 'normal', 'object_id', 'mask'):
@@ -599,21 +599,21 @@ def t_edit_mode(ctx, vp):
 
 
 def t_operator_export(ctx, vp):
-    from viewpass import exr, png
+    from viewprism import exr, png
     clear_scene()
     plane('OpNear', (-0.4, 0.2, -0.5), (.5, .4))
     plane('OpFar', (0.3, -0.2, -2.5), (1.2, .9))
     ctx.view_layer.update()
     window, area, region = find_view3d()
     set_view(area, region, rotation=(1, 0, 0, 0), distance=6)
-    out = tempfile.mkdtemp(prefix='viewpass-gui-')
+    out = tempfile.mkdtemp(prefix='viewprism-gui-')
     s = vp.props.settings(ctx)
     settings_for_test(s, out)
     before = snapshot()
     n_images = len(bpy.data.images)
     with ctx.temp_override(**override(window, area, region)):
-        r1 = bpy.ops.viewpass.export()
-        r2 = bpy.ops.viewpass.export()
+        r1 = bpy.ops.viewprism.export()
+        r2 = bpy.ops.viewprism.export()
     check(r1 == {'FINISHED'} and r2 == {'FINISHED'}, f'operator failed: {vp.operators.status}')
     check(snapshot() == before and len(bpy.data.images) == n_images, 'export changed scene/datablocks')
     files = sorted(os.listdir(out))
@@ -665,11 +665,11 @@ def t_operator_export(ctx, vp):
             return True
         return ret == {'CANCELLED'}
     with ctx.temp_override(**override(window, area, region)):
-        check(refused(lambda: bpy.ops.viewpass.export(), 'already exist'), 'collision not refused')
+        check(refused(lambda: bpy.ops.viewprism.export(), 'already exist'), 'collision not refused')
     check(os.path.getmtime(os.path.join(out, 'gui_0001_depth.exr')) == stamp, 'existing file was touched')
     # export_as without invoke must refuse (view must be frozen before the browser)
     with ctx.temp_override(**override(window, area, region)):
-        check(refused(lambda: bpy.ops.viewpass.export_as('EXEC_DEFAULT', filepath=os.path.join(out, 'x')),
+        check(refused(lambda: bpy.ops.viewprism.export_as('EXEC_DEFAULT', filepath=os.path.join(out, 'x')),
                       '3D Viewport'), 'export_as without invoke should fail explicitly')
     check(not any(f.startswith('x_') for f in os.listdir(out)), 'export_as wrote files')
     check(snapshot() == before and len(bpy.data.images) == n_images, 'scene changed')
@@ -704,15 +704,15 @@ def t_preview_lifecycle(ctx, vp):
     pv = vp.preview
     before = snapshot()
     with ctx.temp_override(**override(window, area, region)):
-        check(bpy.ops.viewpass.preview() == {'FINISHED'}, 'preview failed')
+        check(bpy.ops.viewprism.preview() == {'FINISHED'}, 'preview failed')
     check(pv.state.active and pv.state.texture is not None, 'preview texture missing')
     check(pv._draw_handle is not None and bpy.app.timers.is_registered(pv._tick), 'handler/timer missing')
     for name in ('depth', 'normal', 'object_id', 'mask'):
         vp.props.settings(ctx).preview_pass = name        # re-encode without capture
         check(pv.state.texture is not None, f'texture for {name}')
-    check(snapshot() == before and not any('viewpass' in i.name.lower() for i in bpy.data.images), 'preview created data')
+    check(snapshot() == before and not any('viewprism' in i.name.lower() for i in bpy.data.images), 'preview created data')
     with ctx.temp_override(**override(window, area, region)):
-        bpy.ops.viewpass.preview_hide()
+        bpy.ops.viewprism.preview_hide()
     check(not pv.state.active and pv.state.texture is None and pv.state.raw is None, 'hide did not free')
     # closing the source view releases the preview via the timer
     with ctx.temp_override(**override(window, area, region)):
@@ -720,7 +720,7 @@ def t_preview_lifecycle(ctx, vp):
     a2 = [a_ for a_ in window.screen.areas if a_.type == 'VIEW_3D'][-1]
     r2 = next(r for r in a2.regions if r.type == 'WINDOW')
     with ctx.temp_override(**override(window, a2, r2)):
-        bpy.ops.viewpass.preview()
+        bpy.ops.viewprism.preview()
     check(pv.state.active, 'preview on second view')
     with ctx.temp_override(**override(window, a2, r2)):
         bpy.ops.screen.area_close()
@@ -728,7 +728,7 @@ def t_preview_lifecycle(ctx, vp):
     check(not pv.state.active and pv.state.texture is None, 'closed view did not release preview')
     # load_pre releases as well
     with ctx.temp_override(**override(window, area, region)):
-        bpy.ops.viewpass.preview()
+        bpy.ops.viewprism.preview()
     pv._on_load_pre()
     check(not pv.state.active, 'load_pre did not clear')
     return 'refresh, re-encode, hide, closed view and file load release resources'
@@ -782,7 +782,7 @@ def t_multi_window(ctx, vp):
 
     notes = []
     # Same tick as the close: no current GPU context until Blender redraws, and GPU objects made
-    # in the closed window's context are gone. ViewPass must redraw first and must not reuse a
+    # in the closed window's context are gone. ViewPrism must redraw first and must not reuse a
     # framebuffer from the closed window (Blender 4.5 crashed on that).
     print('MW: capture in the same tick as the close', flush=True)
     capture_ok('same tick as window close')
@@ -797,7 +797,7 @@ def t_multi_window(ctx, vp):
 
 
 def t_reregister_clean(ctx, vp):
-    import viewpass
+    import viewprism
     n_dg = len(bpy.app.handlers.depsgraph_update_post)
     n_lp = len(bpy.app.handlers.load_pre)
     # disable while a preview (auto refresh on) is showing
@@ -806,20 +806,20 @@ def t_reregister_clean(ctx, vp):
     window, area, region = find_view3d()
     vp.props.settings(ctx).preview_auto = True
     with ctx.temp_override(**override(window, area, region)):
-        check(bpy.ops.viewpass.preview() == {'FINISHED'}, 'preview before unregister')
+        check(bpy.ops.viewprism.preview() == {'FINISHED'}, 'preview before unregister')
     check(vp.preview.state.active and vp.preview._draw_handle is not None, 'preview not active')
-    viewpass.unregister()
-    check(not hasattr(bpy.ops.viewpass, 'export') or not hasattr(bpy.types, 'VIEWPASS_PT_main'), 'still registered')
+    viewprism.unregister()
+    check(not hasattr(bpy.ops.viewprism, 'export') or not hasattr(bpy.types, 'VIEWPRISM_PT_main'), 'still registered')
     check(len(bpy.app.handlers.depsgraph_update_post) == n_dg - 1 and len(bpy.app.handlers.load_pre) == n_lp - 1,
           'handlers not removed')
     check(vp.preview._draw_handle is None, f'draw handle left: {vp.preview._draw_handle}')
     check(not bpy.app.timers.is_registered(vp.preview._tick), 'timer left')
     check(vp.preview._tick() is None, 'tick must stop when inactive')
-    from viewpass import gpu_draw
+    from viewprism import gpu_draw
     check(gpu_draw._targets is None and gpu_draw._shader is None, 'GPU resources kept after unregister')
     check(not bpy.app.timers.is_registered(gpu_draw._idle_release), 'idle-release timer left')
-    viewpass.register()
-    check(hasattr(bpy.types, 'VIEWPASS_PT_main'), 're-register failed')
+    viewprism.register()
+    check(hasattr(bpy.types, 'VIEWPRISM_PT_main'), 're-register failed')
     return 'unregister removes handlers, draw callbacks, timers; re-register works'
 
 
@@ -870,7 +870,7 @@ def write(status, **extra):
                 gpu={k: getattr(gpu.platform, k)() for k in ('backend_type_get', 'vendor_get', 'renderer_get',
                                                             'version_get') if hasattr(gpu.platform, k)}, **extra)
     a.result.write_text(json.dumps(info, indent=2, ensure_ascii=False), encoding='utf-8')
-    print('VIEWPASS_SUITE', status, flush=True)
+    print('VIEWPRISM_SUITE', status, flush=True)
 
 
 start = time.monotonic()
@@ -890,9 +890,9 @@ def suite():
     results = []
     try:
         import importlib
-        import viewpass
-        viewpass.register()
-        vp = argparse.Namespace(**{m: importlib.import_module(f'viewpass.{m}') for m in
+        import viewprism
+        viewprism.register()
+        vp = argparse.Namespace(**{m: importlib.import_module(f'viewprism.{m}') for m in
                                    ('capture', 'viewport', 'props', 'preview', 'operators')})
         only = set(filter(None, a.only.split(',')))
         for t in TESTS:
@@ -921,7 +921,7 @@ def suite():
             except Exception:
                 results.append(dict(test=t.__name__, status='fail', traceback=traceback.format_exc()))
             print('TEST', results[-1]['test'], results[-1]['status'], flush=True)
-        viewpass.unregister()
+        viewprism.unregister()
         ok = results and all(r['status'] == 'pass' for r in results)
         write('pass' if ok else 'fail', results=results)
     except Exception:

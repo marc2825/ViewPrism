@@ -26,15 +26,15 @@ python tools/benchmark.py --blender <blender.exe> --runs 5
 
 | Scene | Cold capture median / p95 | Warm capture median / p95 | Encode + write 6 files (median) |
 |---|---|---|---|
-| simple | 65 ms / 77 ms | 46 ms / 69 ms | 144 ms |
-| complex | 216 ms / 236 ms | 187 ms / 205 ms | 261 ms |
+| simple | 58 ms / 86 ms | 45 ms / 58 ms | 138 ms |
+| complex | 204 ms / 338 ms | 182 ms / 321 ms | 257 ms |
 
 Warm stage medians:
 
 | Scene | collect (depsgraph + `to_mesh`) | upload (batches) | GPU draw + readback | post (arrays) |
 |---|---|---|---|---|
-| simple | 0.8 ms | 0.1 ms | 15.2 ms | 24.7 ms |
-| complex | 84.2 ms | 4.3 ms | 64.7 ms | 30.8 ms |
+| simple | 0.9 ms | 0.1 ms | 14.5 ms | 26.8 ms |
+| complex | 81.2 ms | 5.1 ms | 65.4 ms | 30.6 ms |
 
 Files written per export (defaults + ID + mask): depth PNG8, depth EXR (Z + A, ZIP), normal PNG8,
 ID PNG16, mask PNG8, meta JSON. Encoding runs in 4 threads (pure NumPy/zlib).
@@ -52,11 +52,11 @@ GPU Cycles was not configured (that would change preferences).
 
 | Scene | EEVEE (1 spp) render s | Cycles CPU (1 spp) render s |
 |---|---|---|
-| simple | 0.30, 0.21 | 0.31, 0.26 |
-| complex | 0.23, 0.18 | 0.36, 0.37 |
+| simple | 0.28, 0.19 | 0.30, 0.27 |
+| complex | 0.35, 0.30 | 0.41, 0.41 |
 
-**Interpretation (critical):** per export, ViewPass (capture + files ≈ 0.19 s simple / ≈ 0.45 s complex) is
-in the same range as an EEVEE pass render with EXR output on this hardware. ViewPass is not faster than a
+**Interpretation (critical):** per export, ViewPrism (capture + files ≈ 0.18 s simple / ≈ 0.44 s complex) is
+in the same range as an EEVEE pass render with EXR output on this hardware. ViewPrism is not faster than a
 pre-configured EEVEE pass render. Its advantage is that it needs no camera, pass, compositor or output
 setup and changes nothing in the scene. The methods also differ (EEVEE/Cycles shade the image and write
 Combined), so no speed ratio is claimed. A first EEVEE render in a process can take several seconds for
@@ -77,7 +77,7 @@ the single sample may hit different surfaces).
 | object ID agreement (interior) | 99.9999 % | 99.998 % |
 
 The few large relative errors (max) are at depth discontinuities inside the eroded interior (one pixel
-whose sample lands on a different surface). The p99 values confirm that ViewPass depth is the same
+whose sample lands on a different surface). The p99 values confirm that ViewPrism depth is the same
 **planar** camera-Z as Cycles' Depth pass, and that the camera-frame projection matches Blender's render
 framing.
 

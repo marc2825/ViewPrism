@@ -2,7 +2,7 @@
 
 All suites gate on real results: a suite passes only with exit code 0 **and** a result JSON with
 `status == "pass"`. Timeouts, missing results and skips count as failures. Expected values come from
-analytic geometry or from Blender's own functions, never from ViewPass output.
+analytic geometry or from Blender's own functions, never from ViewPrism output.
 
 Run everything (stores sanitised evidence in `docs/evidence/<date>/`):
 

@@ -34,7 +34,7 @@ def resolve(context):
     """The view the operator was invoked from (N-panel button, menu or hotkey over the view)."""
     area = context.area
     if area is None or area.type != 'VIEW_3D':
-        raise ViewError('Run ViewPass from a 3D Viewport')
+        raise ViewError('Run ViewPrism from a 3D Viewport')
     space = area.spaces.active
     regions = _window_regions(area)
     if not regions:

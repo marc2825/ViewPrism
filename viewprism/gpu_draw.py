@@ -73,7 +73,7 @@ def shader():
     if _shader is not None:
         return _shader
     import gpu
-    iface = gpu.types.GPUStageInterfaceInfo('viewpass_iface')
+    iface = gpu.types.GPUStageInterfaceInfo('viewprism_iface')
     iface.smooth('VEC3', 'v_view')
     iface.smooth('VEC3', 'v_nor')
     info = gpu.types.GPUShaderCreateInfo()

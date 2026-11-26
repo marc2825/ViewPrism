@@ -1,4 +1,4 @@
-# ViewPass check run 2026-11-26
+# ViewPrism check run 2026-11-26
 
 - Blender: `Blender 5.3.0`
 - Platform: `win32`
@@ -13,7 +13,7 @@
 | gui_suite_vulkan | PASS | 20/20 cases |
 | harness_opengl | PASS |  |
 | gui_suite_opengl | PASS | 20/20 cases |
-| extension_build | PASS | viewpass-0.1.0.zip |
+| extension_build | PASS | viewprism-0.1.0.zip |
 | package_lifecycle | PASS |  |
 | benchmark | PASS |  |
 

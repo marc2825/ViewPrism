@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from viewpass import exr, export, png, writer  # noqa: E402
+from viewprism import exr, export, png, writer  # noqa: E402
 
 
 def synthetic_result(h=6, w=8):
@@ -74,7 +74,7 @@ class Writing(unittest.TestCase):
             export.atomic_write(path, b'two', overwrite=True)
             with open(path, 'rb') as fh:
                 self.assertEqual(fh.read(), b'two')
-            self.assertEqual([f for f in os.listdir(d) if f.endswith('.vptmp')], [])
+            self.assertEqual([f for f in os.listdir(d) if f.endswith('.viewprism-tmp')], [])
 
     def test_batch_partial_failure_reports_each_file(self):
         with tempfile.TemporaryDirectory() as d:

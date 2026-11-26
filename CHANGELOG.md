@@ -1,8 +1,9 @@
 # Changelog
 
-## 0.1.0 — unreleased (branch `feature/viewpass`)
+## 0.1.0 — unreleased (branch `feature/viewprism`)
 
-Complete rewrite of the former "Depth Renderer" add-on as ViewPass (working name).
+Complete rewrite of the former "Depth Renderer" add-on as **ViewPrism — Viewport Pass Exporter**
+(developed under the working name "ViewPass"; renamed on 2026-11-26).
 
 ### Added
 - One-pass GPU capture (GPU module only) of depth, camera-space normal, object ID and mask from the
@@ -34,6 +35,13 @@ Complete rewrite of the former "Depth Renderer" add-on as ViewPass (working name
 ### CI/CD
 - GitHub Actions: lint, pure tests (Windows/Linux), Blender 4.5 LTS + 5.3 full checks on Linux,
   tag-triggered draft release with the validated ZIP; Dependabot for Actions.
+
+### Name, logo and roadmap
+- Renamed to ViewPrism: package `viewprism`, extension id `viewprism`, operators `viewprism.*`, sidebar
+  tab "ViewPrism", default folder `//viewprism/`, metadata format `viewprism-meta`. A small `viewpass`
+  alias remains at the repository root only for the unchanged independent harness (not packaged).
+- Logo set in `branding/` (SVG source + rendered PNGs, `tools/make_logo.py`).
+- `ROADMAP.md` for planned features (clipboard, ControlNet presets, Line Art/AO, sequences, ...).
 
 ### Removed
 - Legacy `bgl`-based implementation (non-functional) and `memo.txt`.

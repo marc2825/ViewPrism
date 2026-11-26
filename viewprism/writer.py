@@ -18,7 +18,7 @@ def default_options():
         'depth': {'range': 'AUTO', 'near': None, 'far': None, 'near_white': True, 'background': 'FAR'},
         'normal': {'background': (0.0, 0.0, 0.0), 'flip_x': False, 'flip_y': False},
         'exr': {'compression': 'ZIP'},
-        'base_name': 'viewpass', 'numbering': 'AUTO', 'overwrite': False, 'meta': True,
+        'base_name': 'viewprism', 'numbering': 'AUTO', 'overwrite': False, 'meta': True,
         'source': {}, 'version': '0.0.0',
     }
 
@@ -114,8 +114,8 @@ def producers(result, options):
 def metadata(result, options, encodings, files):
     info = result.get('info', {})
     return {
-        'format': 'viewpass-meta', 'format_version': FORMAT_VERSION,
-        'generator': f"ViewPass {options.get('version', '')}".strip(),
+        'format': 'viewprism-meta', 'format_version': FORMAT_VERSION,
+        'generator': f"ViewPrism {options.get('version', '')}".strip(),
         'blender': info.get('blender'),
         'created_utc': datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat(),
         'frame': info.get('frame'), 'frame_float': info.get('frame_float'),

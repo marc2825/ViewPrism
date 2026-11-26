@@ -1,6 +1,6 @@
-00:03.063  blend            | Saved session recovery to "<HOME>\AppData\Local\Temp\quit.blend"
-Info: ViewPass: Saved 6 files as pkg_0001_*  (1574x888, capture 60 ms)
-Info: ViewPass: Saved 6 files as pkg_0001_*  (1574x888, capture 54 ms)
+00:03.484  blend            | Saved session recovery to "<HOME>\AppData\Local\Temp\quit.blend"
+Info: ViewPrism: Saved 6 files as pkg_0001_*  (1574x888, capture 62 ms)
+Info: ViewPrism: Saved 6 files as pkg_0001_*  (1574x888, capture 54 ms)
 Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
 Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
 

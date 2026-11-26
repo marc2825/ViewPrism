@@ -1,6 +1,6 @@
 """Benchmark + render-pass comparison, run inside a sandboxed GUI Blender by tools/benchmark.py.
 
-Builds procedural scenes (no third-party assets), times ViewPass captures, renders the standard
+Builds procedural scenes (no third-party assets), times ViewPrism captures, renders the standard
 Z / Normal / Object Index passes with EEVEE and Cycles from the same camera and compares values.
 The scene changes made here (camera, passes, pass_index) exist only in this factory-startup
 process and are never saved.
@@ -98,8 +98,8 @@ def build(kind):
     return ov, dict(objects=len(sc.objects), mesh_instances=n_inst, triangles=tris)
 
 
-def viewpass_capture(vp, ov):
-    s = bpy.context.window_manager.viewpass
+def viewprism_capture(vp, ov):
+    s = bpy.context.window_manager.viewprism
     s.resolution_mode, s.scale, s.camera_frame = 'VIEW', 100, True
     with bpy.context.temp_override(**ov):
         view = vp['viewport'].resolve(bpy.context)
@@ -156,30 +156,30 @@ def eroded(mask, n=2):
 
 def main():
     import importlib
-    import viewpass
-    viewpass.register()
-    vp = {m: importlib.import_module(f'viewpass.{m}') for m in ('capture', 'viewport', 'writer', 'exr')}
+    import viewprism
+    viewprism.register()
+    vp = {m: importlib.import_module(f'viewprism.{m}') for m in ('capture', 'viewport', 'writer', 'exr')}
     import gpu
     info = dict(blender=bpy.app.version_string, scene=a.scene,
                 gpu={k: getattr(gpu.platform, k)() for k in ('backend_type_get', 'renderer_get', 'version_get')})
     ov, stats = build(a.scene)
     info['scene_stats'] = stats
     # cold = first capture in this process (shader compile, target allocation)
-    res, request, source, cold = viewpass_capture(vp, ov)
-    info['viewpass_cold_s'] = cold
-    info['viewpass_cold_stages'] = res['stats']['seconds']
+    res, request, source, cold = viewprism_capture(vp, ov)
+    info['viewprism_cold_s'] = cold
+    info['viewprism_cold_stages'] = res['stats']['seconds']
     warm, stages = [], []
     for _ in range(a.warm):
-        res, request, source, t = viewpass_capture(vp, ov)
+        res, request, source, t = viewprism_capture(vp, ov)
         warm.append(t)
         stages.append(res['stats']['seconds'])
         bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-    info['viewpass_warm_s'] = warm
-    info['viewpass_warm_median_s'] = float(np.median(warm))
-    info['viewpass_warm_p95_s'] = float(np.percentile(warm, 95))
-    info['viewpass_stage_median_s'] = {k: float(np.median([s[k] for s in stages])) for k in stages[0]}
+    info['viewprism_warm_s'] = warm
+    info['viewprism_warm_median_s'] = float(np.median(warm))
+    info['viewprism_warm_p95_s'] = float(np.percentile(warm, 95))
+    info['viewprism_stage_median_s'] = {k: float(np.median([s[k] for s in stages])) for k in stages[0]}
     info['capture_stats'] = {k: v for k, v in res['stats'].items() if k != 'seconds'}
-    out = tempfile.mkdtemp(prefix='viewpass-bench-')
+    out = tempfile.mkdtemp(prefix='viewprism-bench-')
     opts = vp['writer'].default_options()
     opts['outputs'] = {'depth': ['PNG8', 'EXR'], 'normal': ['PNG8'], 'object_id': ['PNG16'], 'mask': ['PNG8']}
     t0 = time.perf_counter()
@@ -235,7 +235,7 @@ def main():
                 cmp['id_agreement_interior'] = float((cid[both] == ours['object_id'][both]).mean())
             info['cycles_comparison'] = cmp
     info['output_dir'] = out
-    viewpass.unregister()
+    viewprism.unregister()
     return info
 
 

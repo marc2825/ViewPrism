@@ -1,4 +1,4 @@
-"""Run the ViewPass benchmark / render-pass comparison in fresh sandboxed Blender processes.
+"""Run the ViewPrism benchmark / render-pass comparison in fresh sandboxed Blender processes.
 
     python tools/benchmark.py --blender <blender.exe> [--runs 5] [--gpu-backend vulkan] [--out DIR]
 
@@ -25,7 +25,7 @@ def main():
     ap.add_argument('--out', type=Path)
     ap.add_argument('--timeout', type=int, default=900)
     a = ap.parse_args()
-    out = a.out.resolve() if a.out else Path(tempfile.mkdtemp(prefix='viewpass-bench-'))
+    out = a.out.resolve() if a.out else Path(tempfile.mkdtemp(prefix='viewprism-bench-'))
     out.mkdir(parents=True, exist_ok=True)
     summary = {}
     ok = True
@@ -51,19 +51,19 @@ def main():
                 print(scene, i, 'FAIL', data.get('traceback', data))
                 continue
             runs.append(data)
-            print(scene, i, f"cold {data['viewpass_cold_s']*1000:.1f} ms, warm median {data['viewpass_warm_median_s']*1000:.1f} ms")
+            print(scene, i, f"cold {data['viewprism_cold_s']*1000:.1f} ms, warm median {data['viewprism_warm_median_s']*1000:.1f} ms")
         if not runs:
             continue
-        cold = [r['viewpass_cold_s'] for r in runs]
-        warm = [w for r in runs for w in r['viewpass_warm_s']]
+        cold = [r['viewprism_cold_s'] for r in runs]
+        warm = [w for r in runs for w in r['viewprism_warm_s']]
         q = lambda xs, p: sorted(xs)[min(len(xs) - 1, int(round(p * (len(xs) - 1))))]
         summary[scene] = dict(
             runs=len(runs), scene_stats=runs[0]['scene_stats'], capture_stats=runs[0]['capture_stats'],
             gpu=runs[0]['gpu'], blender=runs[0]['blender'],
             cold_ms=dict(median=1000 * statistics.median(cold), p95=1000 * q(cold, .95), samples=[1000 * c for c in cold]),
             warm_ms=dict(median=1000 * statistics.median(warm), p95=1000 * q(warm, .95), n=len(warm)),
-            warm_stage_median_ms={k: 1000 * statistics.median([r['viewpass_stage_median_s'][k] for r in runs])
-                                  for k in runs[0]['viewpass_stage_median_s']},
+            warm_stage_median_ms={k: 1000 * statistics.median([r['viewprism_stage_median_s'][k] for r in runs])
+                                  for k in runs[0]['viewprism_stage_median_s']},
             encode_write_ms=dict(median=1000 * statistics.median([r['encode_write_s'] for r in runs])),
             files_bytes=runs[0]['files_bytes'],
             render_engines=runs[0].get('render_engines'), cycles_comparison=runs[0].get('cycles_comparison'))

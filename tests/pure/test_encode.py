@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from viewpass import encode as E  # noqa: E402
+from viewprism import encode as E  # noqa: E402
 
 nan = np.nan
 

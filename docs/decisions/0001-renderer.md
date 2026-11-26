@@ -7,7 +7,7 @@
 
 ## Context
 
-ViewPass must export Depth / Normal / Object ID / Mask from the 3D viewport the user is working in,
+ViewPrism must export Depth / Normal / Object ID / Mask from the 3D viewport the user is working in,
 without a camera, without touching scene, render or compositor settings, with all passes
 geometrically consistent, using only Blender's current `gpu` module (no `bgl`, no raw OpenGL,
 no private API). The legacy Depth Renderer code (removed in this branch, still in history) was not
@@ -108,7 +108,7 @@ PoC measurements (Blender 5.3.0, RTX 3060 Ti):
   boundaries; reuse removed that growth (measured flat). The **framebuffer is created and freed per
   capture**, because OpenGL framebuffers belong to one window's context. Caching it crashed Blender 4.5
   after the window that created it was closed (found by CI).
-- When windows were opened/closed since the last capture, ViewPass asks Blender to redraw once before
+- When windows were opened/closed since the last capture, ViewPrism asks Blender to redraw once before
   any GPU work, so that a GPU context is current (4.5 has no Python-side check; 5.x raised an error).
 - Readback goes into flat 1-D `gpu.types.Buffer`s: Blender 4.5 exports the default (h, w, 4) buffer
   through a non-contiguous buffer protocol that NumPy cannot view.

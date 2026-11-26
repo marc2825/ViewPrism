@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ap = argparse.ArgumentParser()
 ap.add_argument('--blender', required=True)
 a = ap.parse_args()
-env = dict(os.environ, BLENDER_USER_RESOURCES=tempfile.mkdtemp(prefix='viewpass-shots-userres-'))
+env = dict(os.environ, BLENDER_USER_RESOURCES=tempfile.mkdtemp(prefix='viewprism-shots-userres-'))
 cmd = [a.blender, '--factory-startup', '--disable-autoexec', '--enable-event-simulate',
        '--python', str(ROOT / 'tools' / 'make_screenshots.py'), '--',
        '--repo', str(ROOT), '--out', str(ROOT / 'docs' / 'images')]
