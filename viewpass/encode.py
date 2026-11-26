@@ -45,8 +45,9 @@ def depth_range(depth, mask, mode='AUTO', near=None, far=None):
     raise EncodeError(f'unknown depth range mode {mode!r}')
 
 
-def normalize_depth(depth, mask, mode='AUTO', near=None, far=None, near_white=True, background='FAR'):
-    """Map raw depth to a [0, 1] float32 display image.
+def normalize_depth(depth, mask, mode='AUTO', near=None, far=None, near_white=True, background='FAR',
+                    dtype=np.float32):
+    """Map raw depth to a [0, 1] display image (float32 by default; float64 for file encoding).
 
     * Linear in depth between the resolved range; values outside a FIXED range clamp.
     * ``near_white``: nearest = 1.0 (white) and farthest = 0.0; otherwise reversed.
@@ -83,19 +84,19 @@ def normalize_depth(depth, mask, mode='AUTO', near=None, far=None, near_white=Tr
         t = np.clip(t, 0.0, 1.0)
         out[valid] = 1.0 - t if near_white else t
     info.update(near_white=bool(near_white), background=float(bg))
-    return out.astype(np.float32), info
+    return out.astype(dtype), info
 
 
 # --------------------------------------------------------------------------- normal / mask / id
 
-def normal_to_rgb(normal, mask, background=(0.0, 0.0, 0.0)):
+def normal_to_rgb(normal, mask, background=(0.0, 0.0, 0.0), dtype=np.float32):
     """Signed camera-space normals -> RGB in [0, 1] using n * 0.5 + 0.5 (no colour management)."""
     normal = np.asarray(normal, dtype=np.float64)
     mask = np.asarray(mask, dtype=bool)
     out = np.empty(normal.shape, dtype=np.float64)
     out[...] = np.asarray(background, dtype=np.float64)
     out[mask] = np.clip(normal[mask] * 0.5 + 0.5, 0.0, 1.0)
-    return out.astype(np.float32)
+    return out.astype(dtype)
 
 
 def quantize(img01, bits):
