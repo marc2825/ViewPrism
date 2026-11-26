@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Run every ViewPrism check and store sanitised evidence in docs/evidence/<date>/.
 
     python tools/run_all_checks.py --blender <blender.exe> [--backends vulkan,opengl] [--bench]

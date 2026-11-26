@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Run the ViewPrism Blender test suites in fresh Blender processes.
 
     python tests/run_blender_tests.py --blender <blender.exe> [--suite gui|package|all] [--gpu-backend vulkan|opengl]

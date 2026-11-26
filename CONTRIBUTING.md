@@ -2,6 +2,16 @@
 
 Thanks for helping! The project values correct output over features, so please keep these rules.
 
+## License of contributions
+
+ViewPrism is licensed under GPL-3.0-or-later. By contributing you agree that your contribution is
+licensed under the same terms. New source files start with:
+
+```
+# SPDX-FileCopyrightText: <year> <name>
+# SPDX-License-Identifier: GPL-3.0-or-later
+```
+
 ## Ground rules
 
 - **Use only Blender's `gpu` module** for drawing (no `bgl`, no raw OpenGL, no private APIs).

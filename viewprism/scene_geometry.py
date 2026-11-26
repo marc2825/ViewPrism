@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Collect drawable, visible geometry from the evaluated depsgraph (read-only).
 
 Visibility follows what the given 3D viewport shows (see docs/decisions/0001-renderer.md):

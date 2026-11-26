@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Generate the ViewPrism logo set (SVG is the source) and render PNGs with a headless browser.
 
     python tools/make_logo.py [--browser "<path to msedge.exe or chrome.exe>"]
@@ -169,6 +171,26 @@ def render(browser, svg_path, png_path, width, height, scale=1):
     print('rendered', png_path.relative_to(ROOT))
 
 
+def listing_card():
+    """1920 x 1080 featured image for store/listing pages, composed from the real assets."""
+    wordmark = (OUT / 'viewprism-wordmark-dark.svg').as_uri()
+    grid = (ROOT / 'docs' / 'images' / 'passes_grid.png').as_uri()
+    bullets = ['No camera, no compositor, scene untouched',
+               'Depth · Normal · Object ID · Mask from one GPU pass',
+               'Float EXR + PNG + metadata · Blender 4.5 LTS · 5.3']
+    items = ''.join(f'<li>{b}</li>' for b in bullets)
+    return f'''<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{{margin:0;width:1920px;height:1080px;overflow:hidden;
+  background:radial-gradient(1200px 800px at 20% 10%,#2a3246,#11141c);font-family:{FONT};color:#eef2f9}}
+.wm{{position:absolute;left:110px;top:120px;width:1100px}}
+ul{{position:absolute;left:150px;top:570px;margin:0;padding:0;list-style:none;font-size:38px;line-height:1.9;color:#c9d1e0}}
+li::before{{content:"";display:inline-block;width:18px;height:18px;border-radius:5px;margin-right:26px;
+  background:linear-gradient(135deg,#7d9bff,#b48cff,#ff8f70,#ffd166,#7ce6b0);vertical-align:middle}}
+.grid{{position:absolute;right:90px;top:250px;width:600px;border-radius:22px;
+  box-shadow:0 30px 80px rgba(0,0,0,.55)}}
+</style></head><body><img class="wm" src="{wordmark}"><ul>{items}</ul><img class="grid" src="{grid}"></body></html>'''
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--browser', default=r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe')
@@ -193,6 +215,13 @@ def main():
     for theme in ('dark', 'light'):
         render(a.browser, OUT / f'viewprism-wordmark-{theme}.svg', OUT / f'viewprism-wordmark-{theme}.png',
                740, 200, scale=2)
+    page = pathlib.Path(tempfile.mkdtemp(prefix='viewprism-card-')) / 'card.html'
+    page.write_text(listing_card(), encoding='utf-8')
+    card = OUT / 'viewprism-featured-1920x1080.png'
+    subprocess.run([a.browser, '--headless', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
+                    '--allow-file-access-from-files', '--window-size=1920,1080', f'--screenshot={card}',
+                    page.as_uri()], check=True, capture_output=True, timeout=60)
+    print('rendered', card.relative_to(ROOT))
 
 
 if __name__ == '__main__':

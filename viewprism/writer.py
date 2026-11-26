@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Capture result -> files on disk (pure: NumPy + stdlib; no bpy).
 
 Separates numeric arrays (the capture) from file encoding, so the same code path is

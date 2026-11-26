@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Single geometry pass on the GPU (Blender ``gpu`` module only; no bgl, no raw OpenGL).
 
 One draw of every item into two RGBA32F colour targets plus a DEPTH_COMPONENT32F

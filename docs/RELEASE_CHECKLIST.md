@@ -37,10 +37,10 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 
 | Item | State |
 |---|---|
-| License (candidate GPL-3.0-or-later; add `LICENSE` file) | 🔒 |
+| License GPL-3.0-or-later (`LICENSE`, SPDX headers, manifest, LICENSE inside the ZIP) | ✅ approved by the owner 2026-11-26 |
 | Product name "ViewPrism — Viewport Pass Exporter", extension `id` `viewprism` | ✅ decided by the owner |
-| Trademark search for "ViewPrism" (J-PlatPat / USPTO / EUIPO) | 🔒 |
-| Logo (`branding/`) license; CC0 if bundled in the extension | 🔒 |
+| Trademark search for "ViewPrism" (J-PlatPat / USPTO / EUIPO) | 🔒 web screening found similar marks "PRISMVIEW"/"PRISM VIEW" (see NAMING) |
+| Logo (`branding/`) license | ✅ GPL-3.0-or-later (not bundled; CC0 needed only if bundled) |
 | Repository rename (Depth_Renderer → ViewPrism) | ✅ (GitHub redirects the old URL) |
 | History cleanup of `memo.txt` (would need a force push) | 🔒 optional |
 | Code origin / no copied code / no third-party assets | ✅ `docs/SECURITY_AND_RIGHTS.md` |

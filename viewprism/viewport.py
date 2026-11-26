@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Derive a capture request from the 3D viewport the user is working in (read-only)."""
 import bpy
 import numpy as np

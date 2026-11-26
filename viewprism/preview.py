@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Display-only preview overlay in the 3D viewport the capture came from.
 
 The preview is drawn by a POST_PIXEL handler from a GPU texture owned by this module;

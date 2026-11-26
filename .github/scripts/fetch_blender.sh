@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 # CI helper: resolve / download an official Blender Linux build and verify its SHA-256.
 #   fetch_blender.sh resolve <series>          -> prints the latest patch version, e.g. 4.5.3
 #   fetch_blender.sh fetch <version> <dest>    -> extracts to <dest>, prints the blender executable path

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Minimal lossless PNG encoder/decoder (stdlib zlib + NumPy, no bpy).
 
 Writing PNG bytes directly keeps exports free of Blender colour management and

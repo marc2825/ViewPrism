@@ -31,8 +31,8 @@ the owner's.
 
 ## Code and asset origin
 
-- All product and test code in `viewprism/`, `tests/`, `tools/` was written for this project in this
-  branch. Competitors were studied from public pages and source **to describe approaches only**; no
+- **Documented origin (not independently verified by a third party):** all product and test code in
+  `viewprism/`, `tests/`, `tools/` was written for this project. Competitors were studied from public pages and source **to describe approaches only**; no
   code or assets were copied (see `docs/COMPETITORS.md`).
 - PNG and OpenEXR encoders/decoders were implemented from the public format specifications (PNG spec;
   OpenEXR file layout, ZIP predictor/reordering).
@@ -41,21 +41,32 @@ the owner's.
   Blender primitives (no Suzanne, no third-party assets). The UI screenshots show Blender's interface
   (GPL software) without the splash or the Blender logo. They are produced with an empty, isolated
   user directory so no recent-file names or paths appear.
-- The development starter kit (`viewpass-dev/`) is the owner's input and is kept unchanged.
+- The development starter kit (`viewpass-dev/`) is the owner's input. Its harness is kept unchanged;
+  the development prompt and research brief were removed from the tree on 2026-11-26 (still in history).
+- **Automated checks:** `tools/privacy_scan.py` scans the tree, the git history, the ZIP and the
+  evidence for private data, credentials and PNG metadata. gitleaks scans the full history in CI.
+  Neither proves provenance: they find leaks, not copied code.
 
 ## License
 
-- Candidate: **GPL-3.0-or-later**, which is required by extensions.blender.org for add-ons (bundled
-  assets would have to be CC0). It is written into `blender_manifest.toml` only because the manifest
-  schema requires a value to build. **Not decided**: there is no `LICENSE` file, and the owner must
-  approve the license before any publication.
-- Dependencies used at runtime are Blender itself (GPL) and NumPy (BSD-3-Clause, shipped with Blender).
+- **GPL-3.0-or-later**, approved by the owner on 2026-11-26. Canonical text in `LICENSE` (current FSF
+  text, identical to the copy shipped with Blender apart from http→https URLs). SPDX headers in every
+  project source; manifest `license = ["SPDX:GPL-3.0-or-later"]` and `copyright = ["2026 marc2825"]`.
+- The extension ZIP **includes `LICENSE`** (GPL requires distributed copies to carry the license text).
+  `tools/build_extension.py` fails if it is missing or differs from the repository copy.
+- Blender Extensions requires GPL-3.0-or-later for add-ons and CC0 for bundled binary assets (Terms of
+  Service, checked 2026-11-26). The ZIP bundles no binary assets.
+- Runtime dependencies are not bundled: Blender (GPL) and NumPy (BSD-3-Clause, shipped with Blender).
+  CI-only tools (ruff, gitleaks, GitHub Actions) are not distributed.
+- The published v0.1.0 pre-release was built before `LICENSE` existed. Its ZIP declares
+  GPL-3.0-or-later in the manifest, and the release notes now point to the license; later releases
+  include the file.
 
 ## Privacy items found in the repository history (not rewritten)
 
 | Item | Where | Note |
 |---|---|---|
-| `memo.txt` with a local WSL path (`\\wsl$\Ubuntu-22.04\home\<github-handle>\Blender\`) | commits `447936f`, `e86658a` (deleted in this branch) | contains the GitHub handle, which is already public. Removing it from history needs a history rewrite + force push → **owner decision** |
+| `memo.txt` with a local WSL network path to a home directory named after the GitHub handle | commits `447936f`, `e86658a` (removed from the tree) | only the already-public GitHub handle; no other personal data. Not worth a history rewrite |
 | Old `bl_info` URLs pointing to `github.com/<handle>/Blender_Depth_Renderer` | same commits | harmless, removed from the tree |
 | Commit author name/e-mail | all commits | the owner's configured Git identity (as on GitHub) |
 

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Benchmark + render-pass comparison, run inside a sandboxed GUI Blender by tools/benchmark.py.
 
 Builds procedural scenes (no third-party assets), times ViewPrism captures, renders the standard

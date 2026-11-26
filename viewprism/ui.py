@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """3D View sidebar (N-panel) UI: passes, size, depth range, preview, output, export."""
 import bpy
 

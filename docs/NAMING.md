@@ -7,6 +7,25 @@ Collision check (web search only, 2026-11-26): no product named "ViewPrism" foun
 Accusoft "Prizm Viewer" (document/image viewer) and other "…View…" XR/BIM viewers, all in different
 categories. **Still to do before publishing:** J-PlatPat / USPTO / EUIPO search (classes 9 and 42).
 
+### Trademark screening (web search only, 2026-11-26 — not legal clearance)
+
+| Query | Result |
+|---|---|
+| "ViewPrism" trademark | No record for "ViewPrism". **Similar live US marks:** "PRISMVIEW" (Reg. 2159679,
+registered 1990s, renewed; owner/goods not shown in the result) and "PRISM VIEW" (Reg. 3327821, Class 9,
+medical imaging software, owner Prism Clinical Imaging, Inc.). Same words in reverse order. **Unresolved
+concern**: whether this matters for an open-source Blender add-on needs a proper search, or advice from a
+professional, before investing in the brand. |
+| extensions.blender.org "viewprism" / "View Prism" | No such listing. A paid add-on "Prism Suite Beta"
+(Superhive, UI theme) uses "Prism"; it is a different name. |
+| "View Prism" software | Only unrelated "Prism …" products (accounting, compliance, property software). |
+
+Sources (2026-11-26): trademarks.justia.com (PRISM VIEW 78899494, PRISMVIEW 75192479), markinton.com,
+extensions.blender.org search results, superhivemarket.com (Prism Suite Beta). The official databases
+(USPTO Trademark Search, EUIPO eSearch, WIPO Global Brand Database, J-PlatPat) were not queried: they
+need interactive sessions. The extension id `viewprism` was not found on extensions.blender.org; it is
+reserved only when an extension is uploaded.
+
 The proposals below were prepared before the decision and are kept for the record.
 
 ## Name proposals (2026-11-26, before the decision)
