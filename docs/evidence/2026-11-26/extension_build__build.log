@@ -3,20 +3,20 @@ Success parsing TOML in "<HOME>\Blender_Addon\Depth_Renderer\viewpass"
 
 exit 0
 
-$ C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe --factory-startup --command extension build --source-dir <HOME>\Blender_Addon\Depth_Renderer\viewpass --output-filepath <HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\dist\viewpass-0.1.0.zip
+$ C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe --factory-startup --command extension build --source-dir <HOME>\Blender_Addon\Depth_Renderer\viewpass --output-filepath <HOME>\AppData\Local\Temp\viewpass-checks-7r2f4dqi\dist\viewpass-0.1.0.zip
 building: viewpass-0.1.0.zip
 complete
-created: "<HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\dist\viewpass-0.1.0.zip", 42952
+created: "<HOME>\AppData\Local\Temp\viewpass-checks-7r2f4dqi\dist\viewpass-0.1.0.zip", 44010
 
 exit 0
 
-$ C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe --factory-startup --command extension validate <HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\dist\viewpass-0.1.0.zip
-Success parsing TOML in "<HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\dist\viewpass-0.1.0.zip"
+$ C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe --factory-startup --command extension validate <HOME>\AppData\Local\Temp\viewpass-checks-7r2f4dqi\dist\viewpass-0.1.0.zip
+Success parsing TOML in "<HOME>\AppData\Local\Temp\viewpass-checks-7r2f4dqi\dist\viewpass-0.1.0.zip"
 
 exit 0
 
 
-ZIP: <HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\dist\viewpass-0.1.0.zip (42952 bytes)
+ZIP: <HOME>\AppData\Local\Temp\viewpass-checks-7r2f4dqi\dist\viewpass-0.1.0.zip (44010 bytes)
    __init__.py
    blender_manifest.toml
    capture.py

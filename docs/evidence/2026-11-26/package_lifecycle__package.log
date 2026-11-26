@@ -1,4 +1,7 @@
-Results: <HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\package
-Running package ['C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1', '--python', '<HOME>\\Blender_Addon\\Depth_Renderer\\tests\\blender\\package_suite.py', '--', '--repo', '<HOME>\\Blender_Addon\\Depth_Renderer', '--result', '<HOME>\\AppData\\Local\\Temp\\viewpass-checks-ge0nrwzl\\package\\package.json', '--zip', '<HOME>\\AppData\\Local\\Temp\\viewpass-checks-ge0nrwzl\\dist\\viewpass-0.1.0.zip']
-  PASS package_lifecycle  s  isolated user dir <HOME>\AppData\Local\Temp\viewpass-userres-a7jpo9ea; installed + enabled from viewpass; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed
-package: PASS (exit 0, gpu None); log <HOME>\AppData\Local\Temp\viewpass-checks-ge0nrwzl\package\package.log
+00:03.063  blend            | Saved session recovery to "<HOME>\AppData\Local\Temp\quit.blend"
+Info: ViewPass: Saved 6 files as pkg_0001_*  (1574x888, capture 60 ms)
+Info: ViewPass: Saved 6 files as pkg_0001_*  (1574x888, capture 54 ms)
+Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
+Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
+
+Blender quit

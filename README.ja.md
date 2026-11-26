@@ -8,8 +8,8 @@
 
 *`tools/make_screenshots.py` による実際の出力です。深度（手前が白）、カメラ空間法線、オブジェクトID（表示用に着色。ファイルには整数IDを保存）、マスク。*
 
-> **状態: プレリリース。** 検証済み環境は Blender 5.3.0 / Windows 11 / NVIDIA（Vulkan・OpenGL）のみです。
-> Blender 4.5 LTS、その他の 5.x、macOS・Linux、他社GPUは**未検証**のため、パッケージは Blender 5.3 以上を要求します。ライセンスは未決定です（末尾参照）。
+> **状態: プレリリース。** 検証済み環境は Blender 5.3.0 / Windows 11 / NVIDIA（Vulkan・OpenGL）と、CI 上の Linux（Mesa のソフトウェア OpenGL）での Blender **4.5.17 LTS** / 5.3.0 です。
+> macOS（Metal）、AMD・Intel GPU、Windows 上の 4.5、Blender 5.0〜5.2 は未検証です。Blender 4.5 以上が必要です。ライセンスは未決定です（末尾参照）。
 
 ## 特長
 
@@ -74,6 +74,8 @@ Blender 標準のパスは正確ですが、カメラ、ビューレイヤーの
 # 全検証: 独立ハーネス、GPUバックエンド別GUIスイート、ビルド、パッケージ導入/削除（--bench で性能比較）
 python tools/run_all_checks.py --blender "<path>/blender.exe"
 ```
+
+CI（GitHub Actions）では、lint、Windows/Linux での純粋テスト、Linux 上の Blender 4.5 LTS と 5.3（Xvfb + Mesa ソフトウェア OpenGL）による全検証を実行します。`vX.Y.Z` タグを push すると、検証済みZIPを添付した下書きリリースを作成します。
 
 - `viewpass/` — アドオン本体（`projection`、`encode`、`png`、`exr`、`export`、`writer` は `bpy` を使いません）。UI もテストも同じ入口 `viewpass.capture.capture(context, request)` を通ります。
 - `viewpass-dev/` — 独立検証ハーネスと仕様書（変更していません）。

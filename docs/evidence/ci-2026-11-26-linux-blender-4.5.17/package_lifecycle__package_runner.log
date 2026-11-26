@@ -1,0 +1,4 @@
+Results: /tmp/viewpass-checks-nrwvht37/package
+Running package ['<HOME>/work/_temp/blender/blender-4.5.17-linux-x64/blender', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1', '--python', '<HOME>/work/Depth_Renderer/Depth_Renderer/tests/blender/package_suite.py', '--', '--repo', '<HOME>/work/Depth_Renderer/Depth_Renderer', '--result', '/tmp/viewpass-checks-nrwvht37/package/package.json', '--zip', '/tmp/viewpass-checks-nrwvht37/dist/viewpass-0.1.0.zip']
+  PASS package_lifecycle  s  isolated user dir /tmp/viewpass-userres-gxw5qq5c; installed + enabled from viewpass; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed
+package: PASS (exit 0, gpu None); log /tmp/viewpass-checks-nrwvht37/package/package.log

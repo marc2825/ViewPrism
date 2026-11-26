@@ -1,0 +1,36 @@
+$ <HOME>/work/_temp/blender/blender-4.5.17-linux-x64/blender --factory-startup --command extension validate <HOME>/work/Depth_Renderer/Depth_Renderer/viewpass
+Success parsing TOML in "<HOME>/work/Depth_Renderer/Depth_Renderer/viewpass"
+
+exit 0
+
+$ <HOME>/work/_temp/blender/blender-4.5.17-linux-x64/blender --factory-startup --command extension build --source-dir <HOME>/work/Depth_Renderer/Depth_Renderer/viewpass --output-filepath /tmp/viewpass-checks-nrwvht37/dist/viewpass-0.1.0.zip
+building: viewpass-0.1.0.zip
+complete
+created: "/tmp/viewpass-checks-nrwvht37/dist/viewpass-0.1.0.zip", 43785
+
+exit 0
+
+$ <HOME>/work/_temp/blender/blender-4.5.17-linux-x64/blender --factory-startup --command extension validate /tmp/viewpass-checks-nrwvht37/dist/viewpass-0.1.0.zip
+Success parsing TOML in "/tmp/viewpass-checks-nrwvht37/dist/viewpass-0.1.0.zip"
+
+exit 0
+
+
+ZIP: /tmp/viewpass-checks-nrwvht37/dist/viewpass-0.1.0.zip (43785 bytes)
+   __init__.py
+   blender_manifest.toml
+   capture.py
+   encode.py
+   export.py
+   exr.py
+   gpu_draw.py
+   operators.py
+   png.py
+   preview.py
+   projection.py
+   props.py
+   scene_geometry.py
+   ui.py
+   viewport.py
+   writer.py
+BUILD PASS

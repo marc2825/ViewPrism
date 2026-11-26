@@ -17,6 +17,17 @@ the owner's.
 | Metadata JSON | contains Blender version, matrices, resolution, frame, object names (ID map), warnings, timings and file names. **No absolute paths, user names or .blend paths** (tested). Object names are user content and are written on purpose |
 | Manifest permission | `files` only, with a one-sentence reason |
 
+## Repository and CI
+
+- GitHub Actions may use only GitHub-owned actions; the default workflow token is read-only and only the
+  tag-triggered release job requests `contents: write` (draft release).
+- CI downloads official Blender Linux builds from download.blender.org and verifies them against the
+  published SHA-256 list (`.github/scripts/fetch_blender.sh`). This is CI tooling only; the add-on itself
+  never downloads anything.
+- Dependabot alerts, automated security fixes and weekly Actions updates are enabled. Secret scanning is
+  not available for this private repository on the current plan.
+- CI evidence is sanitised the same way as local evidence (`<HOME>`/`<USER>`).
+
 ## Code and asset origin
 
 - All product and test code in `viewpass/`, `tests/`, `tools/` was written for this project in this

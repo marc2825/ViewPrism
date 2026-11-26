@@ -1,6 +1,7 @@
 # Manual QA results (MANUAL_QA.md U01–U14)
 
-Environment for automated equivalents: Windows 11, Blender 5.3.0, RTX 3060 Ti, Vulkan and OpenGL.
+Environment for automated equivalents: Windows 11, Blender 5.3.0, RTX 3060 Ti, Vulkan and OpenGL; the same
+GUI suite also passes in CI on Linux with Blender 4.5.17 LTS and 5.3.0 (Mesa software OpenGL).
 
 **Important:** no human clicked through these steps yet. "AUTOMATED" means a GUI test drives the same
 operators/functions in a real GUI session with an analytic or Blender-derived expectation. That is
@@ -26,7 +27,7 @@ person must still do are marked **NOT TESTED (manual)**.
 
 ## Hands-on checklist for the owner (≈15 minutes)
 
-1. Install `viewpass-0.1.0.zip` (Edit › Preferences › Get Extensions › Install from Disk) in Blender 5.3.
+1. Install `viewpass-0.1.0.zip` (Edit › Preferences › Get Extensions › Install from Disk) in Blender 4.5 or 5.3.
 2. Open a real project, N-panel › ViewPass: toggle passes, press the preview refresh icon, try
    Depth / Normal / Object ID / Mask previews and Auto Refresh while orbiting.
 3. Export Passes on a saved file (`//viewpass/`), then Export As… and cancel once.

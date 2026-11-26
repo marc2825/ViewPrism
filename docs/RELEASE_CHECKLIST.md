@@ -6,15 +6,15 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 
 | Item | State |
 |---|---|
-| Capture core passes the independent harness (background + GPU) | ✅ Blender 5.3.0, Vulkan + OpenGL |
+| Capture core passes the independent harness (background + GPU) | ✅ Blender 5.3.0 Windows (Vulkan + OpenGL); 4.5.17 + 5.3.0 Linux (CI) |
 | GUI/GPU suite (20 cases) | ✅ Vulkan + OpenGL |
 | Pure tests (48) | ✅ |
 | Non-destructiveness (scene, datablocks, render/compositor/view-layer settings, selection, frame, mode) | ✅ automated `snapshot()` comparisons |
 | File re-read verification (own decoders + Blender loader) | ✅ |
 | Values cross-checked against Cycles (same camera) | ✅ `docs/PERFORMANCE.md` |
-| Blender 4.5 LTS | ⏳ not installed here. Run `python tools/run_all_checks.py --blender "<4.5>/blender.exe"`; if it passes, lower `blender_version_min` |
+| Blender 4.5 LTS | ✅ 4.5.17 on Linux/Mesa in CI (all gates); Windows 4.5 not tested |
 | Blender 5.0–5.2 | ⏳ same procedure |
-| macOS (Metal), Linux, AMD/Intel GPUs | ⏳ needs those machines; until then: "verified on Windows/NVIDIA only" |
+| macOS (Metal), AMD/Intel GPUs, Linux hardware drivers | ⏳ needs those machines; until then: "verified on Windows/NVIDIA and Linux (Mesa software OpenGL) only" |
 | Hands-on manual QA by a person (`docs/MANUAL_QA_RESULTS.md`) | ⏳ |
 
 ## Package
@@ -27,7 +27,9 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 | `permissions`: `files` only, with reason | ✅ |
 | No network, no wheels, no bundled binaries | ✅ |
 | Relative imports, `__package__` for preferences, no `sys.path` changes, nothing written to the add-on dir | ✅ |
-| `blender_version_min` = only verified versions (currently 5.3.0) | ✅ (lower after 4.5 verification) |
+| `blender_version_min` = only verified versions (4.5.0) | ✅ |
+| CI on every PR (lint, pure tests, Blender 4.5 + 5.3 full checks) and protected `main` | ✅ |
+| Tag → validated ZIP in a draft GitHub release | ✅ workflow ready (no tag created yet) |
 | `website` field | 🔒 depends on the final repository name |
 | `maintainer` field (currently the GitHub handle) | 🔒 confirm how the owner wants to be credited |
 
@@ -53,5 +55,5 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 
 | Item | State |
 |---|---|
-| Push branch / open PR | 🔒 not done (no push without approval) |
+| Push branch / open PR | ✅ pushed, PR #1 open (merge: owner) |
 | Upload to extensions.blender.org, announcements, pricing | 🔒 not done |

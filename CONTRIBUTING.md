@@ -30,6 +30,10 @@ python tools/run_all_checks.py --blender "<blender>" [--bench]
 
 Report the Blender version, OS, GPU and backend (`gpu.platform`) with any result.
 
+CI runs the same checks on every pull request (lint, pure tests on Windows/Linux, and the full Blender
+checks on Linux for 4.5 LTS and 5.3 under Xvfb with Mesa software OpenGL); all jobs are required for
+merging into `main`. Lint: `ruff check .` (config in `ruff.toml`).
+
 ## Style
 
 - Code, UI text and commit messages in English. Keep functions small and side-effect free where possible.

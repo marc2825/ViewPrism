@@ -3,6 +3,7 @@
 - Blender: `Blender 5.3.0`
 - Platform: `win32`
 - Backends: vulkan, opengl
+- Selected steps: pure, selftest, harness, gui, build, package, bench
 
 | Step | Result | Detail |
 |---|---|---|

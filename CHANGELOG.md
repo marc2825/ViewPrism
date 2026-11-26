@@ -21,8 +21,19 @@ Complete rewrite of the former "Depth Renderer" add-on as ViewPass (working name
 - Warnings for viewport/render modifier differences, shader displacement, transparency, unsupported
   object types, Wire/Bounds display, viewport clipping region.
 - Settings kept out of .blend files; persistent defaults in preferences.
-- Blender Extension manifest and build/validate tooling; test suites (pure, GUI/GPU, package
+- Blender Extension manifest (Blender 4.5+) and build/validate tooling; test suites (pure, GUI/GPU, package
   lifecycle), benchmark with Cycles/EEVEE comparison, evidence collection.
+
+### Fixed during verification
+- Blender 4.5: GPU readback into flat buffers (4.5's default Buffer is not NumPy-viewable).
+- OpenGL framebuffers are no longer cached across captures (they belong to one window's context;
+  reusing one after its window closed crashed Blender 4.5).
+- Redraw before capturing after windows were opened/closed (no current GPU context otherwise).
+- `GPUTexture.filter_mode` is 5.x only (feature-guarded); `PATH_SUPPORTS_BLEND_RELATIVE` feature-probed.
+
+### CI/CD
+- GitHub Actions: lint, pure tests (Windows/Linux), Blender 4.5 LTS + 5.3 full checks on Linux,
+  tag-triggered draft release with the validated ZIP; Dependabot for Actions.
 
 ### Removed
 - Legacy `bgl`-based implementation (non-functional) and `memo.txt`.

@@ -11,9 +11,10 @@ changes.
 *Real output from `tools/make_screenshots.py`: depth (near = white), camera-space normal, object ID
 (shown with display colours; the file stores the integer ID), mask.*
 
-> **Status: pre-release.** Verified on Blender 5.3.0 / Windows 11 / NVIDIA (Vulkan and OpenGL).
-> Blender 4.5 LTS, other 5.x versions, macOS/Linux and other GPUs are **not verified yet**. The
-> package therefore requires Blender 5.3. License not decided yet (see below).
+> **Status: pre-release.** Verified on Blender 5.3.0 / Windows 11 / NVIDIA (Vulkan and OpenGL), and
+> in CI on Linux with Blender **4.5.17 LTS** and 5.3.0 (Mesa software OpenGL). Not verified yet:
+> macOS/Metal, AMD/Intel GPUs, Blender 4.5 on Windows, Blender 5.0–5.2. Requires Blender 4.5 or newer.
+> License not decided yet (see below).
 
 ## Why
 
@@ -100,6 +101,10 @@ comparison, including where ViewPass is *not* better.
 # everything: independent harness, GUI/GPU suite per backend, build, package lifecycle (+ --bench)
 python tools/run_all_checks.py --blender "<path>/blender.exe"
 ```
+
+CI (GitHub Actions) runs lint, the pure tests on Windows/Linux, and the full Blender checks on Linux
+for Blender 4.5 LTS and 5.3 (Xvfb + Mesa software OpenGL). A `vX.Y.Z` tag builds the validated ZIP
+into a draft release.
 
 - `viewpass/` — the add-on (pure modules `projection`, `encode`, `png`, `exr`, `export`, `writer` do not
   import `bpy`). The UI and the tests use the same entry point: `viewpass.capture.capture(context, request)`.

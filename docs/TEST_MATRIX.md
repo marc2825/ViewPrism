@@ -16,11 +16,16 @@ python tools/run_all_checks.py --blender "<path>/blender.exe" [--backends vulkan
 |---|---|---|---|---|---|---|---|
 | Windows 11, Blender 5.3.0, RTX 3060 Ti, **Vulkan** | 48 PASS | PASS | PASS | 20/20 PASS | PASS | PASS | done |
 | Windows 11, Blender 5.3.0, RTX 3060 Ti, **OpenGL 4.6** | (same) | PASS | PASS | 20/20 PASS | — | — | — |
-| Blender 4.5 LTS | NOT TESTED (not installed; download not permitted in the session) | | | | | | |
-| Blender 5.0 / 5.1 / 5.2 | NOT TESTED (not installed) | | | | | | |
-| macOS / Metal, Linux, AMD / Intel GPUs | NOT TESTED | | | | | | |
+| CI: Ubuntu, Blender **4.5.17 LTS**, Mesa llvmpipe **OpenGL 4.5** (software) | 48 PASS | PASS | PASS | 20/20 PASS | PASS | PASS | — |
+| CI: Ubuntu, Blender 5.3.0, Mesa llvmpipe OpenGL 4.5 (software) | 48 PASS | PASS | PASS | 20/20 PASS | PASS | PASS | — |
+| CI: pure tests on Windows + Ubuntu, Python 3.11 / 3.13 (NumPy from PyPI) | PASS | | | | | | |
+| Blender 4.5 on Windows/macOS; Blender 5.0 / 5.1 / 5.2 | NOT TESTED | | | | | | |
+| macOS / Metal, AMD / Intel GPUs, Linux hardware drivers | NOT TESTED | | | | | | |
 
-Evidence for 2026-11-26 (final run, all steps PASS): [`docs/evidence/2026-11-26/SUMMARY.md`](evidence/2026-11-26/SUMMARY.md).
+Evidence: local Windows run [`docs/evidence/2026-11-26/SUMMARY.md`](evidence/2026-11-26/SUMMARY.md); CI Linux runs
+[`ci-2026-11-26-linux-blender-4.5.17`](evidence/ci-2026-11-26-linux-blender-4.5.17/SUMMARY.md) and
+[`ci-2026-11-26-linux-blender-5.3.0`](evidence/ci-2026-11-26-linux-blender-5.3.0/SUMMARY.md). Every CI run uploads its
+evidence as an artifact (`.github/workflows/ci.yml`).
 
 ## Independent harness (`viewpass-dev/harness`, unchanged since import)
 

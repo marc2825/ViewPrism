@@ -1,8 +1,9 @@
 # ADR 0001 — Capture renderer: one custom GPU geometry pass (method A)
 
 - Status: accepted (2026-11-26)
-- Verified on: Blender 5.3.0, Windows 11, NVIDIA RTX 3060 Ti (driver 610.88), Vulkan and OpenGL 4.6 backends
-- Not verified: Blender 4.5 LTS and 5.0–5.2 (not installed; download was not permitted in this session), Metal, AMD/Intel GPUs, Linux/macOS
+- Verified on: Blender 5.3.0, Windows 11, NVIDIA RTX 3060 Ti (driver 610.88), Vulkan and OpenGL 4.6 backends;
+  Blender 4.5.17 LTS and 5.3.0 on Linux with Mesa llvmpipe OpenGL (CI)
+- Not verified: Blender 5.0–5.2, Blender 4.5 on Windows/macOS, Metal, AMD/Intel GPUs
 
 ## Context
 
@@ -101,9 +102,16 @@ PoC measurements (Blender 5.3.0, RTX 3060 Ti):
 ### Resource management
 
 - Shader compiled once per session; freed on unregister.
-- Render targets reused for same-size captures up to ~2 MP. Released after 30 s idle, on size change,
-  after any failure, and on unregister. Back-to-back captures without a redraw grew ~10 MB each because
-  GPU backends free resources at frame boundaries; reuse removed that growth (measured flat).
+- Render-target **textures** are reused for same-size captures up to ~2 MP. They are released after
+  30 s idle, on size change, after any failure, when windows are opened/closed, and on unregister.
+  Back-to-back captures without a redraw grew ~10 MB each because GPU backends free resources at frame
+  boundaries; reuse removed that growth (measured flat). The **framebuffer is created and freed per
+  capture**, because OpenGL framebuffers belong to one window's context. Caching it crashed Blender 4.5
+  after the window that created it was closed (found by CI).
+- When windows were opened/closed since the last capture, ViewPass asks Blender to redraw once before
+  any GPU work, so that a GPU context is current (4.5 has no Python-side check; 5.x raised an error).
+- Readback goes into flat 1-D `gpu.types.Buffer`s: Blender 4.5 exports the default (h, w, 4) buffer
+  through a non-contiguous buffer protocol that NumPy cannot view.
 - GPU state (depth test/mask, blend, viewport, framebuffer) is restored on success and on failure
   (fault-injection test).
 
