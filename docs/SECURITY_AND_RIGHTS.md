@@ -80,7 +80,12 @@ links are unavailable), AUTO numbers reserved with an exclusive lock file; only 
 |---|---|---|
 | `memo.txt` with a local WSL network path to a home directory named after the GitHub handle | commits `447936f`, `e86658a` (removed from the tree) | only the already-public GitHub handle; no other personal data. Not worth a history rewrite |
 | Old `bl_info` URLs pointing to `github.com/<handle>/Blender_Depth_Renderer` | same commits | harmless, removed from the tree |
-| Commit author name/e-mail | all commits | the owner's configured Git identity (as on GitHub) |
+| Commit author name/e-mail | older commits | the owner's configured Git identity at the time; newer commits use the GitHub noreply address |
+
+**Decision (owner, 2026-11-26):** the published e-mail address and the old local path are accepted;
+the history is not rewritten. Preventing credentials and third-party confidential data from entering
+the repository stays mandatory: gitleaks (all refs) and `tools/privacy_scan.py` (tree + history) run
+on every pull request and on `main`, and GitHub secret scanning with push protection is enabled.
 
 No secrets, tokens or credentials were found in the tree or history file list.
 
@@ -88,6 +93,7 @@ No secrets, tokens or credentials were found in the tree or history file list.
 
 - Rasterising depth/normal/ID buffers is a long-established technique (used in Blender, game engines and
   research code). No specific risk was identified (not a legal search).
-- The product name "ViewPrism" was chosen by the owner. A web search found no product with that name
-  (closest: Accusoft "Prizm Viewer", a document viewer); no
-  trademark database was checked (see `docs/COMPETITORS.md`).
+- The product name "ViewPrism" was chosen by the owner and kept after a follow-up review of similar
+  names (PRISMVIEW, PRISM VIEW, PRISMA RenderPass, Prism Pipeline: different goods, customers or
+  technical approach). No official trademark database was searched and no legal opinion was obtained;
+  details in `docs/NAMING.md`.

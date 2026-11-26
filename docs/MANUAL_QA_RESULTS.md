@@ -33,7 +33,7 @@ person must still do are marked **NOT TESTED (manual)**.
 
 ## Hands-on checklist for the owner (≈15 minutes, issue #9)
 
-1. Install `viewprism-0.1.0.zip` (Edit › Preferences › Get Extensions › Install from Disk) in Blender 4.5 or 5.3.
+1. Install `viewprism-0.2.0.zip` from the v0.2.0 GitHub release (Edit › Preferences › Get Extensions › Install from Disk) in Blender 4.5 or 5.3. Detailed steps (Japanese): `docs/EXTENSION_SUBMISSION.ja.md` §2.
 2. Open a real project, N-panel › ViewPrism: toggle passes, press the preview refresh icon, try
    Depth / Normal / Object ID / Mask previews and Auto Refresh while orbiting.
 3. Export Passes on a saved file (`//viewprism/`), then Export As… and cancel once.

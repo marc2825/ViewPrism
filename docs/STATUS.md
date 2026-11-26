@@ -2,12 +2,14 @@
 
 Product name: **ViewPrism — Viewport Pass Exporter** (decided 2026-11-26; developed as "ViewPass").
 Merged into `main` on 2026-11-26 (PR #1, merge commit, full history kept). The repository
-`ViewPrism` (renamed from `Depth_Renderer`) is **public** since 2026-11-26, and v0.1.0 is published as a
-GitHub **pre-release**. License: **GPL-3.0-or-later** (#6). Not on extensions.blender.org yet. Planned
-features: `ROADMAP.md`.
+`ViewPrism` (renamed from `Depth_Renderer`) is **public** since 2026-11-26. GitHub **pre-releases**:
+v0.1.0 and v0.2.0. License: **GPL-3.0-or-later** (#6). extensions.blender.org: listing and submission
+kit ready (`docs/EXTENSION_LISTING.md`, `docs/EXTENSION_SUBMISSION.ja.md`); the owner submits after a
+hands-on check. Planned features: `ROADMAP.md` (feature work paused until publication).
 
 Review issues of 2026-11-26: #6 licensing and rights (closed by PR #7), #4 export safety and metadata
-privacy (PR #8), #5 QA, resource limits and CI security (PR #10). Open follow-up: #9 (human hands-on QA,
+privacy (PR #8), #5 QA, resource limits and CI security (PR #10). CI dependencies per Python version and
+pinned Blender builds: PR #12 (supersedes Dependabot #11). Open follow-up: #9 (human hands-on QA,
 untested hardware).
 
 ## Implemented
@@ -108,19 +110,20 @@ Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender
 6. Blender prints "push constants … 144 bytes" warnings from its own built-in drawing (seen on 4.5 and
    5.3, also without ViewPrism shaders). The ViewPrism capture shader uses exactly 128 bytes.
 
-## Decisions needed from the owner
+## Owner decisions (2026-11-26)
 
-- Trademark: similar live US marks "PRISMVIEW" / "PRISM VIEW" (Class 9) were found by web search
-  (`docs/NAMING.md`). Decide whether to keep the name before investing in the brand; a proper
-  database search is still open.
-- Publication on extensions.blender.org.
-- Optional: rewriting old history (it needs a force push to `main`).
+- Name: **ViewPrism is kept** after the follow-up review of similar names (`docs/NAMING.md`). No formal
+  trademark clearance was done.
+- Git history: the published author e-mail and the old local path are **accepted**; no rewrite.
+  Credential and third-party-data scanning stays mandatory in CI.
+- GitHub pre-release v0.2.0: **approved**.
+- extensions.blender.org: free distribution; the owner submits after a hands-on check. Untested OS/GPU
+  combinations are stated, not a blocker.
 
 ## Next steps (proposed order)
 
-1. Hands-on QA (#9, `docs/MANUAL_QA_RESULTS.md`, ~15 min).
-2. Collect feedback from 3–5 target users (illustration/compositing/AI-guide users) before adding
-   features.
-3. If requested by users: frame-range export, ControlNet presets (verified conventions), mesh cache for
+1. Owner: hands-on check and submission (`docs/EXTENSION_SUBMISSION.ja.md`, issue #9).
+2. Answer the moderators' review comments; fix-ups as 0.2.x.
+3. Collect feedback from target users (illustration/compositing/AI-guide users) before adding features.
+4. If requested by users: frame-range export, ControlNet presets (verified conventions), mesh cache for
    auto preview.
-4. Owner decisions above, then extension listing text/thumbnails (CC0) and submission.
