@@ -1,8 +1,9 @@
 # Project status — 2026-11-26
 
-Merged into `main` on 2026-11-26 (PR #1, merge commit, full history kept) in the private
-repository `ViewPrism` (renamed from `Depth_Renderer`).
-"ViewPass"). Nothing published, and the repository stays private. Planned features: `ROADMAP.md`.
+Product name: **ViewPrism — Viewport Pass Exporter** (decided 2026-11-26; developed as "ViewPass").
+Merged into `main` on 2026-11-26 (PR #1, merge commit, full history kept) in the private repository
+`ViewPrism` (renamed from `Depth_Renderer`). Nothing published; the repository stays private. Planned
+features: `ROADMAP.md`.
 
 ## Implemented
 
