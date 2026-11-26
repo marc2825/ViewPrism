@@ -122,7 +122,8 @@ def main():
             log = tmp / f'harness_{be}.log'
             code = run([sys.executable, str(ROOT / 'viewpass-dev' / 'harness' / 'run.py'), '--blender', exe, '--mode', 'all',
                         '--out', str(hout)], log, cwd=ROOT)
-            record(f'harness_{be}', code == 0, '', [log, hout / 'background.json', hout / 'gpu.json'])
+            record(f'harness_{be}', code == 0, '', [log, hout / 'background.json', hout / 'gpu.json',
+                                                    hout / 'background.log', hout / 'gpu.log'])
         # 4. GUI suite
         if 'gui' not in steps:
             continue
@@ -136,7 +137,7 @@ def main():
             npass = sum(r['status'] == 'pass' for r in res.get('results', []))
         except (OSError, ValueError):
             n = npass = 0
-        record(f'gui_suite_{be}', code == 0, f'{npass}/{n} cases', [log, gout / 'gui.json'])
+        record(f'gui_suite_{be}', code == 0, f'{npass}/{n} cases', [log, gout / 'gui.json', gout / 'gui.log'])
     # 5. build
     dist = tmp / 'dist'
     zips = []
@@ -152,10 +153,10 @@ def main():
         pass
     elif zips:
         pout = tmp / 'package'
-        log = tmp / 'package.log'
+        log = tmp / 'package_runner.log'
         code = run([sys.executable, str(ROOT / 'tests' / 'run_blender_tests.py'), '--blender', a.blender, '--suite', 'package',
                     '--zip', str(zips[0]), '--out', str(pout)], log, cwd=ROOT)
-        record('package_lifecycle', code == 0, '', [log, pout / 'package.json'])
+        record('package_lifecycle', code == 0, '', [log, pout / 'package.json', pout / 'package.log'])
     else:
         summary.append(dict(step='package_lifecycle', result='NOT RUN', detail='no ZIP'))
     # 7. benchmark

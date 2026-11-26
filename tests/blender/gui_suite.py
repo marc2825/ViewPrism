@@ -879,6 +879,9 @@ def run():
                     for t in TESTS:
                         if only and t.__name__ not in only:
                             continue
+                        # Incremental, always-failing record: if Blender crashes inside a test, the
+                        # result file still names the test that was running.
+                        write('fail', incomplete=True, running=t.__name__, results=results)
                         w0, ar0, rg0 = find_view3d()
                         t0 = time.perf_counter()
                         try:
