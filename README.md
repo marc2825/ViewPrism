@@ -5,9 +5,16 @@
   </picture>
 </p>
 
+<p align="center">
+  <a href="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/marc2825/ViewPrism/releases"><img alt="Release" src="https://img.shields.io/github/v/release/marc2825/ViewPrism?include_prereleases&amp;sort=semver&amp;label=release"></a>
+  <img alt="Blender 4.5 LTS | 5.3" src="https://img.shields.io/badge/Blender-4.5%20LTS%20%7C%205.3-e87d0d">
+  <img alt="Platforms tested" src="https://img.shields.io/badge/tested-Windows%20%7C%20Linux-4c78dd">
+</p>
+
 # ViewPrism — Viewport Pass Exporter
 
-[日本語](README.ja.md) · [Roadmap](ROADMAP.md)
+[日本語](README.ja.md)
 
 Export pixel-aligned **Depth**, **Normal**, **Object ID** and **Mask** images from the 3D viewport you
 are looking at, in one click. No camera, no compositor, no render settings, and nothing in your scene
@@ -40,8 +47,9 @@ current view once on the GPU and writes the data passes directly:
 
 ## Install
 
-1. Build the package (or use a provided ZIP):
-   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewprism-0.1.0.zip`
+1. Download `viewprism-<version>.zip` from [Releases](https://github.com/marc2825/ViewPrism/releases)
+   (pre-releases are marked as such; a `.sha256` file is attached). Alternatively build it from source:
+   `python tools/build_extension.py --blender "<path>/blender.exe"` → `dist/viewprism-<version>.zip`
 2. Blender › Edit › Preferences › Get Extensions › ⌄ › **Install from Disk…** › choose the ZIP.
 3. 3D Viewport › Sidebar (N) › **ViewPrism** tab.
 
@@ -119,11 +127,6 @@ into a draft release.
 - Design: [docs/decisions/0001-renderer.md](docs/decisions/0001-renderer.md) · Status:
   [docs/STATUS.md](docs/STATUS.md) · Tests: [docs/TEST_MATRIX.md](docs/TEST_MATRIX.md) ·
   [CONTRIBUTING.md](CONTRIBUTING.md)
-
-## Roadmap
-
-Planned but not implemented yet: clipboard image output, ControlNet/ComfyUI presets, Line Art and AO
-approximations, animation/frame-range export and more. See [ROADMAP.md](ROADMAP.md).
 
 ## License
 

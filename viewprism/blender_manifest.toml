@@ -6,6 +6,7 @@ version = "0.1.0"
 name = "ViewPrism"
 tagline = "Viewport Pass Exporter: aligned depth, normal, ID and mask"
 maintainer = "marc2825"
+website = "https://github.com/marc2825/ViewPrism"
 type = "add-on"
 
 tags = ["3D View", "Render", "Import-Export"]

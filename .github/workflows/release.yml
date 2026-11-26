@@ -1,8 +1,9 @@
-name: Release build
+name: Release
 
-# Builds the extension ZIP with Blender's own tooling (validate + build + audit).
-# A pushed tag "vX.Y.Z" additionally creates a *draft* GitHub release with the ZIP attached;
-# publishing it (and uploading to extensions.blender.org) stays a manual, owner-approved step.
+# A pushed tag "vX.Y.Z" builds the extension ZIP with Blender's own tooling (validate + build + audit)
+# and publishes a GitHub release with the ZIP and its SHA-256. Versions below 1.0.0 or with a
+# pre-release suffix (vX.Y.Z-beta.1) are published as *pre-releases*. Uploading to
+# extensions.blender.org stays a manual, owner-approved step. Manual runs only build the ZIP.
 on:
   push:
     tags: ['v*']
@@ -16,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: write   # only used by the draft-release step on tag pushes
+      contents: write   # only used by the release step on tag pushes
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -39,12 +40,31 @@ jobs:
           test "v${manifest}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != manifest ${manifest}"; exit 1; }
       - name: Validate, build and audit
         run: python tools/build_extension.py --blender "${{ steps.blender.outputs.exe }}" --out dist
+      - name: Checksum
+        run: cd dist && for f in *.zip; do sha256sum "$f" > "$f.sha256"; done && cat ./*.sha256
       - uses: actions/upload-artifact@v7
         with:
           name: viewprism-extension
-          path: dist/*.zip
-      - name: Create draft release
+          path: |
+            dist/*.zip
+            dist/*.sha256
+      - name: Release notes from CHANGELOG
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          {
+            echo "Install: Blender 4.5 or newer → Edit › Preferences › Get Extensions › ⌄ › Install from Disk… → \`viewprism-${version}.zip\`."
+            echo
+            awk -v v="$version" 'index($0, "## " v " ") == 1 {f=1; next} /^## / && f {exit} f' CHANGELOG.md
+          } > notes.md
+          test -s notes.md && cat notes.md
+      - name: Publish release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --repo "$GITHUB_REPOSITORY" --draft --generate-notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          flag=""
+          case "$version" in 0.*|*-*) flag="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/*.sha256 --repo "$GITHUB_REPOSITORY" \
+            --title "ViewPrism ${GITHUB_REF_NAME}" --notes-file notes.md $flag
