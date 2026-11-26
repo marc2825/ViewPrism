@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-11-27 (pre-release)
+
+A redesigned, easier panel with thumbnails of all four passes and a Japanese interface. Capture and
+file output are unchanged (same files and metadata `format_version` 1 as 0.2.0).
 
 ### Redesigned panel
 - **One row per pass.** Export checkbox, the files it writes (e.g. `PNG 8 + EXR`), an eye button that

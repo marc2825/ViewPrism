@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 # ViewPrism - Viewport Pass Exporter. Free distribution under GPL-3.0-or-later.
 id = "viewprism"
-version = "0.2.0"
+version = "0.3.0"
 name = "ViewPrism"
 tagline = "Viewport Pass Exporter: aligned depth, normal, ID and mask"
 maintainer = "marc2825"

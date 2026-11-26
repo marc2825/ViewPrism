@@ -15,7 +15,7 @@ from .i18n import iface, rpt
 from .i18n_data import CONTEXT
 from .projection import ProjectionError
 
-VERSION = '0.2.0'
+VERSION = '0.3.0'
 _ERRORS = (viewport.ViewError, cap.CaptureError, export.ExportError, EncodeError, ProjectionError, OSError)
 PASS_LABELS = {'depth': 'Depth', 'normal': 'Normal', 'object_id': 'Object ID', 'mask': 'Mask'}
 
