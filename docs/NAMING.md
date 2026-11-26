@@ -3,9 +3,34 @@
 **Decision (owner, 2026-11-26): ViewPrism — Viewport Pass Exporter.** Extension id `viewprism`,
 Python package `viewprism`, repository `ViewPrism`.
 
-Collision check (web search only, 2026-11-26): no product named "ViewPrism" found. The closest are
-Accusoft "Prizm Viewer" (document/image viewer) and other "…View…" XR/BIM viewers, all in different
-categories. **Still to do before publishing:** J-PlatPat / USPTO / EUIPO search (classes 9 and 42).
+**Confirmed after the follow-up review (owner, 2026-11-26): the name is kept.** There is currently no
+concrete reason to rename. **This is not a formal trademark clearance**: no search of the official
+databases (USPTO, EUIPO, WIPO, J-PlatPat) and no professional opinion. If one is done later, or a rights
+holder raises a concern, this decision is revisited.
+
+### Follow-up review (2026-11-26)
+
+Additional research by the owner (assisted by ChatGPT), cross-checked by Claude with web searches on
+the same day (third-party trademark aggregators and vendor pages; the official USPTO record was not
+opened).
+
+| Name found | What it is | Why it is not considered a conflict |
+|---|---|---|
+| "PRISMVIEW" (US Reg. 2159679, software for computerized electronic signage; US Reg. 5126515, digital signage display panels and monitors) | Prismview, LLC, an LED signage manufacturer (formerly YESCO Electronics, a Samsung company) | Different goods and customers: LED signs and signage software for the sign industry, not 3D content-creation tools |
+| "PRISM VIEW" (US Reg. 3327821, Class 9) | **Medical imaging** software (Prism Clinical Imaging, Inc.) | Different field and customers: clinical diagnostics, not 3D content creation |
+| PRISMA RenderPass | Paid Blender **compositor** add-on (Superhive): builds File Output nodes per render pass and multilayer EXR setups from the Render Layers node | The closest one in the market (also a Blender add-on that exports passes), but a different name ("PRISMA RenderPass" vs "ViewPrism") and a different technical approach: it automates render + compositor output, while ViewPrism needs no render, camera or compositor and captures the live viewport with Blender's GPU module |
+| Prism Pipeline | Free, open-source (GPL-3.0) **pipeline / project management** tool for VFX and animation studios with DCC integrations (incl. Blender) | Different purpose: studio project and asset management, not a one-click viewport data export |
+
+Sources: trademark.justia.com (PRISMVIEW 75192479 and 79189216, Prismview LLC owner page; PRISM VIEW
+78899494), insights.samsung.com (Prismview history), superhivemarket.com and producthunt.com
+(Prisma RenderPass), prism-pipeline.com, github.com/PrismPipeline/Prism, cgchannel.com.
+
+Earlier collision check (web search only, 2026-11-26): no product named "ViewPrism" found. The
+closest are Accusoft "Prizm Viewer" (document/image viewer) and other "…View…" XR/BIM viewers, all
+in different categories.
+
+**Not done (optional, owner's choice):** formal search of J-PlatPat / USPTO / EUIPO / WIPO (classes 9
+and 42) or legal advice.
 
 ### Trademark screening (web search only, 2026-11-26 — not legal clearance)
 
@@ -13,9 +38,9 @@ categories. **Still to do before publishing:** J-PlatPat / USPTO / EUIPO search 
 |---|---|
 | "ViewPrism" trademark | No record for "ViewPrism". **Similar live US marks:** "PRISMVIEW" (Reg. 2159679,
 registered 1990s, renewed; owner/goods not shown in the result) and "PRISM VIEW" (Reg. 3327821, Class 9,
-medical imaging software, owner Prism Clinical Imaging, Inc.). Same words in reverse order. **Unresolved
-concern**: whether this matters for an open-source Blender add-on needs a proper search, or advice from a
-professional, before investing in the brand. |
+medical imaging software, owner Prism Clinical Imaging, Inc.). Same words in reverse order. This concern
+was assessed in the follow-up review above: different goods and customers, name kept (not a legal
+clearance). |
 | extensions.blender.org "viewprism" / "View Prism" | No such listing. A paid add-on "Prism Suite Beta"
 (Superhive, UI theme) uses "Prism"; it is a different name. |
 | "View Prism" software | Only unrelated "Prism …" products (accounting, compliance, property software). |

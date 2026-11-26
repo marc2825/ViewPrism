@@ -12,7 +12,7 @@ from . import export, preview, props, resources, viewport, writer
 from .encode import EncodeError
 from .projection import ProjectionError
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 _ERRORS = (viewport.ViewError, cap.CaptureError, export.ExportError, EncodeError, ProjectionError, OSError)
 
 # Last action, shown in the panel (session only).

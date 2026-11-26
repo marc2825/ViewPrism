@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-11-26 (pre-release)
+
+Safer exports, privacy options for metadata, memory guards and a smoother auto preview. No new pass
+types; files written by 0.1.0 and 0.2.0 have the same format (metadata `format_version` 1).
 
 ### Export safety and metadata privacy (#4)
 - No-clobber publication: without overwrite, files are published through a hard link (Windows: a
@@ -32,6 +35,13 @@
 - Secret scanning in CI: gitleaks over the whole history with a canary that must be detected, and the
   repository privacy scan (e-mails, user paths, credential formats, PNG metadata) over tree and history.
 - Fixed: dangling-symlink collisions on Windows were reported as "outside the folder" (still refused).
+- CI Python dependencies are kept per Python version (NumPy 2.5 dropped Python 3.11), so dependency
+  updates cannot break the Python 3.11 tests again.
+
+### License and rights (#6)
+- License confirmed as GPL-3.0-or-later. `LICENSE` is now included in the extension ZIP; SPDX headers
+  in all source files; rights, naming and listing documentation (`docs/SECURITY_AND_RIGHTS.md`,
+  `docs/NAMING.md`, `docs/EXTENSION_LISTING.md`).
 
 ## 0.1.0 — 2026-11-26 (pre-release)
 
@@ -77,7 +87,8 @@ Complete rewrite of the former "Depth Renderer" add-on as **ViewPrism — Viewpo
 - `ROADMAP.md` for planned features (clipboard, ControlNet presets, Line Art/AO, sequences, ...).
 
 ### License
-- GPL-3.0-or-later: `LICENSE`, SPDX headers, manifest copyright; the extension ZIP includes `LICENSE`.
+- The manifest declares GPL-3.0-or-later. The 0.1.0 ZIP has no `LICENSE` file (it was added after this
+  release, see 0.2.0); the license text is attached to the 0.1.0 release page.
 
 ### Removed
 - Legacy `bgl`-based implementation (non-functional) and `memo.txt`.
