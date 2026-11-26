@@ -86,18 +86,26 @@ class NoClobber(unittest.TestCase):
             self.skipTest(f'symlinks not permitted on this system ({type(exc).__name__}); covered on Linux CI')
 
     def test_dangling_symlink_is_not_written_through(self):
-        with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as elsewhere:
+        items = [('mask:PNG8', 'mask', 'png')]
+        with tempfile.TemporaryDirectory() as d:
             target = os.path.join(d, 'target-does-not-exist.png')
-            link = os.path.join(d, 'out.png')
+            (_key, name), = export.file_names('out', items, meta=False)       # the name plan() would use
+            link = os.path.join(d, name)
             self._symlink(target, link)
             self.assertTrue(os.path.lexists(link) and not os.path.exists(link))
             with self.assertRaises(export.CollisionError):           # counts as existing
-                export.plan(d, 'out', [('mask:PNG8', 'mask', 'png')], numbering='NONE', meta=False)
+                export.plan(d, 'out', items, numbering='NONE', meta=False)
             with self.assertRaises(export.CollisionError):
                 export.atomic_write(link, b'data')
             self.assertFalse(os.path.exists(target), 'wrote through a dangling symlink')
             self.assertEqual(leftovers(d), [])
-            del elsewhere
+
+    def test_dangling_symlink_takes_its_number(self):
+        items = [('mask:PNG8', 'mask', 'png')]
+        with tempfile.TemporaryDirectory() as d:
+            (_key, name), = export.file_names('out_0001', items, meta=False)
+            self._symlink(os.path.join(d, 'missing.png'), os.path.join(d, name))
+            self.assertEqual(export.plan(d, 'out', items, meta=False)['stem'], 'out_0002')
 
     def test_symlink_pointing_outside_is_refused(self):
         with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as outside:
