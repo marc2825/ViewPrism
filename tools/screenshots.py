@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Regenerate docs/images with an isolated, empty Blender user directory (no private data).
 
     python tools/screenshots.py --blender <blender.exe>
@@ -20,4 +22,13 @@ cmd = [a.blender, '--factory-startup', '--disable-autoexec', '--enable-event-sim
        '--repo', str(ROOT), '--out', str(ROOT / 'docs' / 'images')]
 proc = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=300)
 print(proc.stdout[-3000:], proc.stderr[-2000:])
-sys.exit(0 if 'SHOTS OK' in proc.stdout else 1)
+if 'SHOTS OK' not in proc.stdout:
+    sys.exit(1)
+# Published images must not carry text/EXIF metadata (Blender writes an EXIF resolution chunk).
+sys.path.insert(0, str(ROOT / 'tools'))
+from privacy_scan import strip_png_metadata  # noqa: E402
+for png in sorted((ROOT / 'docs' / 'images').glob('*.png')):
+    removed = strip_png_metadata(png)
+    if removed:
+        print('stripped', ','.join(removed), 'from', png.name)
+sys.exit(0)

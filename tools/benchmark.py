@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Run the ViewPrism benchmark / render-pass comparison in fresh sandboxed Blender processes.
 
     python tools/benchmark.py --blender <blender.exe> [--runs 5] [--gpu-backend vulkan] [--out DIR]

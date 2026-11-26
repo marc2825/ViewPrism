@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Pure projection math (NumPy only, no bpy) shared by the capture core and the UI.
 
 Conventions

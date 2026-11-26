@@ -48,7 +48,7 @@ metadata · ✅ display-only preview (manual/auto) · ✅ camera-frame export ·
 
 | | Task |
 |---|---|
-| ⬜ | License (candidate GPL-3.0-or-later) and `LICENSE` file |
-| ⬜ | Trademark search for "ViewPrism" (J-PlatPat / USPTO / EUIPO, classes 9 and 42) |
-| ⬜ | Logo license: CC0 is required if the logo is ever bundled inside the extension (see `branding/README.md`) |
+| ✅ | License GPL-3.0-or-later and `LICENSE` file |
+| ⬜ | Trademark search for "ViewPrism" (J-PlatPat / USPTO / EUIPO, classes 9 and 42); web screening found similar marks |
+| ✅ | Logo license: GPL-3.0-or-later (CC0 would be required only if bundled in the extension) |
 | ⬜ | Extension listing text and thumbnails, then submission to extensions.blender.org; making the repository public |

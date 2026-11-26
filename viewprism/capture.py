@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Public capture entry point - the same function serves the UI and the test harness.
 
     capture(context, request) -> dict

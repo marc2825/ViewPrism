@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Operators. Every capture goes through capture.capture() - the same entry point as tests."""
 import os
 import time

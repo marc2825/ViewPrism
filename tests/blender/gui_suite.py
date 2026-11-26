@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """ViewPrism GUI/GPU test suite. Runs only in a fresh GUI Blender started by tests/run_blender_tests.py.
 
 Expected values come from analytic geometry or from Blender's own functions

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Generate README images from real ViewPrism output in a sandboxed GUI Blender.
 
     set BLENDER_USER_RESOURCES=<empty temp dir>   (no recent-files list -> no private names)

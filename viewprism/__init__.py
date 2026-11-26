@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """ViewPrism - export pixel-aligned Depth / Normal / Object ID / Mask from the current 3D viewport.
 
 Pure modules (projection, encode, png, exr, export, writer) do not import bpy, so they can be

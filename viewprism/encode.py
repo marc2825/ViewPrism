@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Pure conversions from raw pass arrays to display/encoded arrays (NumPy only, no bpy).
 
 Raw arrays (the capture result) are never modified; every function returns new arrays.

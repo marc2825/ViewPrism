@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Install the built extension ZIP into an isolated user directory and exercise it in a GUI session.
 
 Started by tests/run_blender_tests.py with BLENDER_USER_RESOURCES pointing at a fresh temporary

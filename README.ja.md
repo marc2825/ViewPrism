@@ -9,6 +9,7 @@
   <a href="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/marc2825/ViewPrism/releases"><img alt="Release" src="https://img.shields.io/github/v/release/marc2825/ViewPrism?include_prereleases&amp;sort=semver&amp;label=release"></a>
   <img alt="Blender 4.5 LTS | 5.3" src="https://img.shields.io/badge/Blender-4.5%20LTS%20%7C%205.3-e87d0d">
+  <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
   <img alt="Platforms tested" src="https://img.shields.io/badge/tested-Windows%20%7C%20Linux-4c78dd">
 </p>
 
@@ -97,4 +98,6 @@ CI（GitHub Actions）では、lint、Windows/Linux での純粋テスト、Linu
 
 ## ライセンス
 
-未決定です。候補は GPL-3.0-or-later（extensions.blender.org のアドオンに必須）。所有者が決定するまで、既定で適用されるもの以外のライセンスは付与されません。ロゴ（`branding/`）も同様に未決定です。
+**GNU General Public License バージョン3、またはそれ以降の任意のバージョン**（`GPL-3.0-or-later`）で提供します。詳細は [LICENSE](LICENSE) を参照してください。Copyright © 2026 marc2825.
+
+`branding/` のロゴと `docs/images/` の画像にも同じライセンスが適用されます。ただし、ViewPrism の名称やロゴを他の製品の商標として使う権利は含みません。

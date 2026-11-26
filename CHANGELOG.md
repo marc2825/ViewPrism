@@ -43,5 +43,8 @@ Complete rewrite of the former "Depth Renderer" add-on as **ViewPrism — Viewpo
 - Logo set in `branding/` (SVG source + rendered PNGs, `tools/make_logo.py`).
 - `ROADMAP.md` for planned features (clipboard, ControlNet presets, Line Art/AO, sequences, ...).
 
+### License
+- GPL-3.0-or-later: `LICENSE`, SPDX headers, manifest copyright; the extension ZIP includes `LICENSE`.
+
 ### Removed
 - Legacy `bgl`-based implementation (non-functional) and `memo.txt`.

@@ -99,10 +99,9 @@ Reproduce locally with `python tools/run_all_checks.py --blender "<path>/blender
 
 ## Decisions needed from the owner
 
-- **License (urgent now that the repository and a pre-release are public):** candidate
-  GPL-3.0-or-later; add a `LICENSE` file. Until then no license is granted, although the manifest
-  inside the ZIP already names the candidate (the schema requires a value).
-- Trademark search for "ViewPrism" (web search only so far: `docs/NAMING.md`); logo license.
+- Trademark: similar live US marks "PRISMVIEW" / "PRISM VIEW" (Class 9) were found by web search
+  (`docs/NAMING.md`). Decide whether to keep the name before investing in the brand; a proper
+  database search is still open.
 - Publication on extensions.blender.org.
 - Optional: history cleanup for `memo.txt`.
 

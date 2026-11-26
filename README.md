@@ -9,6 +9,7 @@
   <a href="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/marc2825/ViewPrism/releases"><img alt="Release" src="https://img.shields.io/github/v/release/marc2825/ViewPrism?include_prereleases&amp;sort=semver&amp;label=release"></a>
   <img alt="Blender 4.5 LTS | 5.3" src="https://img.shields.io/badge/Blender-4.5%20LTS%20%7C%205.3-e87d0d">
+  <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
   <img alt="Platforms tested" src="https://img.shields.io/badge/tested-Windows%20%7C%20Linux-4c78dd">
 </p>
 
@@ -130,6 +131,9 @@ into a draft release.
 
 ## License
 
-Not decided yet. The candidate is GPL-3.0-or-later (required for add-ons on extensions.blender.org).
-Until the owner decides, no license is granted beyond what applies by default. The same applies to the
-logo (`branding/`).
+ViewPrism is free software: you can redistribute it and/or modify it under the terms of the **GNU
+General Public License, version 3 or (at your option) any later version** (`GPL-3.0-or-later`). See
+[LICENSE](LICENSE). Copyright © 2026 marc2825.
+
+The logo and images in `branding/` and `docs/images/` are covered by the same license. The license
+does not grant rights to use the ViewPrism name or logo as a trademark for other products.

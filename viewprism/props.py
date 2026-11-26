@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Settings. Session settings live on the WindowManager (runtime only: never saved into
 the user's .blend). Add-on preferences hold persistent defaults copied in at startup."""
 import bpy

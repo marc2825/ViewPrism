@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 marc2825
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Pure export planning and safe file writing (no bpy).
 
 * Output names are ``<stem>_<suffix>.<ext>`` inside one user-chosen directory.
