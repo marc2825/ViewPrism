@@ -192,11 +192,13 @@ def atomic_write(path, data, *, overwrite=False, _before_publish=None):
     temporary file is removed on every failure. `_before_publish` is a test seam.
     """
     directory = os.path.dirname(path)
-    if not _inside(directory, path):
-        raise ExportError('refusing to write outside the output directory')
+    # Anything already at the name (file, link, dangling link) is a collision first: on Windows the
+    # real path of a dangling link can keep 8.3 short names and would otherwise look "outside".
     if not overwrite and os.path.lexists(path):
         raise CollisionError([os.path.basename(path)])
-    tmp = os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}{TMP_SUFFIX}')
+    if not _inside(directory, path):
+        raise ExportError('refusing to write outside the output directory')
+    tmp =os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}{TMP_SUFFIX}')
     try:
         with open(tmp, 'xb') as fh:
             fh.write(data)
