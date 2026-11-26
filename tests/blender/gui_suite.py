@@ -790,6 +790,10 @@ def t_multi_window(ctx, vp):
         notes.append('same-tick capture after close works')
     # Realistic sequence: Blender processes events and redraws, then the user/timer captures.
     yield 0.5
+    print('MW: guard (redraw) after the event loop ran', flush=True)
+    w_, a_, g_ = find_view3d()
+    with bpy.context.temp_override(**override(w_, a_, g_)):
+        vp.capture._ensure_gpu_context(bpy.context)
     print('MW: capture after the event loop ran', flush=True)
     capture_ok('after window close')
     print('MW: done', flush=True)
