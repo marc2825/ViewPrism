@@ -88,7 +88,7 @@ class Writing(unittest.TestCase):
             st = export.write_batch(p, {'depth:PNG8': lambda: b'ok', 'mask:PNG8': boom})
             self.assertEqual(st['written'], ['b_0001_depth.png'])
             self.assertEqual(len(st['failed']), 1)
-            self.assertIn('encoder exploded', st['failed'][0][1])
+            self.assertIn('encoder exploded', st['failed'][0].detail)
             self.assertEqual(sorted(os.listdir(d)), ['b_0001_depth.png'])
 
     def test_unwritable_directory(self):

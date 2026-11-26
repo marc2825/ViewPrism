@@ -84,6 +84,18 @@ Conventions: pixel rows top to bottom, samples at pixel centres, one sample per 
 anti-aliasing), no colour management. IDs are assigned by sorted object name per capture (per source
 object by default; per instancer or per instance optional).
 
+**Metadata and privacy.** By default the JSON contains object names (that is what an ID map is for)
+and, in camera view, the camera name. *Formats → Metadata Names: Anonymized* writes neutral labels
+(`object_1`, …) instead and drops names from warnings; ids, images and camera matrices are unchanged.
+Error entries never contain file system paths. Keep in mind that the images themselves, the file names
+you choose and the camera geometry can still reveal what is in your scene.
+
+**Safe writing.** Existing files are never replaced unless you choose *Exact Name + Overwrite*, even
+if another program creates a file with the same name while ViewPrism is writing. Automatic numbering
+reserves its number, so several Blender instances exporting into the same folder do not collide. On
+file systems without hard links (outside Windows) an export without overwrite fails with an
+explanation instead of risking an overwrite.
+
 In a free orthographic viewport the depth origin is moved back to the near clipping plane so all depths
 are positive (recorded in the metadata). In camera view the depth is measured from the camera like the
 render's Depth pass. Measured against Cycles from the same camera: p99 relative depth error 4e-6,

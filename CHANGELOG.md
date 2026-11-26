@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Export safety and metadata privacy (#4)
+- No-clobber publication: without overwrite, files are published through a hard link (Windows: a
+  rename that never replaces). A file created by another writer in the meantime is never replaced.
+  File systems without hard links (outside Windows) fail safely with an explanation.
+- Automatic numbering reserves its number with an exclusive lock file (safe across processes).
+- Dangling symlinks count as existing files; symlinks pointing outside the folder are refused.
+- Failed files are recorded in metadata as stable error codes with fixed messages (no paths). Free
+  text in metadata is path-redacted. Detailed errors stay in the local report.
+- New *Metadata Names: Anonymized* option (neutral labels instead of object/camera names).
+
 ## 0.1.0 — 2026-11-26 (pre-release)
 
 Complete rewrite of the former "Depth Renderer" add-on as **ViewPrism — Viewport Pass Exporter**

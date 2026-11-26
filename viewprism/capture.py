@@ -182,11 +182,12 @@ def capture(context, request, *, _after_draw=None):
         out['mask'] = mask
     geom = ident = None
     if not mask.any():
-        warnings.append('nothing visible: the capture is empty')
+        warnings.append(('nothing visible: the capture is empty',) * 2)
     t_post = time.perf_counter()
 
     out['id_map'] = {i: k for k, i in ids.items()}
-    out['warnings'] = warnings
+    out['warnings'] = [w[0] for w in warnings]               # for the UI (may name objects)
+    out['warnings_anonymous'] = [w[1] for w in warnings]     # same warnings without object names
     stats.update(width=w, height=h, foreground_pixels=int(mask.sum()),
                  seconds=dict(collect=t_collect - t0, upload=t_upload - t_collect,
                               gpu_draw_readback=t_gpu - t_upload, post=t_post - t_gpu,

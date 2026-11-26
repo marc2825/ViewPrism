@@ -21,7 +21,7 @@ def default_options():
         'normal': {'background': (0.0, 0.0, 0.0), 'flip_x': False, 'flip_y': False},
         'exr': {'compression': 'ZIP'},
         'base_name': 'viewprism', 'numbering': 'AUTO', 'overwrite': False, 'meta': True,
-        'source': {}, 'version': '0.0.0',
+        'source': {}, 'version': '0.0.0', 'privacy': 'full',
     }
 
 
@@ -113,19 +113,49 @@ def producers(result, options):
     return prods, enc
 
 
+PRIVACY_MODES = ('full', 'anonymized')
+
+
+def _anonymous_source(source):
+    """Camera/viewport source info without names (anonymized metadata)."""
+    out = {k: v for k, v in source.items() if k not in ('camera',)}
+    if 'camera' in source:
+        out['camera'] = 'camera'
+    return out
+
+
 def metadata(result, options, encodings, files):
+    """Metadata dict. 'full' keeps object names (ID map, warnings) and the camera name, which is the
+    point of an ID map but reveals scene content. 'anonymized' replaces names with neutral labels and
+    drops name lists from warnings; ids, pixels and geometry are unchanged. Free text is always stripped
+    of absolute file system paths."""
     info = result.get('info', {})
+    privacy = options.get('privacy', 'full')
+    if privacy not in PRIVACY_MODES:
+        raise export.ExportError(f'unknown metadata privacy mode {privacy!r}')
+    id_map = {str(k): v for k, v in sorted(result.get('id_map', {}).items())}
+    source = dict(options.get('source', {}))
+    if privacy == 'anonymized':
+        id_map = {k: f'object_{k}' for k in id_map}
+        warnings = list(result.get('warnings_anonymous', []))
+        if len(warnings) < len(result.get('warnings', [])):
+            warnings.append(f"{len(result.get('warnings', [])) - len(warnings)} further warning(s) omitted "
+                            '(they name scene objects)')
+        source = _anonymous_source(source)
+    else:
+        warnings = list(result.get('warnings', []))
     return {
         'format': 'viewprism-meta', 'format_version': FORMAT_VERSION,
         'generator': f"ViewPrism {options.get('version', '')}".strip(),
         'blender': info.get('blender'),
         'created_utc': datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat(),
+        'privacy': privacy,
         'frame': info.get('frame'), 'frame_float': info.get('frame_float'),
         'resolution': [info.get('width'), info.get('height')],
         'pixels': {'origin': 'top-left', 'row_order': 'top-to-bottom', 'sample': 'pixel centre',
                    'antialiasing': 'none'},
         'camera': {
-            'source': options.get('source', {}),
+            'source': source,
             'projection': info.get('projection'), 'near': info.get('near'), 'far': info.get('far'),
             'view_matrix': info.get('view_matrix'), 'projection_matrix': info.get('projection_matrix'),
             'convention': 'row-major, column vectors, OpenGL clip space (NDC z -1..1), view looks down -Z',
@@ -133,29 +163,42 @@ def metadata(result, options, encodings, files):
         'normal_mode': info.get('normal_mode'), 'id_mode': info.get('id_mode'),
         'passes': encodings,
         'files': files,
-        'id_map': {str(k): v for k, v in sorted(result.get('id_map', {}).items())},
-        'warnings': list(result.get('warnings', [])),
+        'id_map': id_map,
+        'warnings': [export.redact_paths(w) for w in warnings],
         'stats': result.get('stats', {}),
     }
 
 
 def export_capture(result, options, directory, *, exists=None):
-    """Encode and write the selected outputs. Returns dict(stem, written, failed, files)."""
+    """Encode and write the selected outputs. Returns dict(stem, written, failed, files).
+
+    `failed` holds export.Failure objects: `.code`/`.message` are shareable, `.detail` is local only.
+    """
     items = export.output_items(options['outputs'])
     kwargs = {} if exists is None else {'exists': exists}
-    the_plan = export.plan(directory, options['base_name'], items, numbering=options['numbering'],
-                           overwrite=options['overwrite'], meta=options['meta'], **kwargs)
-    prods, enc = producers(result, options)
-    files = {k: n for k, n, _p in the_plan['files']}
-    data_files = [f for f in the_plan['files'] if f[0] != 'meta']
-    meta_files = [f for f in the_plan['files'] if f[0] == 'meta']
-    status = export.write_batch(dict(the_plan, files=data_files), prods) if data_files \
-        else dict(written=[], failed=[])
-    if meta_files:
-        # Written last so it lists exactly the files that were written and those that failed.
-        ok = set(status['written'])
-        meta = metadata(result, options, enc, {k: n for k, n in files.items() if k != 'meta' and n in ok})
-        meta['failed_files'] = [dict(file=n, error=e) for n, e in status['failed']]
-        st = export.write_batch(dict(the_plan, files=meta_files), {'meta': lambda: export.to_json_bytes(meta)})
-        status = dict(written=status['written'] + st['written'], failed=status['failed'] + st['failed'])
+    prods, enc = producers(result, options)            # validates the inputs before reserving names
+    plan_args = dict(numbering=options['numbering'], overwrite=options['overwrite'], meta=options['meta'], **kwargs)
+    try:
+        the_plan = export.plan(directory, options['base_name'], items, reserve=exists is None, **plan_args)
+    except OSError as exc:
+        # The folder cannot be created or written: report every planned file, write nothing.
+        the_plan = export.plan(directory, options['base_name'], items, reserve=False, **plan_args)
+        files = {k: n for k, n, _p in the_plan['files']}
+        return dict(stem=the_plan['stem'], written=[],
+                    failed=[export.Failure(n, exc) for _k, n, _p in the_plan['files']], files=files)
+    try:
+        files = {k: n for k, n, _p in the_plan['files']}
+        data_files = [f for f in the_plan['files'] if f[0] != 'meta']
+        meta_files = [f for f in the_plan['files'] if f[0] == 'meta']
+        status = export.write_batch(dict(the_plan, files=data_files), prods) if data_files \
+            else dict(written=[], failed=[])
+        if meta_files:
+            # Written last so it lists exactly the files that were written and those that failed.
+            ok = set(status['written'])
+            meta = metadata(result, options, enc, {k: n for k, n in files.items() if k != 'meta' and n in ok})
+            meta['failed_files'] = [f.as_dict() for f in status['failed']]
+            st = export.write_batch(dict(the_plan, files=meta_files), {'meta': lambda: export.to_json_bytes(meta)})
+            status = dict(written=status['written'] + st['written'], failed=status['failed'] + st['failed'])
+    finally:
+        export.release(the_plan)
     return dict(stem=the_plan['stem'], written=status['written'], failed=status['failed'], files=files)

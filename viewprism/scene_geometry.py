@@ -156,8 +156,9 @@ def deviation_warnings(objects):
             displaced.append(ob.name)
 
     def fmt(names, text):
+        # (with object names for the UI, without names for anonymized metadata)
         shown = ', '.join(sorted(names)[:3]) + (' ...' if len(names) > 3 else '')
-        return f'{len(names)} object(s) {text}: {shown}'
+        return f'{len(names)} object(s) {text}: {shown}', f'{len(names)} object(s) {text}'
     out = []
     if render_diff:
         out.append(fmt(render_diff, 'have different viewport/render modifier settings (viewport result exported)'))
@@ -224,8 +225,9 @@ def collect(depsgraph, view_layer, space, *, normal_mode='SHADED', id_mode='OBJE
         items.append(DrawItem(key, mesh_key, np.array(inst.matrix_world, dtype=np.float64),
                               (key, inst.is_instance, pid, owner_orig.name_full)))
     items.sort(key=lambda it: it.sort_key)
-    warnings = [f'{n} object(s) skipped: {why}' for why, n in sorted(skipped.items())]
-    warnings += [f'could not convert {msg}' for msg in failed]
+    # Pairs (text with object names, text without names).
+    warnings = [(f'{n} object(s) skipped: {why}',) * 2 for why, n in sorted(skipped.items())]
+    warnings += [(f'could not convert {msg}', 'an object could not be converted to a mesh') for msg in failed]
     warnings += deviation_warnings(sources.values())
     used = {it.mesh_key for it in items}
     stats = dict(draw_items=len(items), instances=n_inst,

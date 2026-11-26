@@ -99,6 +99,11 @@ class ViewPrismSettings(bpy.types.PropertyGroup):
     exr_compression: EnumProperty(name='EXR Codec', default='ZIP',
                                   items=[('ZIP', 'ZIP', 'Lossless, 16 scanlines per block'),
                                          ('NONE', 'None', 'Uncompressed')])
+    metadata_privacy: EnumProperty(
+        name='Metadata Names', default='FULL',
+        items=[('FULL', 'Full', 'Object and camera names in the ID map and warnings'),
+               ('ANONYMIZED', 'Anonymized', 'Neutral labels (object_1, ...) instead of object and camera names; '
+                                            'ids, images and camera matrices are unchanged')])
     write_meta: BoolProperty(name='Metadata', default=True,
                              description='Write <name>_meta.json (matrices, ranges, ID map, warnings)')
 
