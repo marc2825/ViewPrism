@@ -18,8 +18,8 @@ jobs:
     name: Lint (ruff)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - run: python -m pip install ruff==0.8.6
@@ -34,8 +34,8 @@ jobs:
         python: ['3.11', '3.13']
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install numpy
@@ -64,8 +64,8 @@ jobs:
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: System libraries for Blender + virtual display
@@ -78,7 +78,7 @@ jobs:
       - name: Resolve Blender version
         id: ver
         run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve ${{ matrix.series }})" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/blender
           key: blender-linux-${{ steps.ver.outputs.version }}
@@ -94,7 +94,7 @@ jobs:
       - name: Job summary
         if: always()
         run: cat "${{ runner.temp }}/evidence/SUMMARY.md" >> "$GITHUB_STEP_SUMMARY" || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: evidence-blender-${{ steps.ver.outputs.version }}

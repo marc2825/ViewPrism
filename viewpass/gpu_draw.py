@@ -147,6 +147,14 @@ def free_resources():
     _shader_error = None
 
 
+def _as_array(buf):
+    """gpu.types.Buffer -> flat float32 array (zero-copy when the buffer is contiguous)."""
+    try:
+        return np.frombuffer(buf, dtype=np.float32)
+    except (BufferError, ValueError, TypeError):
+        return np.frombuffer(memoryview(buf).tobytes(), dtype=np.float32)
+
+
 def make_batches(meshes, sh):
     from gpu_extras.batch import batch_for_shader
     return {k: batch_for_shader(sh, 'TRIS', {'pos': m.pos, 'nor': m.nor}, indices=m.tris)
@@ -190,16 +198,20 @@ def render(width, height, view, projection, items, batches, depth_params, *, _af
                     batches[it.mesh_key].draw(sh)
                 if _after_draw is not None:
                     _after_draw()
-                buf_geom = fb.read_color(0, 0, width, height, 4, 0, 'FLOAT')
-                buf_id = fb.read_color(0, 0, width, height, 4, 1, 'FLOAT')
+                # Read into flat 1-D buffers: Blender 4.5 exports the default (h, w, 4) Buffer
+                # through a non-contiguous buffer protocol, which NumPy cannot view.
+                buf_geom = gpu.types.Buffer('FLOAT', width * height * 4)
+                buf_id = gpu.types.Buffer('FLOAT', width * height * 4)
+                fb.read_color(0, 0, width, height, 4, 0, 'FLOAT', data=buf_geom)
+                fb.read_color(0, 0, width, height, 4, 1, 'FLOAT', data=buf_id)
             finally:
                 gpu.state.depth_test_set(prev_depth_test)
                 gpu.state.depth_mask_set(prev_depth_mask)
                 gpu.state.blend_set(prev_blend)
                 gpu.state.face_culling_set('NONE')
         # Views (no copy) flipped to top-left row order; the caller builds new output arrays.
-        geom = np.frombuffer(buf_geom, dtype=np.float32).reshape(height, width, 4)[::-1]
-        ident = np.frombuffer(buf_id, dtype=np.float32).reshape(height, width, 4)[::-1]
+        geom = _as_array(buf_geom).reshape(height, width, 4)[::-1]
+        ident = _as_array(buf_id).reshape(height, width, 4)[::-1]
         return geom, ident
     except BaseException:
         release_targets()      # never reuse targets after a failure
