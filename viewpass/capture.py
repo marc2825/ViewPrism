@@ -41,6 +41,10 @@ class RequestError(CaptureError, ValueError):
     pass
 
 
+class GPUContextError(CaptureError):
+    """Transient: Blender has no active GPU context (retry after the next redraw)."""
+
+
 def _int(value, name):
     if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
         raise RequestError(f'{name} must be an integer')
@@ -119,12 +123,19 @@ def capture(context, request, *, _after_draw=None):
         it.id = ids[it.key]
     t_collect = time.perf_counter()
 
-    sh = gpu_draw.shader()
-    batches = gpu_draw.make_batches(meshes, sh)
-    meshes = None
-    t_upload = time.perf_counter()
-    geom, ident = gpu_draw.render(w, h, req['view'], req['projection'], items, batches,
-                                  depth_params, _after_draw=_after_draw)
+    try:
+        sh = gpu_draw.shader()
+        batches = gpu_draw.make_batches(meshes, sh)
+        meshes = None
+        t_upload = time.perf_counter()
+        geom, ident = gpu_draw.render(w, h, req['view'], req['projection'], items, batches,
+                                      depth_params, _after_draw=_after_draw)
+    except RuntimeError as exc:
+        if 'GPU context' in str(exc):
+            # e.g. directly after a window was closed, before Blender redraws another window
+            raise GPUContextError('no active GPU context right now (for example just after closing a '
+                                  'window); try again') from exc
+        raise
     batches = None
     t_gpu = time.perf_counter()
 

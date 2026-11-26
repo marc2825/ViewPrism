@@ -161,6 +161,18 @@ class EndToEnd(unittest.TestCase):
             self.assertNotIn(d, text)                         # no absolute paths
             self.assertNotIn(os.path.expanduser('~'), text)
 
+    def test_unicode_directory_and_name(self):
+        r = synthetic_result()
+        opts = dict(writer.default_options(), outputs={'depth': ['PNG16', 'EXR'], 'mask': ['PNG8']},
+                    base_name='深度テスト é')
+        with tempfile.TemporaryDirectory() as d:
+            sub = os.path.join(d, '出力 フォルダ', 'ñ')
+            res = writer.export_capture(r, opts, sub)
+            self.assertEqual(res['failed'], [])
+            self.assertTrue(res['stem'].startswith('深度テスト é_'))
+            z = exr.decode(open(os.path.join(sub, f"{res['stem']}_depth.exr"), 'rb').read())[0]['Z']
+            np.testing.assert_array_equal(z, r['depth'])
+
     def test_normal_flip_only_changes_png(self):
         r = synthetic_result()
         opts = dict(writer.default_options(), outputs={'normal': ['PNG8', 'EXR']})

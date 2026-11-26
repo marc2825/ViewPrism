@@ -80,6 +80,8 @@ def capture_view(context, view, settings, request=None, source=None):
                                                  settings, sorted(set(passes) | {'mask'}, key=cap.PASSES.index))
     with context.temp_override(**view.override()):
         result = cap.capture(bpy.context, request)
+    if getattr(view.rv3d, 'use_clip_planes', False):
+        result['warnings'].append('the viewport clipping region (Alt+B) is not applied to the export')
     return result, request, source
 
 

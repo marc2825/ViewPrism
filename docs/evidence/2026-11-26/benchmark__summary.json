@@ -1,0 +1,170 @@
+{
+  "simple": {
+    "runs": 5,
+    "scene_stats": {
+      "objects": 14,
+      "mesh_instances": 13,
+      "triangles": 146
+    },
+    "capture_stats": {
+      "draw_items": 13,
+      "instances": 0,
+      "unique_meshes": 13,
+      "triangles": 146,
+      "width": 1920,
+      "height": 1080,
+      "foreground_pixels": 1927680
+    },
+    "gpu": {
+      "backend_type_get": "VULKAN",
+      "renderer_get": "NVIDIA GeForce RTX 3060 Ti",
+      "version_get": "NVIDIA 610.88"
+    },
+    "blender": "5.3.0",
+    "cold_ms": {
+      "median": 92.11670001968741,
+      "p95": 107.20750002656132,
+      "samples": [
+        82.94669998576865,
+        83.26200000010431,
+        98.98419998353347,
+        92.11670001968741,
+        107.20750002656132
+      ]
+    },
+    "warm_ms": {
+      "median": 53.33769996650517,
+      "p95": 92.54919999511912,
+      "n": 35
+    },
+    "warm_stage_median_ms": {
+      "collect": 0.8512999629601836,
+      "upload": 0.11139997513964772,
+      "gpu_draw_readback": 21.994999959133565,
+      "post": 27.819400012958795,
+      "total": 51.858099992387
+    },
+    "encode_write_ms": {
+      "median": 182.05470003886148
+    },
+    "files_bytes": {
+      "viewpass_0001_depth.png": 10558,
+      "viewpass_0001_depth.exr": 98673,
+      "viewpass_0001_normal.png": 10623,
+      "viewpass_0001_id.png": 16257,
+      "viewpass_0001_mask.png": 4122,
+      "viewpass_0001_meta.json": 3781
+    },
+    "render_engines": {
+      "BLENDER_EEVEE": {
+        "render_s": [
+          0.35066110000479966,
+          0.2026089000282809
+        ]
+      },
+      "CYCLES": {
+        "render_s": [
+          0.2897091000340879,
+          0.2853062999784015
+        ]
+      }
+    },
+    "cycles_comparison": {
+      "foreground_pixels_ours": 1927680,
+      "foreground_pixels_cycles": 1927680,
+      "mask_disagreement_fraction": 0.0,
+      "interior_pixels": 1923840,
+      "depth_abs_err_median": 3.4332275390625e-05,
+      "depth_abs_err_p99": 0.00014495849609375,
+      "depth_rel_err_max": 0.08016763627529144,
+      "depth_rel_err_p99": 4.183343207841972e-06,
+      "normal_angle_deg_median": 0.017156399067175684,
+      "normal_angle_deg_p99": 0.027050644804046266,
+      "id_agreement_interior": 0.9999989604125084
+    }
+  },
+  "complex": {
+    "runs": 5,
+    "scene_stats": {
+      "objects": 34,
+      "mesh_instances": 2633,
+      "triangles": 1103042
+    },
+    "capture_stats": {
+      "draw_items": 2632,
+      "instances": 2601,
+      "unique_meshes": 33,
+      "triangles": 1103042,
+      "width": 1920,
+      "height": 1080,
+      "foreground_pixels": 1927680
+    },
+    "gpu": {
+      "backend_type_get": "VULKAN",
+      "renderer_get": "NVIDIA GeForce RTX 3060 Ti",
+      "version_get": "NVIDIA 610.88"
+    },
+    "blender": "5.3.0",
+    "cold_ms": {
+      "median": 209.28149996325374,
+      "p95": 274.8414999805391,
+      "samples": [
+        194.9964999803342,
+        172.702300013043,
+        274.8414999805391,
+        219.8173999786377,
+        209.28149996325374
+      ]
+    },
+    "warm_ms": {
+      "median": 180.2579999784939,
+      "p95": 229.4996000127867,
+      "n": 35
+    },
+    "warm_stage_median_ms": {
+      "collect": 89.39619996817783,
+      "upload": 6.118500023148954,
+      "gpu_draw_readback": 45.736400003079325,
+      "post": 36.799299996346235,
+      "total": 178.35589998867363
+    },
+    "encode_write_ms": {
+      "median": 284.99230003217235
+    },
+    "files_bytes": {
+      "viewpass_0001_depth.png": 173374,
+      "viewpass_0001_depth.exr": 5911434,
+      "viewpass_0001_normal.png": 850431,
+      "viewpass_0001_id.png": 70134,
+      "viewpass_0001_mask.png": 4122,
+      "viewpass_0001_meta.json": 4271
+    },
+    "render_engines": {
+      "BLENDER_EEVEE": {
+        "render_s": [
+          0.28891389997443184,
+          0.21973369998158887
+        ]
+      },
+      "CYCLES": {
+        "render_s": [
+          0.40727919997880235,
+          0.3972796000307426
+        ]
+      }
+    },
+    "cycles_comparison": {
+      "foreground_pixels_ours": 1927680,
+      "foreground_pixels_cycles": 1927680,
+      "mask_disagreement_fraction": 0.0,
+      "interior_pixels": 1923840,
+      "depth_abs_err_median": 5.7220458984375e-06,
+      "depth_abs_err_p99": 0.000148773193359375,
+      "depth_rel_err_max": 0.12837402522563934,
+      "depth_rel_err_p99": 4.298627573007252e-06,
+      "normal_angle_deg_median": 0.014979775476324377,
+      "normal_angle_deg_p99": 0.027050644804046266,
+      "id_agreement_interior": 0.9999828468063873
+    }
+  }
+}

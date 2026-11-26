@@ -717,10 +717,66 @@ def t_preview_lifecycle(ctx, vp):
     return 'refresh, re-encode, hide, closed view and file load release resources'
 
 
+def t_multi_window(ctx, vp):
+    clear_scene()
+    plane('MW', (0, 0, 0), (1, 1))
+    ctx.view_layer.update()
+    before = {w.as_pointer() for w in bpy.context.window_manager.windows}
+    window, area, region = find_view3d()
+    with ctx.temp_override(**override(window, area, region)):
+        bpy.ops.wm.window_new()
+    new = [w for w in bpy.context.window_manager.windows if w.as_pointer() not in before]
+    check(len(new) == 1, 'second window not created')
+    win2 = new[0]
+    a2 = next((x for x in win2.screen.areas if x.type == 'VIEW_3D'), None)
+    check(a2 is not None, 'second window has no 3D view')
+    r2 = next(r for r in a2.regions if r.type == 'WINDOW')
+    set_view(a2, r2, rotation=tuple(Euler((math.radians(30), 0, 0)).to_quaternion()), distance=7)
+    s = vp.props.settings(ctx)
+    s.resolution_mode, s.scale = 'VIEW', 50
+    try:
+        with ctx.temp_override(**override(win2, a2, r2)):
+            view = vp.viewport.resolve(bpy.context)
+            check(view.window == win2 and view.area == a2, 'resolved the wrong window')
+            request, _ = vp.viewport.build_request(view, ctx.scene, bpy.context.evaluated_depsgraph_get(), s,
+                                                   ['depth', 'mask'])
+            check(np.allclose(np.array(request['view_matrix']), np.array([list(r) for r in r2.data.view_matrix])),
+                  'matrices not from the second window')
+            res = vp.capture.capture(bpy.context, request)
+        check(res['mask'].any(), 'nothing captured in the second window')
+    finally:
+        with ctx.temp_override(window=win2, screen=win2.screen):
+            bpy.ops.wm.window_close()
+    # Right after closing a window Blender may have no active GPU context until the next redraw:
+    # the capture must fail explicitly (not crash), and work again after a redraw.
+    window, area, region = find_view3d()
+    r = req(np.eye(4), persp(math.radians(60), W / H, .1, 100))
+    note = 'context still active after close'
+    try:
+        with ctx.temp_override(**override(window, area, region)):
+            vp.capture.capture(bpy.context, r)
+    except vp.capture.GPUContextError as exc:
+        note = f'explicit error after close: {exc}'
+    with ctx.temp_override(**override(window, area, region)):
+        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+    with ctx.temp_override(**override(window, area, region)):     # redraw_timer drops the override
+        res = vp.capture.capture(bpy.context, r)
+    check(res['depth'].shape == (H, W), 'capture after redraw failed')
+    return f"second main window uses its own view; {note}; recovered after redraw"
+
+
 def t_reregister_clean(ctx, vp):
     import viewpass
     n_dg = len(bpy.app.handlers.depsgraph_update_post)
     n_lp = len(bpy.app.handlers.load_pre)
+    # disable while a preview (auto refresh on) is showing
+    clear_scene()
+    plane('RR', (0, 0, 0), (1, 1))
+    window, area, region = find_view3d()
+    vp.props.settings(ctx).preview_auto = True
+    with ctx.temp_override(**override(window, area, region)):
+        check(bpy.ops.viewpass.preview() == {'FINISHED'}, 'preview before unregister')
+    check(vp.preview.state.active and vp.preview._draw_handle is not None, 'preview not active')
     viewpass.unregister()
     check(not hasattr(bpy.ops.viewpass, 'export') or not hasattr(bpy.types, 'VIEWPASS_PT_main'), 'still registered')
     check(len(bpy.app.handlers.depsgraph_update_post) == n_dg - 1 and len(bpy.app.handlers.load_pre) == n_lp - 1,
@@ -773,7 +829,8 @@ def t_deviation_warnings(ctx, vp):
 
 TESTS = [t_registration, t_empty_scene, t_deviation_warnings, t_visibility, t_local_view, t_modifier_and_scale, t_instances,
          t_viewport_matrices, t_camera_view, t_repeat_and_leak, t_fault_injection, t_sizes, t_multi_area,
-         t_precision, t_edit_mode, t_operator_export, t_view_lost, t_preview_lifecycle, t_reregister_clean]
+         t_precision, t_edit_mode, t_operator_export, t_view_lost, t_preview_lifecycle, t_multi_window,
+         t_reregister_clean]
 
 
 def write(status, **extra):

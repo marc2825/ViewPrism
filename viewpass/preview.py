@@ -278,9 +278,12 @@ def _tick():
         return TICK
     if now - state.change_time < DEBOUNCE:
         return TICK
+    from .capture import GPUContextError
     try:
         with ctx.temp_override(**view.override()):
             refresh(bpy.context, view)
+    except GPUContextError:
+        return 0.5                  # transient (e.g. a window was just closed): retry later
     except Exception as exc:  # never leave a broken timer running
         settings.preview_auto = False
         state.error = f'Auto refresh stopped: {exc}'

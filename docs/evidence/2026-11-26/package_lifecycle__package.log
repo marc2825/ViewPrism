@@ -1,0 +1,4 @@
+Results: <HOME>\AppData\Local\Temp\viewpass-checks-77s2f5or\package
+Running package ['C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe', '--factory-startup', '--disable-autoexec', '--python-exit-code', '1', '--python', '<HOME>\\Blender_Addon\\Depth_Renderer\\tests\\blender\\package_suite.py', '--', '--repo', '<HOME>\\Blender_Addon\\Depth_Renderer', '--result', '<HOME>\\AppData\\Local\\Temp\\viewpass-checks-77s2f5or\\package\\package.json', '--zip', '<HOME>\\AppData\\Local\\Temp\\viewpass-checks-77s2f5or\\dist\\viewpass-0.1.0.zip']
+  PASS package_lifecycle  s  isolated user dir <HOME>\AppData\Local\Temp\viewpass-userres-la9pf3bw; installed + enabled from viewpass; export ok: 6 files; disabled cleanly; re-enabled and exported again; uninstalled, directory removed
+package: PASS (exit 0, gpu None); log <HOME>\AppData\Local\Temp\viewpass-checks-77s2f5or\package\package.log
