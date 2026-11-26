@@ -1,0 +1,169 @@
+{
+  "status": "pass",
+  "blender": "5.3.0",
+  "gpu": {
+    "backend_type_get": "OPENGL",
+    "vendor_get": "NVIDIA Corporation",
+    "renderer_get": "NVIDIA GeForce RTX 3060 Ti/PCIe/SSE2",
+    "version_get": "4.6.0 NVIDIA 610.88"
+  },
+  "results": [
+    {
+      "test": "t_registration",
+      "status": "pass",
+      "detail": "operators, panel, settings registered",
+      "seconds": 0.0
+    },
+    {
+      "test": "t_empty_scene",
+      "status": "pass",
+      "detail": "all background, warning present",
+      "seconds": 0.006
+    },
+    {
+      "test": "t_deviation_warnings",
+      "status": "pass",
+      "detail": "1 object(s) have different viewport/render modifier settings (viewport result exported): SubdivDiff | 1 object(s) use shader displacement (not included: geometry only): Displaced | 1 object(s) may use transparency (exported as opaque surfaces): AlphaMat",
+      "seconds": 0.005
+    },
+    {
+      "test": "t_visibility",
+      "status": "pass",
+      "detail": "hide, exclude, hidden collection, disabled, wire display",
+      "seconds": 0.003
+    },
+    {
+      "test": "t_local_view",
+      "status": "pass",
+      "detail": "only local-view objects captured",
+      "seconds": 0.002
+    },
+    {
+      "test": "t_modifier_and_scale",
+      "status": "pass",
+      "detail": "array modifier evaluated, mirrored outward normals, inverse-transpose normals",
+      "seconds": 0.003
+    },
+    {
+      "test": "t_instances",
+      "status": "pass",
+      "detail": "collection + GN instances; ids {'OBJECT': ['SrcPlane', 'SrcPlane', 'SrcPlane', 'SrcPlane'], 'INSTANCER': ['CI_0', 'CI_1', 'Scatter', 'Scatter'], 'INSTANCE': ['CI_0|SrcPlane|0', 'CI_1|SrcPlane|0', 'Scatter|SrcPlane|0.0', 'Scatter|SrcPlane|0.1']}",
+      "seconds": 0.007
+    },
+    {
+      "test": "t_viewport_matrices",
+      "status": "pass",
+      "detail": {
+        "PERSP": {
+          "size": [
+            787,
+            444
+          ],
+          "depth": 6.369513511657715,
+          "shift": 0.0
+        },
+        "ORTHO": {
+          "size": [
+            787,
+            444
+          ],
+          "depth": 499.3676452636719,
+          "shift": 499.9999762512755
+        }
+      },
+      "seconds": 0.027
+    },
+    {
+      "test": "t_camera_view",
+      "status": "pass",
+      "detail": "camera frame matches world_to_camera_view (with lens shift)",
+      "seconds": 0.006
+    },
+    {
+      "test": "t_repeat_and_leak",
+      "status": "pass",
+      "detail": {
+        "median_ms": 7.66,
+        "p95_ms": 9.16,
+        "memory_source": "private bytes",
+        "mem_steady_growth_mb_last20": 0.0,
+        "new_highs_last20": 0,
+        "mem_ramp_mb": 24.95,
+        "mem_growth_mb_20_back_to_back": 0.0
+      },
+      "seconds": 0.938
+    },
+    {
+      "test": "t_fault_injection",
+      "status": "pass",
+      "detail": "state restored, retry identical",
+      "seconds": 0.007
+    },
+    {
+      "test": "t_sizes",
+      "status": "pass",
+      "detail": "1x1, 3x7, wide, tall, 1080p; oversize and singular rejected",
+      "seconds": 0.096
+    },
+    {
+      "test": "t_multi_area",
+      "status": "pass",
+      "detail": "each view captured from its own matrices (centroid x 0.37 / 0.63)",
+      "seconds": 0.023
+    },
+    {
+      "test": "t_precision",
+      "status": "pass",
+      "detail": "surfaces 5 mm apart at 100 m ordered correctly (clip 0.01..1000)",
+      "seconds": 0.004
+    },
+    {
+      "test": "t_edit_mode",
+      "status": "pass",
+      "detail": "edit-mode edits captured, mode untouched",
+      "seconds": 0.004
+    },
+    {
+      "test": "t_operator_export",
+      "status": "pass",
+      "detail": "16 files, EXR/PNG equal capture, Blender loader agrees, collision refused (<HOME>\\AppData\\Local\\Temp\\viewprism-gui-a2tbf5je)",
+      "seconds": 0.09
+    },
+    {
+      "test": "t_view_lost",
+      "status": "pass",
+      "detail": "closed view -> explicit ViewError",
+      "seconds": 0.0
+    },
+    {
+      "test": "t_preview_lifecycle",
+      "status": "pass",
+      "detail": "refresh, re-encode, hide, closed view and file load release resources",
+      "seconds": 0.101
+    },
+    {
+      "test": "t_preview_debounce",
+      "status": "pass",
+      "detail": "no capture during 2.5 s of navigation or edits; one refresh 0.20 s after stillness",
+      "seconds": 0.054
+    },
+    {
+      "test": "t_multi_window",
+      "status": "pass",
+      "detail": "second main window uses its own view; same-tick capture after close works; capture after closing a window works",
+      "seconds": 0.165
+    },
+    {
+      "test": "t_resource_guard",
+      "status": "pass",
+      "detail": "memory guard refuses capture/export cleanly, warns once when RAM is low; GPU allocation failure -> GPUCaptureError; recovery ok",
+      "seconds": 0.028
+    },
+    {
+      "test": "t_reregister_clean",
+      "status": "pass",
+      "detail": "unregister removes handlers, draw callbacks, timers; re-register works",
+      "seconds": 0.013
+    }
+  ]
+}

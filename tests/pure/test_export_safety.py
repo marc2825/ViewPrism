@@ -126,20 +126,72 @@ class NoClobber(unittest.TestCase):
             self.assertEqual(os.listdir(outside), [])
 
     def test_without_hard_links(self):
+        """FAT/exFAT and some network shares have no hard links: exports still work and stay no-clobber
+        (before 0.2.0 final they failed on macOS/Linux)."""
         with tempfile.TemporaryDirectory() as d:
             path = os.path.join(d, 'a.png')
             with mock.patch('os.link', side_effect=OSError(errno.EPERM, 'no hard links')):
-                if os.name == 'nt':
-                    export.atomic_write(path, b'one')                  # rename never replaces on Windows
-                    with self.assertRaises(export.CollisionError):
-                        export.atomic_write(path, b'two', _before_publish=lambda: None)
-                    with open(path, 'rb') as fh:
-                        self.assertEqual(fh.read(), b'one')
-                else:
-                    with self.assertRaises(export.AtomicPublishUnsupported):
-                        export.atomic_write(path, b'one')               # documented safe failure
-                    self.assertFalse(os.path.exists(path))
+                export.atomic_write(path, b'one')
+                with self.assertRaises(export.CollisionError):        # another writer got there first
+                    export.atomic_write(path, b'two', _before_publish=lambda: None)
+            with open(path, 'rb') as fh:
+                self.assertEqual(fh.read(), b'one')
             self.assertEqual(leftovers(d), [])
+
+    def test_placeholder_publication(self):
+        """The no-hard-link path itself, on every OS: exclusive placeholder, then atomic replace."""
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, 'a.png')
+            tmp = os.path.join(d, '.a.png.0' + export.TMP_SUFFIX)
+            with open(tmp, 'wb') as fh:
+                fh.write(b'data')
+            export._publish_via_placeholder(tmp, path)
+            with open(path, 'rb') as fh:
+                self.assertEqual(fh.read(), b'data')
+            self.assertFalse(os.path.exists(tmp))
+            with open(tmp, 'wb') as fh:
+                fh.write(b'other')
+            with self.assertRaises(export.CollisionError):
+                export._publish_via_placeholder(tmp, path)
+            with open(path, 'rb') as fh:
+                self.assertEqual(fh.read(), b'data')                  # existing file untouched
+            os.remove(tmp)
+            self.assertEqual(leftovers(d), [])
+
+    def test_published_file_is_not_reported_failed_if_temp_cleanup_fails(self):
+        """After the file is published, failing to remove the temporary name (e.g. a scanner holds it)
+        must not turn a written file into a failure."""
+        real_remove = os.remove
+
+        def busy_remove(p):
+            if p.endswith(export.TMP_SUFFIX):
+                raise PermissionError(errno.EACCES, 'file in use')
+            real_remove(p)
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, 'a.png')
+            with mock.patch('os.remove', side_effect=busy_remove):
+                export.atomic_write(path, b'data')                     # must not raise
+            with open(path, 'rb') as fh:
+                self.assertEqual(fh.read(), b'data')
+            for name in leftovers(d):                                  # POSIX: a second name may remain
+                real_remove(os.path.join(d, name))
+
+    def test_long_names_fit_the_temporary_name(self):
+        ok = 'a' * 200
+        self.assertEqual(export.sanitize_stem(ok), ok)
+        with self.assertRaises(export.NameError_):
+            export.sanitize_stem('a' * 230)
+        longest = export._temp_name(f'{ok}_{export.MAX_INDEX}_normal.png')
+        self.assertLessEqual(len(longest.encode('utf-8')), 255)
+        with tempfile.TemporaryDirectory() as d:                     # a real AUTO export with that name
+            if os.name == 'nt' and len(os.path.join(d, longest)) >= 260:
+                self.skipTest('Windows MAX_PATH (260) is shorter than this test path; covered on Linux CI')
+            p = export.plan(d, ok, [('normal:PNG8', 'normal', 'png')], meta=False, reserve=True)
+            try:
+                export.atomic_write(p['files'][0][2], b'x')
+                self.assertEqual(leftovers(d), [os.path.basename(p['lock'])])
+            finally:
+                export.release(p)
 
     def test_partial_failure_cleans_up(self):
         with tempfile.TemporaryDirectory() as d:
@@ -246,6 +298,7 @@ class MetadataPrivacy(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaises(export.ExportError):
                 writer.export_capture(result(), options(privacy='weird'), d)
+            self.assertEqual(os.listdir(d), [], 'files written before the option was rejected')
 
 
 if __name__ == '__main__':

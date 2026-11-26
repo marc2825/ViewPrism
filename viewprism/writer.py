@@ -177,6 +177,8 @@ def export_capture(result, options, directory, *, exists=None):
     `failed` holds export.Failure objects: `.code`/`.message` are shareable, `.detail` is local only.
     """
     items = export.output_items(options['outputs'])
+    if options.get('privacy', 'full') not in PRIVACY_MODES:          # reject before anything is written
+        raise export.ExportError(f"unknown metadata privacy mode {options.get('privacy')!r}")
     kwargs = {} if exists is None else {'exists': exists}
     prods, enc = producers(result, options)            # validates the inputs before reserving names
     plan_args = dict(numbering=options['numbering'], overwrite=options['overwrite'], meta=options['meta'], **kwargs)

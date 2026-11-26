@@ -177,7 +177,7 @@ def listing_card():
     grid = (ROOT / 'docs' / 'images' / 'passes_grid.png').as_uri()
     bullets = ['No camera, no compositor, scene untouched',
                'Depth · Normal · Object ID · Mask from one GPU pass',
-               'Float EXR + PNG + metadata · Blender 4.5 LTS · 5.3']
+               'Float EXR + PNG + metadata · Blender 4.5 LTS – 5.3']
     items = ''.join(f'<li>{b}</li>' for b in bullets)
     return f'''<!doctype html><html><head><meta charset="utf-8"><style>
 html,body{{margin:0;width:1920px;height:1080px;overflow:hidden;

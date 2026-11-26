@@ -1,8 +1,8 @@
 schema_version = "1.0.0"
 
-# ViewPrism - Viewport Pass Exporter. Do not publish without the owner's approval.
+# ViewPrism - Viewport Pass Exporter. Free distribution under GPL-3.0-or-later.
 id = "viewprism"
-version = "0.1.0"
+version = "0.2.0"
 name = "ViewPrism"
 tagline = "Viewport Pass Exporter: aligned depth, normal, ID and mask"
 maintainer = "marc2825"
@@ -11,7 +11,7 @@ type = "add-on"
 
 tags = ["3D View", "Render", "Import-Export"]
 
-# Only versions verified with the test suites (see docs/STATUS.md): 4.5 LTS and 5.3.
+# Verified with the test suites on 4.5 LTS, 5.0, 5.1, 5.2 and 5.3 (see docs/QA_REPORT.md).
 blender_version_min = "4.5.0"
 
 license = [

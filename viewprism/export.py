@@ -6,8 +6,10 @@
 * The whole batch is checked for collisions *before* anything is written; existing
   files are never overwritten unless the caller explicitly allows it.
 * Every file is written to a temporary sibling and then published atomically: without
-  overwrite through a hard link (fails if anything exists at the name, so a file created by
-  another writer in the meantime is never replaced), with overwrite through ``os.replace``.
+  overwrite through a no-replace rename (Windows) or a hard link (elsewhere); both fail if
+  anything exists at the name, so a file created by another writer in the meantime is never
+  replaced. File systems without hard links (FAT/exFAT, some network shares) use an exclusive
+  placeholder instead. With overwrite: ``os.replace``.
 * Automatic numbering reserves its number with an exclusive lock file, so concurrent exports
   (also from other Blender processes) never pick the same name.
 * Failures are reported per file with a stable error code and a path-free message for
@@ -59,7 +61,9 @@ def sanitize_stem(stem):
         raise NameError_('name must not start with a dot')
     if s.split('.')[0].upper() in _RESERVED:
         raise NameError_(f'"{s}" is a reserved file name on Windows')
-    if len((s + '_normal.png').encode('utf-8')) > 240:
+    # Longest file name: the stem with the highest AUTO number and the longest suffix, written first
+    # under a temporary sibling name; it must fit into the usual 255-byte name limit.
+    if len(_temp_name(f'{s}_{MAX_INDEX}_normal.png').encode('utf-8')) > 255:
         raise NameError_('name is too long')
     return s
 
@@ -155,33 +159,54 @@ def _inside(directory, path):
     return os.path.commonpath([d, p]) == d and os.path.dirname(p) == d
 
 
-class AtomicPublishUnsupported(ExportError):
-    pass
+def _temp_name(name):
+    return f'.{name}.{"0" * 8}{TMP_SUFFIX}'
 
 
 def _publish_no_clobber(tmp, path):
-    """Move tmp to path only if path does not exist, atomically.
+    """Move tmp to path only if nothing exists at path. Returns once the file is published.
 
-    A hard link fails with FileExistsError if anything (even a dangling symlink) is at `path`; the
-    temporary name is then removed. If the file system has no hard links, Windows falls back to
-    os.rename, which never replaces an existing file there. On other systems there is no portable
-    atomic no-replace rename, so the export fails safely instead of risking an overwrite.
+    * Windows: ``os.rename`` (MoveFileEx without REPLACE_EXISTING) is atomic and fails if anything,
+      even a dangling link, is at `path`. One step, so nothing is left behind.
+    * Elsewhere: a hard link fails the same way; the temporary name is then removed. Once the link
+      exists the file is published, so a failure to remove the temporary name is not an export error.
+    * File systems without hard links (FAT/exFAT, some network shares): an empty placeholder is
+      created exclusively at `path` (fails if anything is there), then replaced atomically by the
+      temporary file. Other no-clobber writers see the placeholder and back off.
     """
+    if os.name == 'nt':
+        try:
+            os.rename(tmp, path)
+        except FileExistsError:
+            raise CollisionError([os.path.basename(path)])
+        return
     try:
         os.link(tmp, path)
     except FileExistsError:
         raise CollisionError([os.path.basename(path)])
-    except (OSError, NotImplementedError, AttributeError) as exc:
-        if os.name == 'nt':
-            try:
-                os.rename(tmp, path)
-                return
-            except FileExistsError:
-                raise CollisionError([os.path.basename(path)])
-        raise AtomicPublishUnsupported(
-            'the output folder\'s file system cannot publish files without risking to replace existing '
-            'ones (no hard links); choose another folder or use Exact Name + Overwrite') from exc
-    os.remove(tmp)
+    except (OSError, NotImplementedError, AttributeError):
+        _publish_via_placeholder(tmp, path)
+        return
+    try:
+        os.remove(tmp)
+    except OSError:
+        pass                                  # published; at worst a second name for the same data stays
+
+
+def _publish_via_placeholder(tmp, path):
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, 'O_NOFOLLOW', 0), 0o644)
+    except FileExistsError:
+        raise CollisionError([os.path.basename(path)])
+    os.close(fd)
+    try:
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.remove(path)                   # our own empty placeholder
+        except OSError:
+            pass
+        raise
 
 
 def atomic_write(path, data, *, overwrite=False, _before_publish=None):
@@ -198,7 +223,7 @@ def atomic_write(path, data, *, overwrite=False, _before_publish=None):
         raise CollisionError([os.path.basename(path)])
     if not _inside(directory, path):
         raise ExportError('refusing to write outside the output directory')
-    tmp =os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}{TMP_SUFFIX}')
+    tmp = os.path.join(directory, f'.{os.path.basename(path)}.{secrets.token_hex(4)}{TMP_SUFFIX}')
     try:
         with open(tmp, 'xb') as fh:
             fh.write(data)
@@ -225,7 +250,6 @@ _MESSAGES = {
     'not_found': 'the folder does not exist or was removed',
     'bad_path': 'the output path is not a usable folder',
     'no_space': 'not enough disk space',
-    'atomic_publish_unsupported': 'the file system cannot publish files without risking overwrites',
     'id_overflow': 'object id too large for this format',
     'encode_failed': 'the image could not be encoded',
     'export_failed': 'the file could not be exported',
@@ -239,8 +263,6 @@ def error_code(exc):
     import errno
     if isinstance(exc, CollisionError) or isinstance(exc, FileExistsError):
         return 'exists'
-    if isinstance(exc, AtomicPublishUnsupported):
-        return 'atomic_publish_unsupported'
     if isinstance(exc, IdOverflowError):
         return 'id_overflow'
     if isinstance(exc, EncodeError):

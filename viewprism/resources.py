@@ -17,8 +17,8 @@ import os
 import sys
 
 GPU_BYTES_PER_PIXEL = 36          # 2 x RGBA32F colour targets + DEPTH_COMPONENT32F
-CAPTURE_BYTES_PER_PIXEL = 120     # readback buffers, NumPy outputs, Blender's staging copies
-EXPORT_BYTES_PER_PIXEL = 100      # additional peak while encoding/writing all files (chunked encoders)
+CAPTURE_BYTES_PER_PIXEL = 120     # readback buffers, NumPy outputs, Blender's staging copies (112 measured)
+EXPORT_BYTES_PER_PIXEL = 40       # additional peak while encoding/writing all files (<= 36 measured)
 HARD_FRACTION = 0.9
 SOFT_FRACTION = 0.8
 

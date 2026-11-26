@@ -1,58 +1,90 @@
-# Blender Extensions listing — draft for owner review
+# Blender Extensions listing — ViewPrism 0.2.0
 
-Status: **draft, not submitted.** Submitting to extensions.blender.org needs the owner's approval. The
-platform reviews uploads manually. Rules checked 2026-11-26: GPL-3.0-or-later, CC0 for bundled binary
-assets, "Blender" not part of the name, no Blender logo, every permission explained.
+Content to paste into the extensions.blender.org form. The submission procedure and the owner's
+final checks are in [`EXTENSION_SUBMISSION.ja.md`](EXTENSION_SUBMISSION.ja.md).
 
-## Fields
+Status: **ready, not submitted.** The owner submits after a hands-on check. Free distribution; no
+price, no paid features, no donation prompts inside the add-on.
+
+## Fields read from the ZIP's manifest
+
+These come from `blender_manifest.toml` inside the ZIP and cannot be edited on the website without
+uploading a new version.
 
 | Field | Value |
 |---|---|
 | Name | ViewPrism |
-| Tagline (manifest, ≤ 64 chars) | Viewport Pass Exporter: aligned depth, normal, ID and mask |
 | Extension id | `viewprism` |
+| Version | 0.2.0 |
+| Tagline (one line, no final punctuation) | Viewport Pass Exporter: aligned depth, normal, ID and mask |
 | Type | Add-on |
 | Tags | 3D View, Render, Import-Export |
-| License | GPL-3.0-or-later |
-| Blender | 4.5.0 or newer (verified: 4.5.17 LTS, 5.3.0) |
-| Permissions | `files`: write exported pass images and metadata to the folder you choose |
+| Blender | 4.5.0 or newer (no maximum) |
+| Platforms | all (pure Python, no binaries) |
+| License | SPDX:GPL-3.0-or-later (`LICENSE` inside the ZIP) |
+| Copyright | 2026 marc2825 |
+| Maintainer | marc2825 |
 | Website | https://github.com/marc2825/ViewPrism |
-| Package | `viewprism-<version>.zip` from `tools/build_extension.py` (validated, includes `LICENSE`) |
+| Permissions | `files`: "Write exported pass images and metadata to the folder you choose" |
 
-## Description
+## Description (Markdown, paste as is)
 
-> Export pixel-aligned **depth, normal, object ID and mask** images from the 3D viewport you are looking
-> at, in one click. No camera, no compositor, no render settings — and nothing in your scene changes.
->
-> - All four passes come from one GPU draw of the evaluated geometry (modifiers, geometry nodes,
->   instances), so they line up exactly.
-> - Depth is the planar camera-space distance in scene units (float EXR) plus a normalized PNG; normals
->   are camera-space; object IDs are plain integers with any render engine; a JSON file records
->   matrices, ranges and the ID map.
-> - Works from perspective, orthographic and camera views (camera view exports the camera frame).
-> - Display-only preview over the viewport, optional auto refresh.
-> - Settings are not stored in your .blend file. No network access.
->
-> Limitations: geometry only (no shader displacement, bump/normal maps, transparency, volumes, hair or
-> Grease Pencil — ViewPrism warns about these), one sample per pixel, no animation export yet.
+```markdown
+ViewPrism exports pixel-aligned **depth, normal, object ID and mask** images from the 3D Viewport you are looking at. One click: no camera, no compositor, no render settings, and nothing in your scene changes.
+
+### What you get
+- **Depth**: planar camera-space distance in scene units as float EXR, plus a normalized 8- or 16-bit PNG (automatic or fixed range, near = white or black).
+- **Normal**: camera-space normals as 8/16-bit PNG (optional X/Y flip) or float EXR.
+- **Object ID**: integer IDs per object, per instancer or per instance, as 16-bit PNG or 32-bit integer EXR. The same with any render engine.
+- **Mask**: foreground / background.
+- A **JSON** file with the view and projection matrices, the depth range, the ID map and any warnings. Object names can be anonymized.
+
+### How it works
+All passes come from a single GPU draw of the evaluated scene (modifiers, geometry nodes, instances, edit-mode changes), so they line up pixel for pixel. It works from perspective, orthographic and camera views; in camera view the camera frame is exported. A display-only preview shows any pass over the viewport, with an optional auto refresh once the view is still.
+
+### Safe by design
+- Never overwrites existing files unless you turn on Overwrite; each failed file is reported.
+- Settings are not saved in your .blend file, and no images or other data are added to it.
+- Checks available memory before large exports (up to 33.5 megapixels).
+- No network access. Writes only to the folder you choose.
+
+### Limitations
+- Geometry only: shader displacement, bump/normal maps, transparency, volumes, hair and Grease Pencil are not represented (ViewPrism warns about them).
+- One sample per pixel (no anti-aliasing). No animation or sequence export yet.
+
+### Tested on
+- Blender 4.5 LTS, 5.0, 5.1, 5.2 and 5.3.
+- Windows 11 with an NVIDIA GPU (Vulkan and OpenGL), and Linux with Mesa software OpenGL (automated tests).
+- **Not tested yet:** macOS (Metal), AMD and Intel GPUs, Linux with hardware GPU drivers, and Windows with Blender 4.5 on a GPU. Reports are welcome on the issue tracker.
+
+Source code, documentation and issue tracker: https://github.com/marc2825/ViewPrism
+```
 
 ## Media
 
-| Asset | File |
-|---|---|
-| Icon (256 × 256) | `branding/viewprism-icon-256.png` |
-| Featured image (1920 × 1080) | `branding/viewprism-featured-1920x1080.png` |
-| Screenshot: normal preview over the viewport | `docs/images/ui_preview_normal.png` |
-| Screenshot: sidebar panel | `docs/images/ui_panel.png` |
-| Screenshot: the four passes | `docs/images/passes_grid.png` |
+Upload each file once: the platform rejects a file that was already uploaded anywhere on it.
 
-All media are original, generated by `tools/make_logo.py` and `tools/make_screenshots.py` from a
-procedural scene, and stripped of PNG metadata. They are GPL-3.0-or-later like the repository. The
-listing media are uploaded separately and are not bundled inside the extension ZIP.
+| Slot | File | Size | Notes |
+|---|---|---|---|
+| Icon (required, PNG) | `branding/viewprism-icon-256.png` | 256 × 256 | |
+| Featured image (required; shown on cards and the home page) | `branding/viewprism-featured-1920x1080.png` | 1920 × 1080 | logo, three feature lines, the four passes |
+| Preview 1 | `docs/images/ui_preview_normal.png` | 1574 × 888 | normal preview over the viewport |
+| Preview 2 | `docs/images/ui_panel.png` | 1574 × 888 | sidebar panel after an export |
+| Preview 3 | `docs/images/passes_grid.png` | 1286 × 728 | the four exported passes |
+| Preview 4 (optional) | `docs/images/ui_preview_depth.png` | 1574 × 888 | depth preview |
 
-## Before submitting
+Every image is original: generated by `tools/make_logo.py` and `tools/make_screenshots.py` from a
+procedural scene of Blender primitives. There is no Blender logo and no third-party asset. The UI
+screenshots come from an empty, isolated user profile, so no recent files or paths are visible. PNG
+text/EXIF/time chunks are stripped (`tools/privacy_scan.py` checks this in CI). The media are not
+inside the ZIP.
 
-- [ ] Owner approval to publish.
-- [ ] Trademark decision on "ViewPrism" (similar US marks "PRISMVIEW" / "PRISM VIEW", see `docs/NAMING.md`).
-- [ ] Build the release ZIP from a tag (`.github/workflows/release.yml`) and install it once by hand.
-- [ ] Hands-on QA (`docs/MANUAL_QA_RESULTS.md`).
+## Suggested answers for the review
+
+- **Why `files` permission?** The add-on writes the exported PNG/EXR/JSON files to the folder chosen in
+  the panel (default `//viewprism/` next to the saved .blend). It never reads or writes anywhere else.
+  The only extra files are short-lived temporary and lock files in that same folder.
+- **Network / telemetry:** none.
+- **Bundled modules / wheels:** none; NumPy comes with Blender.
+- **Changes to the scene:** none. No datablocks, render, compositor or view-layer settings are
+  changed. Settings live on the window manager and are not saved in the .blend file.

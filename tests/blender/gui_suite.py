@@ -909,8 +909,20 @@ def t_resource_guard(ctx, vp):
         gpu_draw._get_targets = real_targets
     res = vp.capture.capture(ctx, req(np.eye(4), persp(math.radians(60), W / H, .1, 100)))
     check(res['mask'].any(), 'capture after recovery failed')
+    # low free RAM but enough swap: the export runs and warns exactly once (not once per check)
+    resources.available_memory = lambda: dict(physical=1_000_000, commit=10 ** 13)
+    try:
+        s.base_name, s.numbering = 'lowmem', 'AUTO'
+        with ctx.temp_override(**override(window, area, region)):
+            check(bpy.ops.viewprism.export() == {'FINISHED'}, 'export with a low-memory warning failed')
+    finally:
+        resources.available_memory = real_avail
+    with open(os.path.join(out, 'lowmem_0001_meta.json'), encoding='utf-8') as fh:
+        warns = [w for w in json.load(fh)['warnings'] if 'may be slow' in w]
+    check(len(warns) == 1, f'expected one low-memory warning, got {warns}')
     check(snapshot() == before, 'scene changed')
-    return 'memory guard refuses capture/export cleanly; GPU allocation failure -> GPUCaptureError; recovery ok'
+    return ('memory guard refuses capture/export cleanly, warns once when RAM is low; GPU allocation failure '
+            '-> GPUCaptureError; recovery ok')
 
 
 def t_reregister_clean(ctx, vp):

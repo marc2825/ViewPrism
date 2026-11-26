@@ -10,7 +10,7 @@ Timeouts, missing results and skips are failures; "NOT TESTED" is never reported
 
 | # | Blender | OS | GPU / backend | Where | Pure | Harness | GUI suite | Build | Package | Stress |
 |---|---|---|---|---|---|---|---|---|---|---|
-| L1 | 5.3.0 | Windows 11 Pro 26200 | RTX 3060 Ti (driver 610.88), **Vulkan** | local | 82 PASS | bg + GPU PASS | 22/22 PASS | PASS | PASS | PASS |
+| L1 | 5.3.0 | Windows 11 Pro 26200 | RTX 3060 Ti (driver 610.88), **Vulkan** | local | 85 PASS | bg + GPU PASS | 22/22 PASS | PASS | PASS | PASS |
 | L2 | 5.3.0 | Windows 11 Pro 26200 | RTX 3060 Ti, **OpenGL 4.6** | local | (same) | bg + GPU PASS | 22/22 PASS | — | — | PASS |
 | C1 | **4.5.17 LTS** | Ubuntu (GitHub runner) | Mesa llvmpipe OpenGL 4.5 (software) | CI | PASS | bg + GPU PASS | PASS | PASS | PASS | — |
 | C2 | 5.0.1 | Ubuntu | Mesa llvmpipe | CI | PASS | bg + GPU PASS | PASS | PASS | PASS | — |
@@ -119,6 +119,30 @@ external readers (GIMP/Krita/Nuke/ComfyUI), and multi-view use in a real project
 - GPU memory cannot be queried from Blender's Python API; GPU exhaustion is reported as an error, not
   prevented.
 
+### Independent code review before v0.2.0 (2026-11-27)
+
+A separate review of `git diff v0.1.0..main -- viewprism/` found no crash or data-loss bug. Its
+equivalence fuzzing showed the chunked encoders to be bit-identical to v0.1.0, and it found no
+problem in the preview state machine or the memory figures. Findings fixed before the release (with
+tests):
+
+- a published file reported as failed when Windows could not remove the temporary name;
+- exports failing on drives without hard links (macOS/Linux FAT/exFAT, some shares);
+- an over-conservative memory estimate;
+- the order of the size and memory checks;
+- a duplicated low-memory warning;
+- too-long base names;
+- late validation of the privacy option.
+
+Accepted as known, low impact:
+
+- Path redaction in metadata stops at whitespace. No current warning carries a path; the metadata
+  holds no absolute paths in either mode.
+- A crash during an export can leave its hidden `.viewprism-lock` / `.viewprism-tmp` files; that
+  number is then skipped.
+- An output "folder" that is an existing file reports every file as `exists`. The local message is
+  correct.
+
 ## 5. Decisions left to the owner
 
 - Hands-on QA (issue #9) before a non-pre-release.
@@ -128,7 +152,8 @@ external readers (GIMP/Krita/Nuke/ComfyUI), and multi-view use in a real project
 
 | Evidence | Content |
 |---|---|
-| [`evidence/2026-11-26/`](evidence/2026-11-26/SUMMARY.md) | L1 + L2 full run (sanitised logs/JSON) |
+| [`evidence/2026-11-27/`](evidence/2026-11-27/SUMMARY.md) | L1 + L2 full run of the v0.2.0 release branch (sanitised logs/JSON) |
+| [`evidence/2026-11-26/`](evidence/2026-11-26/SUMMARY.md) | earlier L1 + L2 run and the benchmark |
 | [`evidence/2026-11-26-stress/`](evidence/2026-11-26-stress/) | L1 + L2 stress results |
 | [`evidence/ci-2026-11-26/`](evidence/ci-2026-11-26/) | C1–C7 job evidence of the PR that closed issue #5 |
 | CI artifacts `evidence-*` (30 days) | every later CI run |
