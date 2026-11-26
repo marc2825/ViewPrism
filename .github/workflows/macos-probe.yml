@@ -1,0 +1,71 @@
+name: macOS probe
+
+# Manual, informational run on a hosted Apple Silicon runner. It is NOT a required check and NOT
+# evidence of macOS GPU support: hosted macOS runners are virtual machines whose Metal support is
+# limited, so the GPU part is attempted only on request and its result is reported as a probe.
+on:
+  workflow_dispatch:
+    inputs:
+      series:
+        description: Blender series
+        default: '5.3'
+      try_gpu:
+        description: Also attempt the GPU harness mode and the GUI suite (informational)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Blender ${{ inputs.series }} (macOS arm64 probe)
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: Resolve Blender version
+        id: ver
+        env:
+          SERIES: ${{ inputs.series }}
+        run: |
+          version="$(bash .github/scripts/fetch_blender.sh resolve "$SERIES" macos-arm64)"   # fails the step if resolving fails
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Download / verify Blender ${{ steps.ver.outputs.version }}
+        id: blender
+        run: |
+          exe="$(bash .github/scripts/fetch_blender.sh fetch '${{ steps.ver.outputs.version }}' \
+                 "$RUNNER_TEMP/blender-archive" "$RUNNER_TEMP/blender" macos-arm64)"
+          echo "exe=$exe" >> "$GITHUB_OUTPUT"
+      - name: Background checks
+        run: |
+          "${{ steps.blender.outputs.exe }}" --version | head -n 1
+          python tools/run_all_checks.py --blender "${{ steps.blender.outputs.exe }}" --backends metal \
+            --harness-mode background --steps pure,selftest,harness,build --out "$RUNNER_TEMP/evidence"
+      - name: GPU probe (informational)
+        if: ${{ inputs.try_gpu }}
+        continue-on-error: true
+        run: |
+          python tools/run_all_checks.py --blender "${{ steps.blender.outputs.exe }}" --backends metal \
+            --harness-mode gpu --steps harness,gui --out "$RUNNER_TEMP/evidence-gpu-probe"
+      - name: Job summary
+        if: always()
+        run: |
+          cat "$RUNNER_TEMP/evidence/SUMMARY.md" >> "$GITHUB_STEP_SUMMARY" || true
+          if [ -f "$RUNNER_TEMP/evidence-gpu-probe/SUMMARY.md" ]; then
+            { echo; echo "## GPU probe (informational, not a pass criterion)"; cat "$RUNNER_TEMP/evidence-gpu-probe/SUMMARY.md"; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: evidence-macos-probe-blender-${{ steps.ver.outputs.version }}
+          path: |
+            ${{ runner.temp }}/evidence
+            ${{ runner.temp }}/evidence-gpu-probe
+          if-no-files-found: ignore
+          retention-days: 14

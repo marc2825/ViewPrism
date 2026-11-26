@@ -1,9 +1,18 @@
 version: 2
 updates:
+  # Actions are pinned to commit SHAs with the version in a comment; Dependabot updates both.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
     groups:
       actions:
+        patterns: ['*']
+  # Hashed CI requirements (ci/requirements-*.txt).
+  - package-ecosystem: pip
+    directory: /ci
+    schedule:
+      interval: weekly
+    groups:
+      ci-python:
         patterns: ['*']

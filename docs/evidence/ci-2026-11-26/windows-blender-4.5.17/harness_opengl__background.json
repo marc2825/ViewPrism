@@ -1,0 +1,8 @@
+{
+  "status": "pass",
+  "mode": "background",
+  "blender": "4.5.17 LTS",
+  "checks": [
+    "register/unregister twice"
+  ]
+}

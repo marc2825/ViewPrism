@@ -104,12 +104,11 @@ def encode(channels, compression='ZIP'):
               + b'\0')
     lpb = _LINES_PER_BLOCK[comp]
     nblocks = (h + lpb - 1) // lpb
-    # Interleave per scanline: [ch0 row][ch1 row]...
-    rows = np.concatenate([a.view(np.uint8).reshape(h, w * 4) for a in arrays], axis=1)
+    # Interleave per scanline ([ch0 row][ch1 row]...), one block at a time (bounded memory).
     blocks = []
     for b in range(nblocks):
         y0 = b * lpb
-        raw = rows[y0:y0 + lpb].tobytes()
+        raw = np.concatenate([a[y0:y0 + lpb].view(np.uint8).reshape(-1, w * 4) for a in arrays], axis=1).tobytes()
         if comp == NO_COMPRESSION:
             payload = raw
         else:

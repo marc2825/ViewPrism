@@ -10,6 +10,7 @@ import numpy as np
 
 ID_PNG_MAX = 65535            # 16-bit grayscale PNG, value == object id, 0 == background
 ID_GPU_MAX = (1 << 24) - 1    # ids travel through a float32 render target (exact up to 2**24)
+CHUNK_PIXELS = 1 << 20        # pixels per chunk in chunked encoders (bounded temporaries)
 
 
 class EncodeError(ValueError):
@@ -47,8 +48,21 @@ def depth_range(depth, mask, mode='AUTO', near=None, far=None):
     raise EncodeError(f'unknown depth range mode {mode!r}')
 
 
+def background_value(background, near_white):
+    """Resolve the depth display background ('FAR', 'NEAR' or a value in [0, 1])."""
+    near_value, far_value = (1.0, 0.0) if near_white else (0.0, 1.0)
+    if background == 'FAR':
+        return far_value
+    if background == 'NEAR':
+        return near_value
+    bg = float(background)
+    if not (0.0 <= bg <= 1.0):
+        raise EncodeError('background value must be within [0, 1]')
+    return bg
+
+
 def normalize_depth(depth, mask, mode='AUTO', near=None, far=None, near_white=True, background='FAR',
-                    dtype=np.float32):
+                    dtype=np.float32, _range=None):
     """Map raw depth to a [0, 1] display image (float32 by default; float64 for file encoding).
 
     * Linear in depth between the resolved range; values outside a FIXED range clamp.
@@ -64,16 +78,9 @@ def normalize_depth(depth, mask, mode='AUTO', near=None, far=None, near_white=Tr
     mask = np.asarray(mask, dtype=bool)
     if depth.shape != mask.shape:
         raise EncodeError('depth/mask shape mismatch')
-    info = depth_range(depth, mask, mode, near, far)
+    info = dict(_range) if _range is not None else depth_range(depth, mask, mode, near, far)
     near_value, far_value = (1.0, 0.0) if near_white else (0.0, 1.0)
-    if background == 'FAR':
-        bg = far_value
-    elif background == 'NEAR':
-        bg = near_value
-    else:
-        bg = float(background)
-        if not (0.0 <= bg <= 1.0):
-            raise EncodeError('background value must be within [0, 1]')
+    bg = background_value(background, near_white)
     valid = mask & np.isfinite(depth)
     info['invalid_foreground'] = int((mask & ~np.isfinite(depth)).sum())
     if info['empty']:
@@ -124,15 +131,49 @@ def quantize_normal(normal, mask, bits, background=(0.0, 0.0, 0.0)):
     if bits not in (8, 16):
         raise EncodeError('bit depth must be 8 or 16')
     maxv = (1 << bits) - 1
-    q = np.asarray(normal, dtype=np.float32).astype(np.float64)
-    q *= maxv / 2.0
-    q += (maxv + 1) / 2.0
-    np.floor(q, out=q)
-    np.clip(q, 0, maxv, out=q)
+    normal = np.asarray(normal, dtype=np.float32)
+    mask = np.asarray(mask, dtype=bool)
     dt = np.uint8 if bits == 8 else np.uint16
-    out = q.astype(dt)
-    out[~np.asarray(mask, dtype=bool)] = quantize(np.asarray(background, dtype=np.float64), bits)
+    out = np.empty(normal.shape, dtype=dt)
+    bg = quantize(np.asarray(background, dtype=np.float64), bits)
+    rows = max(1, CHUNK_PIXELS // max(1, normal.shape[1]))      # bounded float64 temporaries
+    for y0 in range(0, normal.shape[0], rows):
+        q = normal[y0:y0 + rows].astype(np.float64)
+        q *= maxv / 2.0
+        q += (maxv + 1) / 2.0
+        np.floor(q, out=q)
+        np.clip(q, 0, maxv, out=q)
+        chunk = q.astype(dt)
+        chunk[~mask[y0:y0 + rows]] = bg
+        out[y0:y0 + rows] = chunk
     return out
+
+
+def quantize_depth(depth, mask, bits, mode='AUTO', near=None, far=None, near_white=True, background='FAR'):
+    """Chunked, bit-identical equivalent of quantize(normalize_depth(..., dtype=float64), bits).
+
+    The display range is resolved once for the whole image; each chunk then uses exactly the same
+    formula. Returns (uint array, info). Only a few MB of float64 temporaries are alive at a time.
+    """
+    if bits not in (8, 16):
+        raise EncodeError('bit depth must be 8 or 16')
+    depth = np.asarray(depth)
+    mask = np.asarray(mask, dtype=bool)
+    if depth.shape != mask.shape or depth.ndim != 2:
+        raise EncodeError('depth/mask must be 2-D arrays of the same shape')
+    full = depth_range(depth, mask, mode, near, far)
+    out = np.empty(depth.shape, dtype=np.uint8 if bits == 8 else np.uint16)
+    rows = max(1, CHUNK_PIXELS // max(1, depth.shape[1]))
+    info = None
+    for y0 in range(0, depth.shape[0], rows):
+        img, part = normalize_depth(depth[y0:y0 + rows], mask[y0:y0 + rows], mode, near, far, near_white,
+                                    background, dtype=np.float64, _range=full)
+        out[y0:y0 + rows] = quantize(img, bits)
+        info = info or part
+    if info is None:                                   # zero-height image
+        _img, info = normalize_depth(depth, mask, mode, near, far, near_white, background, _range=full)
+    info['invalid_foreground'] = int((mask & ~np.isfinite(depth)).sum())
+    return out, info
 
 
 def mask_to_u8(mask):

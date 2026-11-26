@@ -3,7 +3,14 @@ name: Release
 # A pushed tag "vX.Y.Z" builds the extension ZIP with Blender's own tooling (validate + build + audit)
 # and publishes a GitHub release with the ZIP and its SHA-256. Versions below 1.0.0 or with a
 # pre-release suffix (vX.Y.Z-beta.1) are published as *pre-releases*. Uploading to
-# extensions.blender.org stays a manual, owner-approved step. Manual runs only build the ZIP.
+# extensions.blender.org stays a manual, owner-approved step.
+#
+# Manual runs (workflow_dispatch) are a dry run: they build the ZIP, checksum and release notes and
+# upload them as a workflow artifact, but never create a release.
+#
+# Least privilege: the build job (which runs repository code) has read-only permissions; only the
+# publish job gets `contents: write`, and it runs no repository code - it only uploads the files
+# the build job produced.
 on:
   push:
     tags: ['v*']
@@ -14,52 +21,88 @@ permissions:
 
 jobs:
   build:
+    name: Build extension
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    permissions:
-      contents: write   # only used by the release step on tag pushes
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
       - name: Resolve Blender version
         id: ver
-        run: echo "version=$(bash .github/scripts/fetch_blender.sh resolve 5.3)" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v6
+        run: |
+          version="$(bash .github/scripts/fetch_blender.sh resolve 5.3 linux-x64)"   # fails the step if resolving fails
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ${{ runner.temp }}/blender
-          key: blender-linux-${{ steps.ver.outputs.version }}
-      - name: Download Blender (SHA-256 verified)
+          path: ${{ runner.temp }}/blender-archive
+          key: blender-archive-linux-x64-${{ steps.ver.outputs.version }}
+      - name: Download / verify Blender (SHA-256 checked every run)
         id: blender
-        run: echo "exe=$(bash .github/scripts/fetch_blender.sh fetch ${{ steps.ver.outputs.version }} '${{ runner.temp }}/blender')" >> "$GITHUB_OUTPUT"
+        run: |
+          exe="$(bash .github/scripts/fetch_blender.sh fetch '${{ steps.ver.outputs.version }}' \
+                 "$RUNNER_TEMP/blender-archive" "$RUNNER_TEMP/blender" linux-x64)"
+          echo "exe=$exe" >> "$GITHUB_OUTPUT"
+      - name: Manifest version
+        id: manifest
+        run: echo "version=$(grep -E '^version *=' viewprism/blender_manifest.toml | sed -E 's/.*"(.*)".*/\1/')" >> "$GITHUB_OUTPUT"
       - name: Check tag matches manifest version
         if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          MANIFEST_VERSION: ${{ steps.manifest.outputs.version }}
         run: |
-          manifest="$(grep -E '^version *=' viewprism/blender_manifest.toml | sed -E 's/.*"(.*)".*/\1/')"
-          test "v${manifest}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != manifest ${manifest}"; exit 1; }
+          test "v${MANIFEST_VERSION}" = "${GITHUB_REF_NAME}" \
+            || { echo "tag ${GITHUB_REF_NAME} != manifest ${MANIFEST_VERSION}"; exit 1; }
       - name: Validate, build and audit
         run: python tools/build_extension.py --blender "${{ steps.blender.outputs.exe }}" --out dist
       - name: Checksum
         run: cd dist && for f in *.zip; do sha256sum "$f" > "$f.sha256"; done && cat ./*.sha256
-      - uses: actions/upload-artifact@v7
+      - name: Release notes from CHANGELOG
+        env:
+          VERSION: ${{ steps.manifest.outputs.version }}
+        run: |
+          {
+            echo "Install: Blender 4.5 or newer → Edit › Preferences › Get Extensions › ⌄ › Install from Disk… → \`viewprism-${VERSION}.zip\`."
+            echo
+            echo "License: GPL-3.0-or-later (the LICENSE file is inside the ZIP)."
+            echo
+            awk -v v="$VERSION" 'index($0, "## " v " ") == 1 {f=1; next} /^## / && f {exit} f' CHANGELOG.md
+          } > dist/notes.md
+          cat dist/notes.md
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            grep -q '[^[:space:]]' <(tail -n +5 dist/notes.md) || { echo "CHANGELOG has no section for ${VERSION}"; exit 1; }
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: viewprism-extension
           path: |
             dist/*.zip
             dist/*.sha256
-      - name: Release notes from CHANGELOG
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          {
-            echo "Install: Blender 4.5 or newer → Edit › Preferences › Get Extensions › ⌄ › Install from Disk… → \`viewprism-${version}.zip\`."
-            echo
-            awk -v v="$version" 'index($0, "## " v " ") == 1 {f=1; next} /^## / && f {exit} f' CHANGELOG.md
-          } > notes.md
-          test -s notes.md && cat notes.md
-      - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+            dist/notes.md
+          if-no-files-found: error
+      - name: Dry run
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: echo "Dry run - no release is created for ${GITHUB_REF}." >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish GitHub release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: viewprism-extension
+          path: dist
+      - name: Verify checksums
+        run: cd dist && sha256sum -c ./*.sha256
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -67,4 +110,4 @@ jobs:
           flag=""
           case "$version" in 0.*|*-*) flag="--prerelease" ;; esac
           gh release create "$GITHUB_REF_NAME" dist/*.zip dist/*.sha256 --repo "$GITHUB_REPOSITORY" \
-            --title "ViewPrism ${GITHUB_REF_NAME}" --notes-file notes.md $flag
+            --verify-tag --title "ViewPrism ${GITHUB_REF_NAME}" --notes-file dist/notes.md $flag

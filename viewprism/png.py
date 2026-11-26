@@ -39,30 +39,46 @@ def _as_image(arr):
     return a
 
 
+CHUNK_BYTES = 1 << 22          # ~4 MB of raw scanlines per step keeps encoder memory bounded
+
+
 def encode(arr, compress_level=5):
-    """Encode an image array to PNG bytes. Per-row filter chosen among None/Sub/Up."""
+    """Encode an image array to PNG bytes. Per-row filter chosen among None/Sub/Up.
+
+    Rows are filtered and compressed in chunks (streaming zlib), so the temporary memory does not
+    grow with the image size beyond a few MB plus the compressed output.
+    """
     a = _as_image(arr)
     h, w, c = a.shape
     bits = 8 if a.dtype == np.uint8 else 16
-    raw = np.ascontiguousarray(a.astype('>u2') if bits == 16 else a).view(np.uint8).reshape(h, -1)
     bpp = c * bits // 8
-    sub = raw.copy()
-    sub[:, bpp:] -= raw[:, :-bpp]          # uint8 arithmetic wraps mod 256 as PNG requires
-    up = raw.copy()
-    up[1:] -= raw[:-1]
-    cands = (raw, sub, up)
-    # libpng heuristic (minimum sum of absolute signed residuals), estimated on a column
-    # subsample for speed. Only the filter choice is approximate; the output is lossless.
-    step = 4 if raw.shape[1] >= 64 else 1
-    cost = np.stack([np.abs(c_[:, ::step].view(np.int8).astype(np.int16)).sum(axis=1, dtype=np.int64)
-                     for c_ in cands])                                    # (3, H)
-    choice = cost.argmin(axis=0)                                           # 0 none, 1 sub, 2 up
-    rows = np.where((choice == 0)[:, None], raw, np.where((choice == 1)[:, None], sub, up))
-    filtered = np.concatenate([choice.astype(np.uint8)[:, None], rows], axis=1)
+    rowbytes = w * bpp
+    rows_per = max(1, CHUNK_BYTES // max(1, rowbytes))
+    step = 4 if rowbytes >= 64 else 1
+    comp = zlib.compressobj(compress_level)
+    parts = []
+    prev = None                              # last raw row of the previous chunk (for the Up filter)
+    for y0 in range(0, h, rows_per):
+        block = a[y0:y0 + rows_per]
+        raw = np.ascontiguousarray(block.astype('>u2') if bits == 16 else block).view(np.uint8).reshape(len(block), -1)
+        sub = raw.copy()
+        sub[:, bpp:] -= raw[:, :-bpp]          # uint8 arithmetic wraps mod 256 as PNG requires
+        up = raw.copy()
+        up[1:] -= raw[:-1]
+        if prev is not None:
+            up[0] -= prev
+        # libpng heuristic (minimum sum of absolute signed residuals), estimated on a column
+        # subsample for speed. Only the filter choice is approximate; the output is lossless.
+        cost = np.stack([np.abs(c_[:, ::step].view(np.int8).astype(np.int16)).sum(axis=1, dtype=np.int64)
+                         for c_ in (raw, sub, up)])                           # (3, rows)
+        choice = cost.argmin(axis=0)                                           # 0 none, 1 sub, 2 up
+        rows = np.where((choice == 0)[:, None], raw, np.where((choice == 1)[:, None], sub, up))
+        filtered = np.concatenate([choice.astype(np.uint8)[:, None], rows], axis=1)
+        parts.append(comp.compress(filtered.tobytes()))
+        prev = raw[-1].copy()
+    parts.append(comp.flush())
     ihdr = struct.pack('>IIBBBBB', w, h, bits, _COLOR_TYPES[c], 0, 0, 0)
-    return (_SIG + _chunk(b'IHDR', ihdr)
-            + _chunk(b'IDAT', zlib.compress(filtered.tobytes(), compress_level))
-            + _chunk(b'IEND', b''))
+    return (_SIG + _chunk(b'IHDR', ihdr) + _chunk(b'IDAT', b''.join(parts)) + _chunk(b'IEND', b''))
 
 
 def _paeth(a, b, c):

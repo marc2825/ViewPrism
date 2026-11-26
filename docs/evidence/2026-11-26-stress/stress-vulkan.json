@@ -1,0 +1,138 @@
+{
+  "blender": "5.3.0",
+  "gpu": {
+    "backend_type_get": "VULKAN",
+    "renderer_get": "NVIDIA GeForce RTX 3060 Ti",
+    "version_get": "NVIDIA 610.88"
+  },
+  "instances": 40000,
+  "sizes": [
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "megapixels": 2.07,
+      "capture_s": 0.568,
+      "export_s": 0.233,
+      "stages_s": {
+        "collect": 0.3019112999900244,
+        "upload": 0.006863499991595745,
+        "gpu_draw_readback": 0.21688770002219826,
+        "post": 0.033916299988050014,
+        "total": 0.5595787999918684
+      },
+      "triangles": 3412562,
+      "failed": [],
+      "process_mb": {
+        "before": 1040,
+        "after_capture": 1455,
+        "peak_after_capture": 1497,
+        "after_export": 1487,
+        "peak_after_export": 1579
+      }
+    },
+    {
+      "size": [
+        3840,
+        2160
+      ],
+      "megapixels": 8.29,
+      "capture_s": 0.825,
+      "export_s": 0.831,
+      "stages_s": {
+        "collect": 0.24906110001029447,
+        "upload": 0.004809600010048598,
+        "gpu_draw_readback": 0.406462199985981,
+        "post": 0.15300749999005347,
+        "total": 0.8133403999963775
+      },
+      "triangles": 3412562,
+      "failed": [],
+      "process_mb": {
+        "before": 1414,
+        "after_capture": 2340,
+        "peak_after_capture": 2643,
+        "after_export": 2503,
+        "peak_after_export": 2725
+      }
+    },
+    {
+      "size": [
+        7680,
+        4320
+      ],
+      "megapixels": 33.18,
+      "capture_s": 2.029,
+      "export_s": 3.184,
+      "stages_s": {
+        "collect": 0.27838699996937066,
+        "upload": 0.0026239000144414604,
+        "gpu_draw_readback": 0.9659190999809653,
+        "post": 0.7551609000074677,
+        "total": 2.002090899972245
+      },
+      "triangles": 3412562,
+      "failed": [],
+      "process_mb": {
+        "before": 2291,
+        "after_capture": 4787,
+        "peak_after_capture": 5997,
+        "after_export": 4631,
+        "peak_after_export": 5997
+      }
+    }
+  ],
+  "repeat_4k": {
+    "no_redraw": {
+      "capture_s_median": 0.744,
+      "private_mb": [
+        -1127,
+        -713,
+        -697,
+        -691,
+        -742,
+        -670,
+        -746,
+        -673
+      ]
+    },
+    "redraw": {
+      "capture_s_median": 0.674,
+      "private_mb": [
+        6,
+        -189,
+        -152,
+        -148,
+        -212,
+        -165,
+        -257,
+        -185
+      ]
+    }
+  },
+  "preview": {
+    "region": [
+      1574,
+      888
+    ],
+    "size": [
+      787,
+      444
+    ],
+    "refresh_s_median": 0.409,
+    "refresh_s_max": 0.459
+  },
+  "recovery_error": "GPUCaptureError: GPU error (injected GPU allocation failure); try a lower resolution",
+  "recovery": {
+    "capture_after_failure_s": 0.683,
+    "foreground": true
+  },
+  "status": "pass",
+  "gpu_memory_mb": {
+    "baseline": 1454,
+    "peak": 3305,
+    "peak_over_baseline": 1851,
+    "source": "nvidia-smi (whole GPU, includes other processes)"
+  }
+}

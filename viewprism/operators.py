@@ -8,7 +8,7 @@ import bpy
 from bpy.props import StringProperty
 
 from . import capture as cap
-from . import export, preview, props, viewport, writer
+from . import export, preview, props, resources, viewport, writer
 from .encode import EncodeError
 from .projection import ProjectionError
 
@@ -81,8 +81,15 @@ def capture_view(context, view, settings, request=None, source=None):
     if request is None:
         request, source = viewport.build_request(view, context.scene, context.evaluated_depsgraph_get(),
                                                  settings, sorted(set(passes) | {'mask'}, key=cap.PASSES.index))
+    try:                                   # capture + export peak, checked before any GPU work
+        mem = resources.check(request['width'], request['height'], export=True)
+    except resources.ResourceError as exc:
+        raise cap.ResourceLimitError(str(exc)) from exc
     with context.temp_override(**view.override()):
         result = cap.capture(bpy.context, request)
+    if mem['warning'] and mem['warning'] not in result['warnings']:
+        result['warnings'].append(mem['warning'])
+        result.setdefault('warnings_anonymous', []).append(mem['warning'])
     if getattr(view.rv3d, 'use_clip_planes', False):
         msg = 'the viewport clipping region (Alt+B) is not applied to the export'
         result['warnings'].append(msg)

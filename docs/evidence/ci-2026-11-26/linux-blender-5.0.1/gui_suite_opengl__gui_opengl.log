@@ -1,0 +1,25 @@
+Results: /tmp/viewprism-checks-sb20qpan/gui_opengl
+Running gui ['<HOME>/work/_temp/blender/blender-5.0.1-linux-x64/blender', '--factory-startup', '--disable-autoexec', '--gpu-backend', 'opengl', '--python-exit-code', '1', '--python', '<HOME>/work/ViewPrism/ViewPrism/tests/blender/gui_suite.py', '--', '--repo', '<HOME>/work/ViewPrism/ViewPrism', '--result', '/tmp/viewprism-checks-sb20qpan/gui_opengl/gui.json']
+  PASS t_registration  0.0s  operators, panel, settings registered
+  PASS t_empty_scene  0.005s  all background, warning present
+  PASS t_deviation_warnings  0.009s  1 object(s) have different viewport/render modifier settings (viewport result exported): SubdivDiff | 1 object(s) use shader displacement (not included: geometry only): Displaced | 1 object(s) may use transparency (exported as opaque surfaces): AlphaMat
+  PASS t_visibility  0.003s  hide, exclude, hidden collection, disabled, wire display
+  PASS t_local_view  0.003s  only local-view objects captured
+  PASS t_modifier_and_scale  0.003s  array modifier evaluated, mirrored outward normals, inverse-transpose normals
+  PASS t_instances  0.007s  collection + GN instances; ids {'OBJECT': ['SrcPlane', 'SrcPlane', 'SrcPlane', 'SrcPlane'], 'INSTANCER': ['CI_0', 'CI_1', 'Scatter', 'Scatter'], 'INSTANCE': ['CI_0|SrcPlane|0', 'CI_1|SrcPlane|0', 'Scatter|SrcPlane|0.0', 'Scatter|SrcPlane|0.1']}
+  PASS t_viewport_matrices  0.027s  {'PERSP': {'size': [787, 476], 'depth': 6.369510173797607, 'shift': 0.0}, 'ORTHO': {'size': [787, 476], 'depth': 499.3676452636719, 'shift': 499.9999762512755}}
+  PASS t_camera_view  0.005s  camera frame matches world_to_camera_view (with lens shift)
+  PASS t_repeat_and_leak  6.82s  {'median_ms': 10.25, 'p95_ms': 13.91, 'memory_source': 'VmRSS', 'mem_steady_growth_mb_last20': -0.8, 'new_highs_last20': 0, 'mem_ramp_mb': 7.35, 'mem_growth_mb_20_back_to_back': 9.46}
+  PASS t_fault_injection  0.006s  state restored, retry identical
+  PASS t_sizes  0.068s  1x1, 3x7, wide, tall, 1080p; oversize and singular rejected
+  PASS t_multi_area  0.015s  each view captured from its own matrices (centroid x 0.37 / 0.63)
+  PASS t_precision  0.003s  surfaces 5 mm apart at 100 m ordered correctly (clip 0.01..1000)
+  PASS t_edit_mode  0.003s  edit-mode edits captured, mode untouched
+  PASS t_operator_export  0.051s  16 files, EXR/PNG equal capture, Blender loader agrees, collision refused (/tmp/viewprism-gui-ak1t6gnm)
+  PASS t_view_lost  0.0s  closed view -> explicit ViewError
+  PASS t_preview_lifecycle  0.089s  refresh, re-encode, hide, closed view and file load release resources
+  PASS t_preview_debounce  0.052s  no capture during 2.5 s of navigation or edits; one refresh 0.20 s after stillness
+  PASS t_multi_window  0.654s  second main window uses its own view; same-tick capture after close works; capture after closing a window works
+  PASS t_resource_guard  0.004s  memory guard refuses capture/export cleanly; GPU allocation failure -> GPUCaptureError; recovery ok
+  PASS t_reregister_clean  0.009s  unregister removes handlers, draw callbacks, timers; re-register works
+gui: PASS (exit 0, gpu {'backend_type_get': 'OPENGL', 'vendor_get': 'Mesa', 'renderer_get': 'llvmpipe (LLVM 21.1.8, 256 bits)', 'version_get': '4.5 (Core Profile) Mesa 26.0.8-1ubuntu0.3'}); log /tmp/viewprism-checks-sb20qpan/gui_opengl/gui.log

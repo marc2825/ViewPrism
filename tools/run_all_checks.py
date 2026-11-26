@@ -12,7 +12,9 @@ Steps (each must pass; skips are reported as NOT RUN, never as PASS):
   5. extension validate/build/audit
   6. package install/enable/export/disable/uninstall in an isolated user directory
   7. (optional) benchmark + Cycles/EEVEE comparison
+  8. privacy scan of the sanitised evidence (always)
 Local user paths are replaced by placeholders before anything is written to docs/.
+On machines without a usable GPU/display use `--harness-mode background --steps pure,selftest,harness,build`.
 """
 import argparse
 import datetime
@@ -29,11 +31,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def sanitise(text):
+def home_variants():
+    """The home directory as it can appear in logs: long and (Windows) 8.3 short form (GitHub's
+    Windows runners put the short form, "RUNNER~1", into TEMP)."""
     home = str(Path.home())
+    homes = {home}
+    if os.name == 'nt':
+        try:
+            import ctypes
+            buf = ctypes.create_unicode_buffer(32768)
+            if ctypes.windll.kernel32.GetShortPathNameW(home, buf, len(buf)):
+                homes.add(buf.value)
+        except (OSError, AttributeError):
+            pass
+    return homes
+
+
+def sanitise(text, homes=None):
     user = os.environ.get('USERNAME') or os.environ.get('USER') or ''
-    for variant in {home, home.replace('\\', '/'), home.replace('\\', '\\\\'), home.replace('/', '\\')}:
-        text = text.replace(variant, '<HOME>')
+    variants = set()
+    for home in (home_variants() if homes is None else homes):
+        variants |= {home, home.replace('\\', '/'), home.replace('\\', '\\\\'), home.replace('/', '\\')}
+    flags = re.I if os.name == 'nt' or homes is not None else 0     # Windows paths are case-insensitive
+    for variant in sorted(variants, key=len, reverse=True):
+        text = re.sub(re.escape(variant), '<HOME>', text, flags=flags)
     if user and len(user) > 2:
         text = re.sub(rf'(?i)(?<![A-Za-z0-9]){re.escape(user)}(?![A-Za-z0-9])', '<USER>', text)
     return text
@@ -58,8 +79,10 @@ DEFAULT_STEPS = 'pure,selftest,harness,gui,build,package'
 def bundled_python(blender):
     """Blender's bundled interpreter (has NumPy); ignores e.g. python3.13-config on Linux."""
     name = re.compile(r'^python(\.exe|3(\.\d+)?)$')
-    cands = [p for p in glob.glob(str(Path(blender).resolve().parent / '*' / 'python' / 'bin' / 'python*'))
-             if name.match(Path(p).name)]
+    exe_dir = Path(blender).resolve().parent
+    # Windows/Linux: <dir>/<ver>/python/bin; macOS: Blender.app/Contents/Resources/<ver>/python/bin
+    roots = [exe_dir / '*', exe_dir.parent / 'Resources' / '*']
+    cands = [p for r in roots for p in glob.glob(str(r / 'python' / 'bin' / 'python*')) if name.match(Path(p).name)]
     return sorted(cands)[-1] if cands else None
 
 
@@ -70,6 +93,8 @@ def main():
     ap.add_argument('--steps', default=DEFAULT_STEPS,
                     help=f'comma separated subset of {",".join(STEPS)}; only these are run and judged')
     ap.add_argument('--bench', action='store_true', help='same as adding "bench" to --steps')
+    ap.add_argument('--harness-mode', choices=['all', 'background', 'gpu'], default='all',
+                    help='independent harness mode (background only on machines without a GPU/display)')
     ap.add_argument('--out', type=Path)
     a = ap.parse_args()
     steps = {s for s in a.steps.split(',') if s} | ({'bench'} if a.bench else set())
@@ -122,9 +147,10 @@ def main():
         if 'harness' in steps:
             hout = tmp / f'harness_{be}'
             log = tmp / f'harness_{be}.log'
-            code = run([sys.executable, str(ROOT / 'viewpass-dev' / 'harness' / 'run.py'), '--blender', exe, '--mode', 'all',
+            code = run([sys.executable, str(ROOT / 'viewpass-dev' / 'harness' / 'run.py'), '--blender', exe,
+                        '--mode', a.harness_mode,
                         '--out', str(hout)], log, cwd=ROOT)
-            record(f'harness_{be}', code == 0, '', [log, hout / 'background.json', hout / 'gpu.json',
+            record(f'harness_{be}', code == 0, a.harness_mode, [log, hout / 'background.json', hout / 'gpu.json',
                                                     hout / 'background.log', hout / 'gpu.log'])
         # 4. GUI suite
         if 'gui' not in steps:
@@ -168,13 +194,19 @@ def main():
         code = run([sys.executable, str(ROOT / 'tools' / 'benchmark.py'), '--blender', a.blender, '--runs', '5',
                     '--out', str(bout)], log, cwd=ROOT, timeout=3600)
         record('benchmark', code == 0, '', [log, bout / 'summary.json'])
+    if not summary:
+        summary.append(dict(step='(none)', result='NOT RUN', detail='no step selected'))
+    # The evidence is published: scan the sanitised files for private data before declaring success.
+    sys.path.insert(0, str(ROOT / 'tools'))
+    from privacy_scan import scan_bytes
+    leaks = [f for p in sorted(out.iterdir()) if p.is_file() for f in scan_bytes(p.read_bytes(), p.name)]
+    summary.append(dict(step='evidence_privacy_scan', result='FAIL' if leaks else 'PASS',
+                        detail=f'{len(leaks)} finding(s)' + ('' if not leaks else ': ' + '; '.join(leaks[:3]))))
     lines = [f'# ViewPrism check run {stamp}', '', f'- Blender: `{ver}`', f'- Platform: `{sys.platform}`',
              f'- Backends: {", ".join(backends)}', f'- Selected steps: {", ".join(s for s in STEPS if s in steps)}',
              '', '| Step | Result | Detail |', '|---|---|---|']
     lines += [f"| {s['step']} | {s['result']} | {s['detail']} |" for s in summary]
-    if not summary:
-        summary.append(dict(step='(none)', result='NOT RUN', detail='no step selected'))
-    lines += ['', 'Files in this folder are the raw logs/JSON of each step with local paths replaced by `<HOME>`/`<USER>`.']
+    lines +=['', 'Files in this folder are the raw logs/JSON of each step with local paths replaced by `<HOME>`/`<USER>`.']
     (out / 'SUMMARY.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print('\n'.join(lines))
     ok = all(s['result'] == 'PASS' for s in summary)

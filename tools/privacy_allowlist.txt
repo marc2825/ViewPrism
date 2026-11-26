@@ -1,0 +1,14 @@
+# Reviewed historical findings (git history only; the working tree must stay clean).
+# Format: <blob sha> <rule>  # reason. Reviewed 2026-11-26.
+2c126f7b8c4476dc264c688c9fb82c267b8989e2 WSL path  # docs/SECURITY_AND_RIGHTS.md: earlier version of this rights doc quoting the memo path pattern
+ca7f9847a8e7087370958073a9d85494392277bb PNG metadata chunk eXIf (54 bytes)  # docs/images/ui_panel.png: Blender screenshot EXIF: X/Y resolution tags only (72 dpi), no personal data
+e7c509259021338c6b75498312d679479459f70f PNG metadata chunk eXIf (54 bytes)  # docs/images/ui_preview_depth.png: Blender screenshot EXIF: X/Y resolution tags only (72 dpi), no personal data
+414798e6de525a08c1788723a517ec6131432138 PNG metadata chunk eXIf (54 bytes)  # docs/images/ui_preview_normal.png: Blender screenshot EXIF: X/Y resolution tags only (72 dpi), no personal data
+4819ffc61c9712b3666de70b645ce28a9c2886c3 WSL path  # docs/SECURITY_AND_RIGHTS.md: earlier version of this rights doc quoting the memo path pattern
+3ac35218ea88c9df5cc0a37f8ad8c180f2bb2b1d WSL path  # docs/SECURITY_AND_RIGHTS.md: earlier version of this rights doc quoting the memo path pattern
+7922ad33794aafc9da961fc44985626a744b4e39 PNG metadata chunk eXIf (54 bytes)  # docs/images/ui_panel.png: Blender screenshot EXIF: X/Y resolution tags only (72 dpi), no personal data
+83f422efc94cf7034faa5147b937ffefb9836e7e PNG metadata chunk eXIf (54 bytes)  # docs/images/ui_preview_depth.png: Blender screenshot EXIF: X/Y resolution tags only (72 dpi), no personal data
+eecdc4cbfae384c47674efd44f05d6c32108a5da PNG metadata chunk eXIf (54 bytes)  # docs/images/ui_preview_normal.png: Blender screenshot EXIF: X/Y resolution tags only (72 dpi), no personal data
+6dd331a5eceef7bd02090872d7f054fdba8d0dae WSL path  # docs/SECURITY_AND_RIGHTS.md: earlier version of this rights doc quoting the memo path pattern
+647c0dc59e8aa43d11ed5173515f574f5b7988f4 WSL path  # memo.txt: old memo with a WSL path naming only the public GitHub handle
+338c2594e853bf669c2feb2df9bb91e458defb87 Windows user path  # tools/run_all_checks.py: docstring example of the GitHub runner account's 8.3 short name (not personal data); reworded in the next commit

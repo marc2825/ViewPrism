@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/marc2825/ViewPrism/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/marc2825/ViewPrism/releases"><img alt="Release" src="https://img.shields.io/github/v/release/marc2825/ViewPrism?include_prereleases&amp;sort=semver&amp;label=release"></a>
-  <img alt="Blender 4.5 LTS | 5.3" src="https://img.shields.io/badge/Blender-4.5%20LTS%20%7C%205.3-e87d0d">
+  <img alt="Blender 4.5 LTS – 5.3" src="https://img.shields.io/badge/Blender-4.5%20LTS%20%E2%80%93%205.3-e87d0d">
   <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
   <img alt="Platforms tested" src="https://img.shields.io/badge/tested-Windows%20%7C%20Linux-4c78dd">
 </p>
@@ -27,9 +27,10 @@ changes.
 (shown with display colours; the file stores the integer ID), mask.*
 
 > **Status: pre-release.** Verified on Blender 5.3.0 / Windows 11 / NVIDIA (Vulkan and OpenGL), and
-> in CI on Linux with Blender **4.5.17 LTS** and 5.3.0 (Mesa software OpenGL). Not verified yet:
-> macOS/Metal, AMD/Intel GPUs, Blender 4.5 on Windows, Blender 5.0–5.2. Requires Blender 4.5 or newer.
-> License not decided yet (see below).
+> in CI on Linux with Blender **4.5 LTS**, 5.0, 5.1, 5.2 and 5.3 (Mesa software OpenGL) and on Windows
+> with 4.5 LTS and 5.3 (background checks only). Not verified yet: macOS/Metal, AMD/Intel GPUs,
+> Blender 4.5 on Windows with a GPU, and a human hands-on pass ([#9](https://github.com/marc2825/ViewPrism/issues/9)).
+> Requires Blender 4.5 or newer. Details: [docs/QA_REPORT.md](docs/QA_REPORT.md).
 
 ## Why
 
@@ -130,9 +131,10 @@ comparison, including where ViewPrism is *not* better.
 python tools/run_all_checks.py --blender "<path>/blender.exe"
 ```
 
-CI (GitHub Actions) runs lint, the pure tests on Windows/Linux, and the full Blender checks on Linux
-for Blender 4.5 LTS and 5.3 (Xvfb + Mesa software OpenGL). A `vX.Y.Z` tag builds the validated ZIP
-into a draft release.
+CI (GitHub Actions) runs lint, the pure tests on Windows/Linux, secret and privacy scans of the whole
+history, the full Blender checks on Linux for Blender 4.5 LTS, 5.0, 5.1, 5.2 and 5.3 (Xvfb + Mesa
+software OpenGL), and background checks on Windows for 4.5 LTS and 5.3. A `vX.Y.Z` tag publishes the
+validated ZIP and its SHA-256 as a GitHub release (pre-release below 1.0).
 
 - `viewprism/` — the add-on (pure modules `projection`, `encode`, `png`, `exr`, `export`, `writer` do not
   import `bpy`). The UI and the tests use the same entry point: `viewprism.capture.capture(context, request)`.

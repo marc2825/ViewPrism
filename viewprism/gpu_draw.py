@@ -208,7 +208,8 @@ def render(width, height, view, projection, items, batches, depth_params, *, _af
                     batches[it.mesh_key].draw(sh)
                 if _after_draw is not None:
                     _after_draw()
-                # Read into flat 1-D buffers: Blender 4.5 exports the default (h, w, 4) Buffer
+                # Read all 4 channels (reading fewer channels is backend dependent: it failed on
+                # Vulkan) into flat 1-D buffers: Blender 4.5 exports the default (h, w, 4) Buffer
                 # through a non-contiguous buffer protocol, which NumPy cannot view.
                 buf_geom = gpu.types.Buffer('FLOAT', width * height * 4)
                 buf_id = gpu.types.Buffer('FLOAT', width * height * 4)

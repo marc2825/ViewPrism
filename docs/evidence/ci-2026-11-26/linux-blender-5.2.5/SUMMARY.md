@@ -1,0 +1,18 @@
+# ViewPrism check run 2026-11-26
+
+- Blender: `Blender 5.2.5 LTS`
+- Platform: `linux`
+- Backends: opengl
+- Selected steps: pure, selftest, harness, gui, build, package
+
+| Step | Result | Detail |
+|---|---|---|
+| pure_unit_tests | PASS | 82 tests |
+| harness_selftest | PASS |  |
+| harness_opengl | PASS | all |
+| gui_suite_opengl | PASS | 22/22 cases |
+| extension_build | PASS | viewprism-0.1.0.zip |
+| package_lifecycle | PASS |  |
+| evidence_privacy_scan | PASS | 0 finding(s) |
+
+Files in this folder are the raw logs/JSON of each step with local paths replaced by `<HOME>`/`<USER>`.

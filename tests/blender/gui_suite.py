@@ -744,6 +744,66 @@ def t_preview_lifecycle(ctx, vp):
     return 'refresh, re-encode, hide, closed view and file load release resources'
 
 
+def t_preview_debounce(ctx, vp):
+    """Auto refresh waits for stillness: no blocking capture while the view keeps moving or the scene
+    keeps changing (issue #5, preview responsiveness). Drives the timer callback with a fake clock."""
+    clear_scene()
+    plane('Deb', (0, 0, 0), (1, 1))
+    ctx.view_layer.update()
+    window, area, region = find_view3d()
+    set_view(area, region, distance=6)
+    pv = vp.preview
+    s = vp.props.settings(ctx)
+    auto_before = s.preview_auto
+    s.preview_auto = True
+    with ctx.temp_override(**override(window, area, region)):
+        check(bpy.ops.viewprism.preview() == {'FINISHED'}, 'preview failed')
+    real_refresh, real_time = pv.refresh, pv.time
+    clock = [1000.0]
+    calls = []
+
+    def counting_refresh(c, view):
+        calls.append(clock[0])
+        return real_refresh(c, view)
+    pv.refresh = counting_refresh
+    pv.time = argparse.Namespace(monotonic=lambda: clock[0])
+    try:
+        def tick(dt=0.1):
+            clock[0] += dt
+            with ctx.temp_override(**override(window, area, region)):
+                pv._tick()
+        tick()                                            # syncs the window set
+        settle = max(pv.DEBOUNCE, pv.state.last_seconds)
+        for i in range(25):                               # 2.5 s of continuous navigation
+            set_view(area, region, distance=6 + 0.05 * (i + 1))
+            tick()
+        check(calls == [], f'refreshed {len(calls)} time(s) while the view was still moving')
+        last_move = clock[0]
+        for _ in range(int(settle / 0.1) + 4):
+            tick()
+        check(len(calls) == 1, f'expected one refresh after the view settled, got {len(calls)}')
+        check(calls[0] - last_move >= settle - 1e-9, f'refreshed {calls[0] - last_move:.2f}s after the last move')
+        calls.clear()
+        for _ in range(25):                               # continuous scene edits (e.g. dragging an object)
+            clock[0] += 0.1
+            pv._on_depsgraph_update(None, None)
+            with ctx.temp_override(**override(window, area, region)):
+                pv._tick()
+        check(calls == [], f'refreshed {len(calls)} time(s) during continuous scene edits')
+        last_edit = clock[0]
+        settle = max(pv.DEBOUNCE, pv.state.last_seconds)
+        for _ in range(int(settle / 0.1) + 4):
+            tick()
+        check(len(calls) == 1, f'expected one refresh after the edits stopped, got {len(calls)}')
+        check(calls[0] - last_edit >= settle - 1e-9, f'refreshed {calls[0] - last_edit:.2f}s after the last edit')
+    finally:
+        pv.refresh, pv.time = real_refresh, real_time
+        with ctx.temp_override(**override(window, area, region)):
+            bpy.ops.viewprism.preview_hide()
+        s.preview_auto = auto_before
+    return f'no capture during 2.5 s of navigation or edits; one refresh {settle:.2f} s after stillness'
+
+
 def t_multi_window(ctx, vp):
     clear_scene()
     plane('MW', (0, 0, 0), (1, 1))
@@ -804,6 +864,53 @@ def t_multi_window(ctx, vp):
     print('MW: done', flush=True)
     notes.append('capture after closing a window works')
     return 'second main window uses its own view; ' + '; '.join(notes)
+
+
+def t_resource_guard(ctx, vp):
+    """Too little free memory or a GPU allocation failure must end in a clear error, not a crash."""
+    from viewprism import gpu_draw, resources
+    clear_scene()
+    plane('RG', (0, 0, -4), (1, 1))
+    ctx.view_layer.update()
+    window, area, region = find_view3d()
+    out = tempfile.mkdtemp(prefix='viewprism-guard-')
+    s = vp.props.settings(ctx)
+    settings_for_test(s, out)
+    before = snapshot()
+    real_avail = resources.available_memory
+    resources.available_memory = lambda: dict(physical=1_000_000, commit=1_000_000)   # pretend 1 MB
+    try:
+        try:
+            vp.capture.capture(ctx, req(np.eye(4), persp(math.radians(60), W / H, .1, 100)))
+            raise AssertionError('capture was not refused')
+        except vp.capture.ResourceLimitError as exc:
+            check('lower the resolution' in str(exc), f'unclear message: {exc}')
+        try:
+            with ctx.temp_override(**override(window, area, region)):
+                ret = bpy.ops.viewprism.export()
+            check(ret == {'CANCELLED'}, f'export returned {ret}')
+        except RuntimeError as exc:                         # operator reported the error
+            check('lower the resolution' in str(exc), f'unclear operator error: {exc}')
+    finally:
+        resources.available_memory = real_avail
+    check(os.listdir(out) == [], 'files written despite the memory guard')
+    real_targets = gpu_draw._get_targets
+
+    def no_gpu_memory(w, h):
+        raise RuntimeError('GPU out of memory (injected)')
+    gpu_draw._get_targets = no_gpu_memory
+    try:
+        try:
+            vp.capture.capture(ctx, req(np.eye(4), persp(math.radians(60), W / H, .1, 100)))
+            raise AssertionError('GPU failure not raised')
+        except vp.capture.GPUCaptureError as exc:
+            check('lower resolution' in str(exc), f'unclear GPU message: {exc}')
+    finally:
+        gpu_draw._get_targets = real_targets
+    res = vp.capture.capture(ctx, req(np.eye(4), persp(math.radians(60), W / H, .1, 100)))
+    check(res['mask'].any(), 'capture after recovery failed')
+    check(snapshot() == before, 'scene changed')
+    return 'memory guard refuses capture/export cleanly; GPU allocation failure -> GPUCaptureError; recovery ok'
 
 
 def t_reregister_clean(ctx, vp):
@@ -870,8 +977,9 @@ def t_deviation_warnings(ctx, vp):
 
 TESTS = [t_registration, t_empty_scene, t_deviation_warnings, t_visibility, t_local_view, t_modifier_and_scale, t_instances,
          t_viewport_matrices, t_camera_view, t_repeat_and_leak, t_fault_injection, t_sizes, t_multi_area,
-         t_precision, t_edit_mode, t_operator_export, t_view_lost, t_preview_lifecycle, t_multi_window,
-         t_reregister_clean]
+         t_precision, t_edit_mode, t_operator_export, t_view_lost, t_preview_lifecycle, t_preview_debounce,
+         t_multi_window,
+         t_resource_guard, t_reregister_clean]
 
 
 def write(status, **extra):

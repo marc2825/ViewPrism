@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+ALLOWLIST = Path(__file__).resolve().parent / 'privacy_allowlist.txt'
 
 # Each rule: (name, compiled regex). Literals are split so this file does not match itself.
 RULES = [
@@ -45,7 +46,7 @@ ALLOW = [
 ]
 TEXT_SUFFIXES = {'.py', '.md', '.txt', '.toml', '.yml', '.yaml', '.json', '.log', '.sh', '.cfg', '.ini',
                  '.html', '.svg', '.csv', ''}
-SKIP_DIRS = {'.git', '__pycache__', 'dist', '.venv'}
+SKIP_DIRS = {'.git', '__pycache__', 'dist', '.venv', '.ruff_cache'}
 
 
 def _mask(value):
@@ -113,6 +114,18 @@ def scan_bytes(data, name):
     return []
 
 
+def load_allowlist():
+    """(blob sha, rule) pairs reviewed and accepted (history only). Format: `<sha> <rule>  # reason`."""
+    allowed = set()
+    if ALLOWLIST.exists():
+        for line in ALLOWLIST.read_text(encoding='utf-8').splitlines():
+            line = line.split('#', 1)[0].strip()
+            if line:
+                sha, rule = line.split(' ', 1)
+                allowed.add((sha, rule.strip()))
+    return allowed
+
+
 def tracked_files():
     out = subprocess.run(['git', 'ls-files', '-z'], cwd=ROOT, capture_output=True, check=True).stdout
     return [ROOT / p for p in out.decode('utf-8').split('\0') if p]
@@ -146,7 +159,7 @@ def history_blobs():
         data = proc.stdout.read(size)
         proc.stdout.read(1)
         if header[1] == b'blob':
-            yield path, data
+            yield sha, path, data
     proc.stdin.close()
     proc.wait()
 
@@ -166,8 +179,16 @@ def main(argv=None):
         return 0
     findings = []
     if a.history:
-        for path, data in history_blobs():
-            findings += scan_bytes(data, f'history:{path}')
+        allowed = load_allowlist()
+        suppressed = 0
+        for sha, path, data in history_blobs():
+            for f in scan_bytes(data, f'history:{path}'):
+                rule = f.split(': ')[1] if ': ' in f else f
+                if (sha, rule) in allowed:
+                    suppressed += 1
+                else:
+                    findings.append(f'{f} [blob {sha}]')
+        print(f'{suppressed} reviewed historical finding(s) allowlisted in {ALLOWLIST.name}')
     else:
         files = list(walk(a.paths)) if a.paths else tracked_files()
         for f in files:

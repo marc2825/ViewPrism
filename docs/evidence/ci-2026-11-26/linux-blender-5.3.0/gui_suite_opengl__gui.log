@@ -1,0 +1,123 @@
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+VIEWPRISM_SUITE fail
+TEST t_registration pass
+VIEWPRISM_SUITE fail
+TEST t_empty_scene pass
+VIEWPRISM_SUITE fail
+<HOME>/work/ViewPrism/ViewPrism/tests/blender/gui_suite.py:950: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat.use_nodes = True
+<HOME>/work/ViewPrism/ViewPrism/tests/blender/gui_suite.py:955: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  dmat.use_nodes = True
+<HOME>/work/ViewPrism/ViewPrism/tests/blender/gui_suite.py:963: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  pmat.use_nodes = True
+TEST t_deviation_warnings pass
+VIEWPRISM_SUITE fail
+TEST t_visibility pass
+VIEWPRISM_SUITE fail
+TEST t_local_view pass
+VIEWPRISM_SUITE fail
+TEST t_modifier_and_scale pass
+VIEWPRISM_SUITE fail
+TEST t_instances pass
+VIEWPRISM_SUITE fail
+TEST t_viewport_matrices pass
+VIEWPRISM_SUITE fail
+<HOME>/work/ViewPrism/ViewPrism/tests/blender/gui_suite.py:149: DeprecationWarning: 'Scene.compositing_node_group' is expected to be removed in Blender 6.0
+  comp = getattr(s, 'compositing_node_group', None)
+TEST t_camera_view pass
+VIEWPRISM_SUITE fail
+Warning: 1 × Draw window and swap: 229.6039 ms, average: 229.60394000 ms
+Warning: 1 × Draw window and swap: 226.8481 ms, average: 226.84805500 ms
+Warning: 1 × Draw window and swap: 224.0356 ms, average: 224.03562400 ms
+Warning: 1 × Draw window and swap: 223.9569 ms, average: 223.95691700 ms
+Warning: 1 × Draw window and swap: 187.4534 ms, average: 187.45336300 ms
+Warning: 1 × Draw window and swap: 188.6373 ms, average: 188.63734900 ms
+Warning: 1 × Draw window and swap: 188.0382 ms, average: 188.03823400 ms
+Warning: 1 × Draw window and swap: 187.4115 ms, average: 187.41145100 ms
+Warning: 1 × Draw window and swap: 139.1471 ms, average: 139.14706700 ms
+Warning: 1 × Draw window and swap: 139.3006 ms, average: 139.30062000 ms
+Warning: 1 × Draw window and swap: 140.8581 ms, average: 140.85807300 ms
+Warning: 1 × Draw window and swap: 142.5962 ms, average: 142.59617100 ms
+Warning: 1 × Draw window and swap: 139.1026 ms, average: 139.10260000 ms
+Warning: 1 × Draw window and swap: 139.8192 ms, average: 139.81920400 ms
+Warning: 1 × Draw window and swap: 145.3662 ms, average: 145.36618700 ms
+Warning: 1 × Draw window and swap: 143.2036 ms, average: 143.20364500 ms
+Warning: 1 × Draw window and swap: 141.3080 ms, average: 141.30795500 ms
+Warning: 1 × Draw window and swap: 140.6004 ms, average: 140.60038500 ms
+Warning: 1 × Draw window and swap: 141.6667 ms, average: 141.66674500 ms
+Warning: 1 × Draw window and swap: 139.3694 ms, average: 139.36935900 ms
+Warning: 1 × Draw window and swap: 139.2331 ms, average: 139.23311700 ms
+Warning: 1 × Draw window and swap: 140.1678 ms, average: 140.16784800 ms
+Warning: 1 × Draw window and swap: 138.8794 ms, average: 138.87938100 ms
+Warning: 1 × Draw window and swap: 140.4716 ms, average: 140.47159300 ms
+Warning: 1 × Draw window and swap: 140.4854 ms, average: 140.48540400 ms
+Warning: 1 × Draw window and swap: 139.3555 ms, average: 139.35549800 ms
+Warning: 1 × Draw window and swap: 140.8123 ms, average: 140.81230000 ms
+Warning: 1 × Draw window and swap: 139.6247 ms, average: 139.62473100 ms
+Warning: 1 × Draw window and swap: 139.2656 ms, average: 139.26556800 ms
+Warning: 1 × Draw window and swap: 139.4363 ms, average: 139.43625600 ms
+Warning: 1 × Draw window and swap: 140.1645 ms, average: 140.16449100 ms
+Warning: 1 × Draw window and swap: 140.7141 ms, average: 140.71414400 ms
+Warning: 1 × Draw window and swap: 138.6947 ms, average: 138.69471100 ms
+Warning: 1 × Draw window and swap: 138.7846 ms, average: 138.78460300 ms
+Warning: 1 × Draw window and swap: 138.6667 ms, average: 138.66670800 ms
+Warning: 1 × Draw window and swap: 140.2141 ms, average: 140.21406700 ms
+Warning: 1 × Draw window and swap: 139.0670 ms, average: 139.06695900 ms
+Warning: 1 × Draw window and swap: 140.6516 ms, average: 140.65156000 ms
+Warning: 1 × Draw window and swap: 139.9869 ms, average: 139.98687800 ms
+Warning: 1 × Draw window and swap: 138.9190 ms, average: 138.91901800 ms
+MEM noredraw MB [820, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819, 819]
+MEM redraw MB [821, 831, 831, 831, 831, 831, 831, 831, 831, 831, 831, 831, 831, 831, 832, 832, 832, 832, 832, 832, 832, 832, 832, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833, 833]
+TEST t_repeat_and_leak pass
+VIEWPRISM_SUITE fail
+TEST t_fault_injection pass
+VIEWPRISM_SUITE fail
+TEST t_sizes pass
+VIEWPRISM_SUITE fail
+TEST t_multi_area pass
+VIEWPRISM_SUITE fail
+TEST t_precision pass
+VIEWPRISM_SUITE fail
+TEST t_edit_mode pass
+VIEWPRISM_SUITE fail
+Info: ViewPrism: Saved 8 files as gui_0001_*  (240x145, capture 4 ms)
+Info: ViewPrism: Saved 8 files as gui_0002_*  (240x145, capture 2 ms)
+Error: ViewPrism: files already exist: gui_0001_depth.png, gui_0001_depth.exr, gui_0001_normal.png, gui_0001_normal.exr, gui_0001_id.png, gui_0001_id.exr, gui_0001_mask.png, gui_0001_meta.json
+Error: ViewPrism: Export As must be started from a 3D Viewport
+Info: ViewPrism: Saved 8 files as anon_0001_*  (240x145, capture 1 ms)
+TEST t_operator_export pass
+VIEWPRISM_SUITE fail
+TEST t_view_lost pass
+VIEWPRISM_SUITE fail
+TEST t_preview_lifecycle pass
+VIEWPRISM_SUITE fail
+TEST t_preview_debounce pass
+VIEWPRISM_SUITE fail
+MW: window_new
+MW: window created
+MW: capture in second window
+Warning: 1 × Draw window: 264.0414 ms, average: 264.04139600 ms
+MW: window_close
+MW: closed
+MW: capture in the same tick as the close
+Warning: 1 × Draw window: 168.2742 ms, average: 168.27425000 ms
+MW: capture after the event loop ran
+MW: done
+TEST t_multi_window pass
+VIEWPRISM_SUITE fail
+Error: ViewPrism: a 240x72 capture and export needs about 0.0 GB of memory but only 0.0 GB can still be allocated; lower the resolution or close other programs
+TEST t_resource_guard pass
+VIEWPRISM_SUITE fail
+TEST t_reregister_clean pass
+VIEWPRISM_SUITE pass
+00:10.541  blend            | Saved session recovery to "/tmp/quit.blend"
+Push constants have a minimum supported size of 128 bytes, however the constants added so far already reach 144 bytes. Consider using UBO.
+
+Blender quit

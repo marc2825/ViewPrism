@@ -13,6 +13,16 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from viewprism import exr, export, png, writer  # noqa: E402
 
 
+def read_bytes(path):
+    with open(path, 'rb') as fh:
+        return fh.read()
+
+
+def read_text(path):
+    with open(path, encoding='utf-8') as fh:
+        return fh.read()
+
+
 def synthetic_result(h=6, w=8):
     """Hand-made capture result with known values (independent of the GPU path)."""
     depth = np.full((h, w), np.nan, np.float32)
@@ -132,7 +142,7 @@ class EndToEnd(unittest.TestCase):
             names = sorted(os.listdir(d))
             self.assertEqual(names, sorted(f'{stem}_{s}' for s in (
                 'depth.png', 'depth.exr', 'normal.png', 'normal.exr', 'id.png', 'id.exr', 'mask.png', 'meta.json')))
-            rd = lambda n: open(os.path.join(d, f'{stem}_{n}'), 'rb').read()
+            rd = lambda n: read_bytes(os.path.join(d, f'{stem}_{n}'))
             # depth PNG16: near(2.0) -> 65535, far(6.0) -> 0, background -> 0 (far colour)
             dp = png.decode(rd('depth.png'))[0][..., 0]
             self.assertEqual(int(dp[1, 1]), 65535)
@@ -172,7 +182,7 @@ class EndToEnd(unittest.TestCase):
             res = writer.export_capture(r, opts, sub)
             self.assertEqual(res['failed'], [])
             self.assertTrue(res['stem'].startswith('深度テスト é_'))
-            z = exr.decode(open(os.path.join(sub, f"{res['stem']}_depth.exr"), 'rb').read())[0]['Z']
+            z = exr.decode(read_bytes(os.path.join(sub, f"{res['stem']}_depth.exr")))[0]['Z']
             np.testing.assert_array_equal(z, r['depth'])
 
     def test_normal_flip_only_changes_png(self):
@@ -182,12 +192,12 @@ class EndToEnd(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             res = writer.export_capture(r, opts, d)
             stem = res['stem']
-            npng = png.decode(open(os.path.join(d, f'{stem}_normal.png'), 'rb').read())[0]
+            npng = png.decode(read_bytes(os.path.join(d, f'{stem}_normal.png')))[0]
             # (0.6, 0, 0.8) flipped -> (-0.6, -0, 0.8) -> round((-0.6*0.5+0.5)*255)=51, 128, 230
             np.testing.assert_array_equal(npng[3, 5], [51, 128, 230])
-            ch, _ = exr.decode(open(os.path.join(d, f'{stem}_normal.exr'), 'rb').read())
+            ch, _ = exr.decode(read_bytes(os.path.join(d, f'{stem}_normal.exr')))
             np.testing.assert_array_equal(ch['R'], r['normal'][..., 0])          # raw stays canonical
-            meta = json.load(open(os.path.join(d, f'{stem}_meta.json'), encoding='utf-8'))
+            meta = json.loads(read_text(os.path.join(d, f'{stem}_meta.json')))
             self.assertEqual(meta['passes']['normal']['png']['mapping'], 'rgb = (-n.x, -n.y, n.z) * 0.5 + 0.5')
 
     def test_id_overflow_fails_only_that_file(self):
@@ -199,7 +209,7 @@ class EndToEnd(unittest.TestCase):
             res = writer.export_capture(r, opts, d)
             self.assertEqual([n for n, _e in res['failed']], [f"{res['stem']}_id.png"])
             self.assertIn(f"{res['stem']}_id.exr", res['written'])
-            meta = json.load(open(os.path.join(d, f"{res['stem']}_meta.json"), encoding='utf-8'))
+            meta = json.loads(read_text(os.path.join(d, f"{res['stem']}_meta.json")))
             self.assertEqual(meta['failed_files'][0]['file'], f"{res['stem']}_id.png")
             self.assertNotIn('object_id:PNG16', meta['files'])
 

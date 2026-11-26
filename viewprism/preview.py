@@ -13,9 +13,10 @@ import numpy as np
 
 from . import encode, viewport
 
-DEBOUNCE = 0.2          # seconds of stillness before an auto refresh
+DEBOUNCE = 0.2          # seconds of stillness (no view change, no depsgraph update) before an auto refresh
 TICK = 0.1
 SLOW_CAPTURE = 0.25     # back off when a preview capture is slower than this
+MAX_SETTLE = 1.0        # upper bound of the stillness wait for slow scenes
 
 
 class _State:
@@ -30,7 +31,8 @@ class _State:
         self.signature = None
         self.capture_modes = None  # (normal_mode, id_mode) used for raw
         self.dirty = False
-        self.change_time = None
+        self.change_time = None    # last time the view or the scene was seen changing
+        self.pending_signature = None
         self.busy = False
         self.error = ''
         self.message = ''
@@ -141,6 +143,7 @@ def refresh(context, view):
     state.capture_modes = (settings.normal_mode, settings.id_mode)
     state.dirty = False
     state.change_time = None
+    state.pending_signature = None
     state.stale = False
     state.last_seconds = result['stats']['seconds']['total']
     n_warn = len(result['warnings'])
@@ -279,14 +282,17 @@ def _tick():
         state.windows = windows
         return TICK
     now = time.monotonic()
-    changed = state.dirty or viewport.view_signature(view) != state.signature
-    if not changed:
-        state.change_time = None
+    signature = viewport.view_signature(view)
+    if not (state.dirty or signature != state.signature):
+        state.change_time = state.pending_signature = None
         return TICK
-    if state.change_time is None:
+    # Refresh only once the view has been still for DEBOUNCE seconds (longer for slow scenes), so
+    # navigating or dragging never triggers blocking captures. Depsgraph updates move change_time too.
+    if signature != state.pending_signature or state.change_time is None:
+        state.pending_signature = signature
         state.change_time = now
         return TICK
-    if now - state.change_time < DEBOUNCE:
+    if now - state.change_time < min(MAX_SETTLE, max(DEBOUNCE, state.last_seconds)):
         return TICK
     from .capture import GPUContextError
     try:
@@ -307,6 +313,7 @@ def _on_depsgraph_update(_scene, _depsgraph):
     if state.active and not state.busy:
         state.dirty = True
         state.stale = True
+        state.change_time = time.monotonic()      # still editing: restart the stillness wait
 
 
 @bpy.app.handlers.persistent

@@ -42,6 +42,16 @@ def options(**kw):
     return o
 
 
+def read_text(path):
+    with open(path, encoding='utf-8') as fh:
+        return fh.read()
+
+
+def read_bytes(path):
+    with open(path, 'rb') as fh:
+        return fh.read()
+
+
 def leftovers(d):
     return [f for f in os.listdir(d) if f.endswith(export.TMP_SUFFIX) or f.endswith(export.LOCK_SUFFIX)]
 
@@ -180,7 +190,7 @@ class MetadataPrivacy(unittest.TestCase):
             res = writer.export_capture(r, options(), d)
             self.assertEqual(sorted(f.code for f in res['failed']), ['os_error', 'permission_denied'])
             self.assertTrue(any('someone' in f.detail for f in res['failed']))    # local detail kept
-            text = open(os.path.join(d, f"{res['stem']}_meta.json"), encoding='utf-8').read()
+            text = read_text(os.path.join(d, f"{res['stem']}_meta.json"))
             for leak in ('someone', 'secret', 'Users', 'home'):
                 self.assertNotIn(leak, text)
             meta = json.loads(text)
@@ -192,7 +202,7 @@ class MetadataPrivacy(unittest.TestCase):
                          'display as Wire/Bounds', 'rgb = (-n.x, -n.y, n.z) * 0.5 + 0.5']
         with tempfile.TemporaryDirectory() as d:
             res = writer.export_capture(r, options(), d)
-            meta = json.load(open(os.path.join(d, f"{res['stem']}_meta.json"), encoding='utf-8'))
+            meta = json.loads(read_text(os.path.join(d, f"{res['stem']}_meta.json")))
             joined = ' '.join(meta['warnings'])
             self.assertNotIn('someone', joined)
             self.assertIn('<path>', joined)
@@ -211,7 +221,7 @@ class MetadataPrivacy(unittest.TestCase):
         o = options(privacy='anonymized', source={'kind': 'camera', 'camera': 'Hero Cam', 'camera_type': 'PERSP'})
         with tempfile.TemporaryDirectory() as d:
             res = writer.export_capture(r, o, d)
-            text = open(os.path.join(d, f"{res['stem']}_meta.json"), encoding='utf-8').read()
+            text = read_text(os.path.join(d, f"{res['stem']}_meta.json"))
             for name in ('Near', 'Far Lamp', 'Hero Cam'):
                 self.assertNotIn(name, text)
             meta = json.loads(text)
@@ -221,14 +231,14 @@ class MetadataPrivacy(unittest.TestCase):
             self.assertEqual(meta['camera']['source']['camera_type'], 'PERSP')
             # pixels and ids are unchanged by the privacy mode
             full = writer.export_capture(r, options(), d)
-            a = open(os.path.join(d, f"{res['stem']}_depth.exr"), 'rb').read()
-            b = open(os.path.join(d, f"{full['stem']}_depth.exr"), 'rb').read()
+            a = read_bytes(os.path.join(d, f"{res['stem']}_depth.exr"))
+            b = read_bytes(os.path.join(d, f"{full['stem']}_depth.exr"))
             self.assertEqual(a, b)
 
     def test_full_mode_keeps_names(self):
         with tempfile.TemporaryDirectory() as d:
             res = writer.export_capture(result(), options(), d)
-            meta = json.load(open(os.path.join(d, f"{res['stem']}_meta.json"), encoding='utf-8'))
+            meta = json.loads(read_text(os.path.join(d, f"{res['stem']}_meta.json")))
             self.assertEqual(meta['id_map'], {'1': 'Near', '2': 'Far Lamp'})
             self.assertEqual(meta['privacy'], 'full')
 

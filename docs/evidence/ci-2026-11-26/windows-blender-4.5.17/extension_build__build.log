@@ -1,0 +1,38 @@
+$ D:/a/_temp/blender/blender-4.5.17-windows-x64/blender.exe --factory-startup --command extension validate <HOME>\AppData\Local\Temp\viewprism-stage-7_nz9l36
+Success parsing TOML in "<HOME>\AppData\Local\Temp\viewprism-stage-7_nz9l36"
+
+exit 0
+
+$ D:/a/_temp/blender/blender-4.5.17-windows-x64/blender.exe --factory-startup --command extension build --source-dir <HOME>\AppData\Local\Temp\viewprism-stage-7_nz9l36 --output-filepath <HOME>\AppData\Local\Temp\viewprism-checks-60aq6q0f\dist\viewprism-0.1.0.zip
+building: viewprism-0.1.0.zip
+complete
+created: "<HOME>\AppData\Local\Temp\viewprism-checks-60aq6q0f\dist\viewprism-0.1.0.zip", 63462
+
+exit 0
+
+$ D:/a/_temp/blender/blender-4.5.17-windows-x64/blender.exe --factory-startup --command extension validate <HOME>\AppData\Local\Temp\viewprism-checks-60aq6q0f\dist\viewprism-0.1.0.zip
+Success parsing TOML in "<HOME>\AppData\Local\Temp\viewprism-checks-60aq6q0f\dist\viewprism-0.1.0.zip"
+
+exit 0
+
+
+ZIP: <HOME>\AppData\Local\Temp\viewprism-checks-60aq6q0f\dist\viewprism-0.1.0.zip (63462 bytes)
+   LICENSE
+   __init__.py
+   blender_manifest.toml
+   capture.py
+   encode.py
+   export.py
+   exr.py
+   gpu_draw.py
+   operators.py
+   png.py
+   preview.py
+   projection.py
+   props.py
+   resources.py
+   scene_geometry.py
+   ui.py
+   viewport.py
+   writer.py
+BUILD PASS
