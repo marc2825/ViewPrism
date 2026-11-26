@@ -140,7 +140,7 @@ def refresh(context, view):
     state.stale = False
     state.last_seconds = result['stats']['seconds']['total']
     n_warn = len(result['warnings'])
-    state.message = (f"{request['width']}x{request['height']}, {state.last_seconds * 1000:.0f} ms"
+    state.message = (f"Preview {request['width']}x{request['height']}, {state.last_seconds * 1000:.0f} ms"
                      + (f", {n_warn} warning(s)" if n_warn else ''))
     _rebuild_texture(settings)
     _ensure_draw_handler()
@@ -213,12 +213,32 @@ def _draw():
     label = f'ViewPass preview ({settings.preview_pass}) - display only'
     if stale:
         label += ' - OUTDATED, press Refresh' if not settings.preview_auto else ' - updating...'
+    ui = ctx.preferences.system.ui_scale
+    tw, th = blf.dimensions(font, label)
+    _backdrop(8 * ui, 8 * ui, tw + 8 * ui, th + 8 * ui, ctx.region.width, ctx.region.height)
     blf.color(font, 1.0, 0.85 if stale else 1.0, 0.2 if stale else 1.0, 1.0)
-    blf.enable(font, blf.SHADOW)
-    blf.shadow(font, 3, 0.0, 0.0, 0.0, 0.8)
-    blf.position(font, 12 * ctx.preferences.system.ui_scale, 12 * ctx.preferences.system.ui_scale, 0)
+    blf.position(font, 12 * ui, 12 * ui, 0)
     blf.draw(font, label)
-    blf.disable(font, blf.SHADOW)
+
+
+def _backdrop(x, y, w, h, rw, rh):
+    """Dark translucent box behind the overlay label (pixel coords -> NDC, no gpu.matrix use)."""
+    import gpu
+    from gpu_extras.batch import batch_for_shader
+    from mathutils import Matrix
+    x0, y0 = 2 * x / rw - 1, 2 * y / rh - 1
+    x1, y1 = 2 * (x + w) / rw - 1, 2 * (y + h) / rh - 1
+    sh = gpu.shader.from_builtin('UNIFORM_COLOR')
+    batch = batch_for_shader(sh, 'TRI_FAN', {'pos': ((x0, y0, 0), (x1, y0, 0), (x1, y1, 0), (x0, y1, 0))})
+    prev = gpu.state.blend_get()
+    gpu.state.blend_set('ALPHA')
+    with gpu.matrix.push_pop():
+        gpu.matrix.load_identity()
+        with gpu.matrix.push_pop_projection():
+            gpu.matrix.load_projection_matrix(Matrix.Identity(4))
+            sh.uniform_float('color', (0.0, 0.0, 0.0, 0.6))
+            batch.draw(sh)
+    gpu.state.blend_set(prev)
 
 
 def _ensure_draw_handler():

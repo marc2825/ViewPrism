@@ -55,9 +55,8 @@ class VIEWPASS_PT_main(bpy.types.Panel):
         else:
             sub = box.column(align=True)
             sub.prop(s, 'width')
-            row = sub.row(align=True)
-            row.active = not s.lock_aspect
-            row.prop(s, 'height')
+            if not s.lock_aspect:
+                sub.prop(s, 'height')
             box.prop(s, 'lock_aspect')
         size, camera = _view_size_hint(context, s)
         if size:
@@ -86,7 +85,7 @@ class VIEWPASS_PT_main(bpy.types.Panel):
             row.prop(s, 'preview_auto', toggle=True, icon='TIME')
             row.prop(s, 'preview_opacity', slider=True)
             if preview.state.message:
-                pcol.label(text=f'Preview: {preview.state.message} (display only)', icon='INFO')
+                pcol.label(text=preview.state.message, icon='INFO')
         if preview.state.error:
             pcol.label(text=preview.state.error, icon='ERROR')
 

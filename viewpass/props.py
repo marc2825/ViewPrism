@@ -4,6 +4,20 @@ import bpy
 from bpy.props import (BoolProperty, EnumProperty, FloatProperty, IntProperty,
                        PointerProperty, StringProperty)
 
+def _path_options():
+    """'//' is resolved with bpy.path.abspath, so declare blend-relative support where the
+    option exists (Blender 5.x marks undeclared relative paths as invalid)."""
+    class _Probe(bpy.types.PropertyGroup):
+        pass
+    _Probe.__annotations__ = {'p': StringProperty(subtype='DIR_PATH', options={'PATH_SUPPORTS_BLEND_RELATIVE'})}
+    try:
+        bpy.utils.register_class(_Probe)
+    except (TypeError, ValueError, RuntimeError):
+        return set()
+    bpy.utils.unregister_class(_Probe)
+    return {'PATH_SUPPORTS_BLEND_RELATIVE'}
+
+
 PASS_ITEMS = [('depth', 'Depth', 'Planar camera-space depth'),
               ('normal', 'Normal', 'Camera-space normals'),
               ('object_id', 'Object ID', 'Integer object index'),
@@ -87,6 +101,7 @@ class ViewPassSettings(bpy.types.PropertyGroup):
                              description='Write <name>_meta.json (matrices, ranges, ID map, warnings)')
 
     output_dir: StringProperty(name='Folder', default='//viewpass/', subtype='DIR_PATH',
+                               options=_path_options(),
                                description='Output folder ("//" is relative to the saved .blend file)')
     base_name: StringProperty(name='Name', default='viewpass', description='Base file name')
     numbering: EnumProperty(name='Numbering', default='AUTO',
