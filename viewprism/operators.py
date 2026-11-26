@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Operators. Every capture goes through capture.capture() - the same entry point as tests."""
 import os
-import sys
 import time
 
 import bpy
@@ -11,7 +10,7 @@ from bpy.props import EnumProperty, StringProperty
 from . import capture as cap
 from . import export, preview, props, resources, viewport, writer
 from .encode import EncodeError
-from .i18n import iface, rpt
+from .i18n import iface, message, rpt
 from .i18n_data import CONTEXT
 from .projection import ProjectionError
 
@@ -88,9 +87,8 @@ def output_directory(path):
 
 # ----------------------------------------------------------------------------- what Export will write
 
-_plan_cache = {'key': None, 'time': 0.0, 'value': None}
+_plan_cache = {'key': None, 'time': 0.0, 'ttl': 0.0, 'value': None}
 _PLAN_TTL = 1.0         # seconds; the panel redraws often, the folder is listed at most once per second
-_CASE_INSENSITIVE = os.name == 'nt' or sys.platform == 'darwin'
 
 
 def invalidate_plan():
@@ -102,7 +100,8 @@ def planned_files(settings):
 
     Returns dict(files=[(key, name, exists)], directory, stem, error, unsaved). `exists` marks a file
     that is already in the folder (only possible with Name Only). The folder is listed once and the
-    result cached briefly, so the panel stays fast on slow or network drives.
+    result cached (longer when listing is slow), so the panel stays fast on slow or network drives.
+    With an unsaved .blend and a '//' folder, Export opens Export As, which writes the name as is.
     """
     out = dict(files=[], directory=None, stem=None, error=None, unsaved=False)
     try:
@@ -115,26 +114,29 @@ def planned_files(settings):
     try:
         directory = output_directory(settings.output_dir)
     except UnsavedBlendError:
-        stem = f'{base}_0001' if numbering == 'AUTO' else base
-        out.update(unsaved=True, stem=stem, files=[(k, n, False) for k, n in export.file_names(stem, items, meta)])
+        out.update(unsaved=True, stem=base, files=[(k, n, False) for k, n in export.file_names(base, items, meta)])
         return out
     except export.ExportError as exc:
         out['error'] = str(exc)
         return out
     key = (directory, base, numbering, meta, tuple(items))
-    now = time.monotonic()
-    if _plan_cache['key'] == key and now - _plan_cache['time'] < _PLAN_TTL:
+    if _plan_cache['key'] == key and time.monotonic() - _plan_cache['time'] < _plan_cache['ttl']:
         return _plan_cache['value']
+    t0 = time.monotonic()
     try:
-        present = set(os.listdir(directory)) if os.path.isdir(directory) else set()
+        names = os.listdir(directory) if os.path.isdir(directory) else []
     except OSError:
-        present = set()
-    if _CASE_INSENSITIVE:
-        present = {n.casefold() for n in present}
+        names = []
+    present = set(names)
+    folded = {n.casefold() for n in names}
 
     def exists(path):
+        # The listing answers quickly; a name that differs only in case is decided by the file system
+        # itself (os.path.lexists, like the real export), whatever its case rules are.
         name = os.path.basename(path)
-        return (name.casefold() if _CASE_INSENSITIVE else name) in present
+        if name in present:
+            return True
+        return name.casefold() in folded and os.path.lexists(path)
     try:
         plan = export.plan(directory, base, items, numbering=numbering, overwrite=True, meta=meta,
                            exists=exists, reserve=False)
@@ -142,7 +144,8 @@ def planned_files(settings):
                    files=[(k, n, exists(p)) for k, n, p in plan['files']])
     except export.ExportError as exc:
         out.update(directory=directory, error=str(exc))
-    _plan_cache.update(key=key, time=now, value=out)
+    done = time.monotonic()
+    _plan_cache.update(key=key, time=done, ttl=max(_PLAN_TTL, 10 * (done - t0)), value=out)
     return out
 
 
@@ -178,7 +181,7 @@ def _finish(op, result, res, request, settings):
     ms = result['stats']['seconds']['total'] * 1000
     size = f"{request['width']} × {request['height']}"
     for w in result['warnings']:
-        op.report({'WARNING'}, f'ViewPrism: {w}')
+        op.report({'WARNING'}, f'ViewPrism: {message(w)}')
     if failed:
         for name, err in failed:
             op.report({'ERROR'}, rpt('ViewPrism: could not write {}: {}').format(name, err))
@@ -198,7 +201,7 @@ def _message(exc):
         shown = ', '.join(names[:2]) + (', …' if len(names) > 2 else '')
         return iface('{} files with these names already exist ({}). Choose "Add Number", turn on Overwrite or '
                      'change the name.').format(len(names), shown)
-    return str(exc) or type(exc).__name__
+    return message(str(exc)) or type(exc).__name__
 
 
 def _fail(op, exc, settings=None):
@@ -361,7 +364,7 @@ class VIEWPRISM_OT_preview(bpy.types.Operator):
         except _ERRORS as exc:
             return _fail_preview(self, exc)
         for w in result['warnings']:
-            self.report({'WARNING'}, f'ViewPrism: {w}')
+            self.report({'WARNING'}, f'ViewPrism: {message(w)}')
         return {'FINISHED'}
 
 

@@ -38,18 +38,31 @@ PNG_BITS = [('NONE', 'Off', 'No PNG file for this pass'),
 
 
 def _redraw(_self, context):
+    """Display setting: re-encode the cached preview (no new capture)."""
     from . import preview
-    preview.settings_changed(context)
+    preview.settings_changed(context, 'display')
+
+
+def _repaint(_self, context):
+    """Only drawing changes (opacity, exported passes, Auto Refresh)."""
+    from . import preview
+    preview.settings_changed(context, 'repaint')
+
+
+def _recapture(_self, context):
+    """Preview resolution: needs a new capture."""
+    from . import preview
+    preview.settings_changed(context, 'capture')
 
 
 class ViewPrismSettings(bpy.types.PropertyGroup):
-    use_depth: BoolProperty(name='Depth', default=True, update=_redraw, **T,
+    use_depth: BoolProperty(name='Depth', default=True, update=_repaint, **T,
                             description='Export the depth pass (distance from the camera plane)')
-    use_normal: BoolProperty(name='Normal', default=True, update=_redraw, **T,
+    use_normal: BoolProperty(name='Normal', default=True, update=_repaint, **T,
                              description='Export the normal pass (surface direction as seen from the camera)')
-    use_object_id: BoolProperty(name='Object ID', default=False, update=_redraw, **T,
+    use_object_id: BoolProperty(name='Object ID', default=False, update=_repaint, **T,
                                 description='Export the object ID pass (one integer per object)')
-    use_mask: BoolProperty(name='Mask', default=False, update=_redraw, **T,
+    use_mask: BoolProperty(name='Mask', default=False, update=_repaint, **T,
                            description='Export the foreground mask (white = something, black = nothing)')
 
     resolution_mode: EnumProperty(
@@ -138,10 +151,11 @@ class ViewPrismSettings(bpy.types.PropertyGroup):
 
     preview_pass: EnumProperty(name='Preview', items=PASS_ITEMS, default='depth', update=_redraw, **T)
     preview_opacity: FloatProperty(name='Opacity', default=1.0, min=0.0, max=1.0, subtype='FACTOR',
-                                   update=_redraw, **T, description='Opacity of the large preview')
+                                   update=_repaint, **T, description='Opacity of the large preview')
     preview_scale: IntProperty(name='Resolution', default=50, min=10, max=100, subtype='PERCENTAGE', **T,
+                               update=_recapture,
                                description='Preview resolution relative to the viewport')
-    preview_auto: BoolProperty(name='Auto Refresh', default=False, update=_redraw, **T,
+    preview_auto: BoolProperty(name='Auto Refresh', default=False, update=_repaint, **T,
                                description='Capture the preview again once the view and the scene stop changing')
     preview_thumbnails: BoolProperty(name='Thumbnails', default=True, update=_redraw, **T,
                                      description='Show small images of all four passes in the corner of the viewport')

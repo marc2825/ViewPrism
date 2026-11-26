@@ -7,13 +7,13 @@
 
 | Step | Result | Detail |
 |---|---|---|
-| pure_unit_tests | PASS | 89 tests |
+| pure_unit_tests | PASS | 100 tests |
 | harness_selftest | PASS |  |
 | harness_vulkan | PASS | all |
 | gui_suite_vulkan | PASS | 26/26 cases |
 | harness_opengl | PASS | all |
 | gui_suite_opengl | PASS | 26/26 cases |
-| extension_build | PASS | viewprism-0.2.0.zip |
+| extension_build | PASS | viewprism-0.3.0.zip |
 | package_lifecycle | PASS |  |
 | evidence_privacy_scan | PASS | 0 finding(s) |
 

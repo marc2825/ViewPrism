@@ -6,33 +6,33 @@
     {
       "projection": "perspective",
       "trial": 1,
-      "seconds": 0.012189999979455024,
+      "seconds": 0.008937900012824684,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     },
     {
       "projection": "perspective",
       "trial": 2,
-      "seconds": 0.003651999984867871,
+      "seconds": 0.0034966000239364803,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     },
     {
       "projection": "orthographic",
       "trial": 1,
-      "seconds": 0.0035949000157415867,
+      "seconds": 0.003069500031415373,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     },
     {
       "projection": "orthographic",
       "trial": 2,
-      "seconds": 0.0029061000095680356,
+      "seconds": 0.0028153000166639686,
       "checks": "analytic samples, alignment, background, visibility, state, repeat"
     }
   ],
   "gpu": {
-    "backend_type_get": "VULKAN",
+    "backend_type_get": "OPENGL",
     "device_type_get": "NVIDIA",
     "vendor_get": "NVIDIA Corporation",
-    "renderer_get": "NVIDIA GeForce RTX 3060 Ti",
-    "version_get": "NVIDIA 610.88"
+    "renderer_get": "NVIDIA GeForce RTX 3060 Ti/PCIe/SSE2",
+    "version_get": "4.6.0 NVIDIA 610.88"
   }
 }

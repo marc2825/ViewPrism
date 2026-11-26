@@ -1,3 +1,7 @@
+test_exr_oversized_data_window (test_codecs.DecoderLimits.test_exr_oversized_data_window) ... ok
+test_exr_zip_bomb_and_bad_offsets (test_codecs.DecoderLimits.test_exr_zip_bomb_and_bad_offsets) ... ok
+test_png_decompression_bomb_is_not_inflated (test_codecs.DecoderLimits.test_png_decompression_bomb_is_not_inflated) ... ok
+test_png_oversized_header_is_refused_before_allocating (test_codecs.DecoderLimits.test_png_oversized_header_is_refused_before_allocating) ... ok
 test_decode_hand_built_multipart (test_codecs.Exr.test_decode_hand_built_multipart) ... ok
 test_errors (test_codecs.Exr.test_errors) ... ok
 test_roundtrip (test_codecs.Exr.test_roundtrip) ... ok
@@ -37,23 +41,34 @@ test_anonymized_mode (test_export_safety.MetadataPrivacy.test_anonymized_mode) .
 test_failure_metadata_has_no_paths (test_export_safety.MetadataPrivacy.test_failure_metadata_has_no_paths) ... ok
 test_full_mode_keeps_names (test_export_safety.MetadataPrivacy.test_full_mode_keeps_names) ... ok
 test_redact_paths (test_export_safety.MetadataPrivacy.test_redact_paths) ... ok
+test_redact_single_segment_posix_paths (test_export_safety.MetadataPrivacy.test_redact_single_segment_posix_paths)
+Issue #15: one-segment absolute paths were kept; URLs and fractions must stay readable. ... ok
 test_unknown_privacy_mode (test_export_safety.MetadataPrivacy.test_unknown_privacy_mode) ... ok
 test_warnings_are_path_redacted (test_export_safety.MetadataPrivacy.test_warnings_are_path_redacted) ... ok
 test_concurrent_auto_numbering_across_processes (test_export_safety.NoClobber.test_concurrent_auto_numbering_across_processes) ... ok
 test_dangling_symlink_is_not_written_through (test_export_safety.NoClobber.test_dangling_symlink_is_not_written_through) ... skipped 'symlinks not permitted on this system (OSError); covered on Linux CI'
 test_dangling_symlink_takes_its_number (test_export_safety.NoClobber.test_dangling_symlink_takes_its_number) ... skipped 'symlinks not permitted on this system (OSError); covered on Linux CI'
 test_long_names_fit_the_temporary_name (test_export_safety.NoClobber.test_long_names_fit_the_temporary_name) ... skipped 'Windows MAX_PATH (260) is shorter than this test path; covered on Linux CI'
+test_no_replace_rename_before_the_placeholder (test_export_safety.NoClobber.test_no_replace_rename_before_the_placeholder)
+Issue #15: on Linux the no-hard-link path uses renameat2(RENAME_NOREPLACE), which is atomic. ... skipped 'renameat2 is Linux-only (macOS uses renamex_np; Windows never needs it)'
 test_overwrite_is_explicit (test_export_safety.NoClobber.test_overwrite_is_explicit) ... ok
 test_partial_failure_cleans_up (test_export_safety.NoClobber.test_partial_failure_cleans_up) ... ok
 test_placeholder_publication (test_export_safety.NoClobber.test_placeholder_publication)
 The no-hard-link path itself, on every OS: exclusive placeholder, then atomic replace. ... ok
+test_placeholder_replaced_by_another_program_is_not_overwritten (test_export_safety.NoClobber.test_placeholder_replaced_by_another_program_is_not_overwritten)
+Issue #15: without hard links and a no-replace rename, a program that replaces our placeholder ... ok
 test_published_file_is_not_reported_failed_if_temp_cleanup_fails (test_export_safety.NoClobber.test_published_file_is_not_reported_failed_if_temp_cleanup_fails)
 After the file is published, failing to remove the temporary name (e.g. a scanner holds it) ... ok
 test_race_file_created_just_before_publication (test_export_safety.NoClobber.test_race_file_created_just_before_publication) ... ok
+test_stale_lock_from_a_crash_is_reused (test_export_safety.NoClobber.test_stale_lock_from_a_crash_is_reused)
+Issue #15: a lock left by a crash no longer skips its number forever. ... ok
 test_symlink_pointing_outside_is_refused (test_export_safety.NoClobber.test_symlink_pointing_outside_is_refused) ... skipped 'symlinks not permitted on this system (OSError); covered on Linux CI'
 test_threads_same_numbering (test_export_safety.NoClobber.test_threads_same_numbering) ... ok
 test_without_hard_links (test_export_safety.NoClobber.test_without_hard_links)
 FAT/exFAT and some network shares have no hard links: exports still work and stay no-clobber ... ok
+test_english_and_unknown_messages_pass_through (test_i18n.Messages.test_english_and_unknown_messages_pass_through) ... ok
+test_known_messages_have_japanese (test_i18n.Messages.test_known_messages_have_japanese) ... ok
+test_values_and_names_are_kept (test_i18n.Messages.test_values_and_names_are_kept) ... ok
 test_every_ui_string_is_translated (test_i18n.Translations.test_every_ui_string_is_translated) ... ok
 test_no_unused_entries (test_i18n.Translations.test_no_unused_entries) ... ok
 test_placeholders_match (test_i18n.Translations.test_placeholders_match) ... ok
@@ -92,6 +107,6 @@ test_soft_limit_warns_about_paging (test_resources.Guard.test_soft_limit_warns_a
 test_unknown_memory_does_not_block (test_resources.Guard.test_unknown_memory_does_not_block) ... ok
 
 ----------------------------------------------------------------------
-Ran 89 tests in 1.002s
+Ran 100 tests in 1.403s
 
-OK (skipped=4)
+OK (skipped=5)

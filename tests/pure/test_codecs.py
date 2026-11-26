@@ -3,6 +3,7 @@
 import os
 import struct
 import sys
+import tracemalloc
 import unittest
 import zlib
 
@@ -160,6 +161,70 @@ class Exr(unittest.TestCase):
             exr.encode({'Z': np.zeros((2, 2), np.float32)}, 'PIZ')
         with self.assertRaises(exr.ExrError):
             exr.decode(b'\0' * 16)
+
+
+def _png_chunk(kind, body):
+    return struct.pack('>I', len(body)) + kind + body + struct.pack('>I', zlib.crc32(kind + body) & 0xFFFFFFFF)
+
+
+def _png(w, h, idat):
+    return (b'\x89PNG\r\n\x1a\n' + _png_chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 0, 0, 0, 0))
+            + _png_chunk(b'IDAT', idat) + _png_chunk(b'IEND', b''))
+
+
+def _peak_bytes(fn):
+    tracemalloc.start()
+    try:
+        fn()
+        return tracemalloc.get_traced_memory()[1]
+    finally:
+        tracemalloc.stop()
+
+
+def _exr_single_block(data):
+    """(offset-table position, chunk offset) of a single-block EXR (the table entry points just past itself)."""
+    for p in range(8, len(data) - 8):
+        if struct.unpack('<Q', data[p:p + 8])[0] == p + 8:
+            return p, p + 8
+    raise AssertionError('offset table not found')
+
+
+class DecoderLimits(unittest.TestCase):
+    """Issue #15: the verification decoders must not allocate or inflate without bounds."""
+
+    def test_png_oversized_header_is_refused_before_allocating(self):
+        with self.assertRaises(png.PngError):
+            png.decode(_png(100000, 100000, zlib.compress(b'\0' * 64)))
+        with self.assertRaises(png.PngError):
+            png.decode(_png(0, 5, zlib.compress(b'')))
+
+    def test_png_decompression_bomb_is_not_inflated(self):
+        bomb = zlib.compress(b'\0' * 50_000_000, 9)                 # ~50 KB that would inflate to 50 MB
+        peak = _peak_bytes(lambda: self.assertRaises(png.PngError, png.decode, _png(8, 8, bomb)))
+        self.assertLess(peak, 5_000_000, 'the decoder inflated the whole stream')
+        with self.assertRaises(png.PngError):
+            png.decode(_png(8, 8, b'not zlib data'))
+
+    def test_exr_oversized_data_window(self):
+        data = exr.encode({'Z': np.zeros((2, 2), np.float32)}, 'NONE')
+        key = b'dataWindow\0box2i\0' + struct.pack('<i', 16)
+        i = data.index(key) + len(key)
+        bad = data[:i] + struct.pack('<iiii', 0, 0, 99999, 99999) + data[i + 16:]
+        with self.assertRaises(exr.ExrError):
+            exr.decode(bad)
+
+    def test_exr_zip_bomb_and_bad_offsets(self):
+        data = exr.encode({'Z': np.ones((4, 16), np.float32)}, 'ZIP')
+        table, chunk = _exr_single_block(data)
+        bomb = zlib.compress(b'\0' * 50_000_000, 9)
+        bombed = data[:chunk] + struct.pack('<ii', 0, len(bomb)) + bomb
+        peak = _peak_bytes(lambda: self.assertRaises(exr.ExrError, exr.decode, bombed))
+        self.assertLess(peak, 5_000_000, 'the decoder inflated the whole block')
+        outside = data[:table] + struct.pack('<Q', len(data) + 1000) + data[table + 8:]
+        with self.assertRaises(exr.ExrError):
+            exr.decode(outside)
+        with self.assertRaises(exr.ExrError):
+            exr.decode(data[:table + 4])                                 # truncated offset table
 
 
 if __name__ == '__main__':

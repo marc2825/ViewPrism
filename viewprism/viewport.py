@@ -140,7 +140,13 @@ def build_request(view, scene, depsgraph, settings, passes, *, preview=False):
 
 def view_signature(view):
     """Cheap fingerprint of everything that changes the projected image (for auto preview)."""
-    rv3d, region = view.rv3d, view.region
+    return signature_of(view.rv3d, view.region, view.space)
+
+
+def signature_of(rv3d, region, space):
+    from .scene_geometry import _TYPE_FILTER
+    # Object-type visibility of this viewport changes what is captured without any scene update.
+    types = tuple(bool(getattr(space, attr, True)) for attr in _TYPE_FILTER.values())
     return (tuple(round(x, 7) for row in rv3d.view_matrix for x in row),
             tuple(round(x, 7) for row in rv3d.window_matrix for x in row),
-            region.width, region.height, rv3d.view_perspective)
+            region.width, region.height, rv3d.view_perspective, types)

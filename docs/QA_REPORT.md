@@ -134,12 +134,42 @@ tests):
 - too-long base names;
 - late validation of the privacy option.
 
+### Independent code review before v0.3.0 (2026-11-27)
+
+A second review covered the UI redesign: `git diff v0.2.0..main -- viewprism/`. It found nothing
+critical. It confirmed the file-list cache key, the prediction (saved .blend), poll/draw safety,
+translation contexts, the drawing math and the texture lifetime. Fixed before the release (with tests):
+
+- the listing cache timestamp (slow drives were listed on every redraw);
+- the unsaved-.blend prediction;
+- capture/file-layer messages shown in English in the Japanese UI;
+- display settings ignored while the shading/ID mode differed;
+- the preview resolution not triggering Auto Refresh;
+- an invisible preview that kept capturing;
+- thumbnail aspect and sidebar overlap;
+- redundant re-encoding;
+- case handling of the clash check;
+- object-type visibility not marking the preview outdated.
+
+Still open (also in #17): selecting objects marks the preview outdated. Blender reports a
+selection change like a visibility change, so the two cannot be told apart.
+
+Issue #15 (six boundary cases from an external review) is fixed in 0.3.0:
+
+- one-segment paths are redacted;
+- a no-replace rename is used before the placeholder, and the placeholder is checked before the swap;
+- the decoders have size limits;
+- the read-only-folder test skips as root;
+- the CHANGELOG date of 0.2.0 is corrected;
+- stale locks are reused.
+
 Accepted as known, low impact:
 
 - Path redaction in metadata stops at whitespace. No current warning carries a path; the metadata
   holds no absolute paths in either mode.
-- A crash during an export can leave its hidden `.viewprism-lock` / `.viewprism-tmp` files; that
-  number is then skipped.
+- A crash during an export can leave its hidden `.viewprism-tmp` file (harmless; it can be deleted).
+  Its `.viewprism-lock` is reused after 15 minutes (since 0.3.0, #15); before, the number was skipped
+  forever.
 - An output "folder" that is an existing file reports every file as `exists`. The local message is
   correct.
 

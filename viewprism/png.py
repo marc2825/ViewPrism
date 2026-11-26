@@ -14,6 +14,7 @@ import numpy as np
 _SIG = b'\x89PNG\r\n\x1a\n'
 _COLOR_TYPES = {1: 0, 2: 4, 3: 2, 4: 6}          # channels -> PNG colour type
 _CHANNELS = {v: k for k, v in _COLOR_TYPES.items()}
+MAX_DECODE_PIXELS = 1 << 28      # decoder sanity limit (16384 x 16384); the decoder is for verification
 
 
 class PngError(ValueError):
@@ -119,12 +120,20 @@ def decode(data):
     w, h, bits, ctype, _comp, _filt, interlace = ihdr
     if interlace or bits not in (8, 16) or ctype not in _CHANNELS:
         raise PngError(f'unsupported PNG (bits={bits}, colour type={ctype}, interlace={interlace})')
+    if not (0 < w and 0 < h and w * h <= MAX_DECODE_PIXELS):
+        raise PngError(f'image size {w}x{h} outside the decoder limit')
     c = _CHANNELS[ctype]
     bpp = c * bits // 8
     stride = w * bpp
-    buf = np.frombuffer(zlib.decompress(b''.join(idat)), dtype=np.uint8)
-    if buf.size != h * (stride + 1):
+    expected = h * (stride + 1)
+    z = zlib.decompressobj()
+    try:
+        raw = z.decompress(b''.join(idat), expected + 1)      # never inflate more than the image needs
+    except zlib.error as exc:
+        raise PngError(f'corrupt image data: {exc}') from exc
+    if len(raw) != expected or z.unconsumed_tail:
         raise PngError('unexpected decompressed size')
+    buf = np.frombuffer(raw, dtype=np.uint8)
     buf = buf.reshape(h, stride + 1)
     out = np.zeros((h, stride), dtype=np.uint8)
     prev = np.zeros(stride, dtype=np.int64)

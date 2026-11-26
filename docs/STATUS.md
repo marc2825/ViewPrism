@@ -59,14 +59,14 @@ after a capture from a second, later closed window.
 
 ## Test results
 
-- Local (Windows): [`docs/evidence/2026-11-27-ui/SUMMARY.md`](evidence/2026-11-27-ui/SUMMARY.md) (redesigned UI; v0.2.0: [`2026-11-27`](evidence/2026-11-27/SUMMARY.md)) (v0.2.0 branch), stress:
+- Local (Windows): [`docs/evidence/2026-11-27-v0.3.0/SUMMARY.md`](evidence/2026-11-27-v0.3.0/SUMMARY.md) (v0.3.0; v0.2.0: [`2026-11-27`](evidence/2026-11-27/SUMMARY.md)) (v0.2.0 branch), stress:
   [`docs/evidence/2026-11-26-stress/`](evidence/2026-11-26-stress/)
 - CI: [`docs/evidence/ci-2026-11-26/`](evidence/ci-2026-11-26/) (PR #10); every CI run also uploads its
   evidence as an artifact.
 
 | Suite | Count | Result |
 |---|---|---|
-| Pure unit tests | 89 | PASS (local + CI on Windows/Linux, Python 3.11/3.13; symlink cases run in CI) |
+| Pure unit tests | 100 | PASS (local + CI on Windows/Linux, Python 3.11/3.13; symlink cases run in CI) |
 | Independent harness self-test | 2 | PASS |
 | Independent harness (background registration + GPU analytic cases) | per environment above | PASS |
 | GUI/GPU suite | 26 cases per environment | PASS |

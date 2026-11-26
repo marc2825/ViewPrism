@@ -76,7 +76,7 @@ NAMES_JA = {
     'Name Only': '名前のみ',
     'Overwrite': '上書き',
     '{} files to {}': '{} ファイル → {}',
-    '{} files; Export will ask for a folder': '{} ファイル。保存先はエクスポート時に選びます',
+    '{} files; Export will ask for the folder and name': '{} ファイル。保存先と名前はエクスポート時に選びます',
     'replaces': '置き換え',
     'exists': '既存',
     'float': '浮動小数点',
@@ -246,6 +246,97 @@ TIPS_JA = {
         '現在の設定をアドオンのプリファレンスに保存します。新しいセッションはこの設定から始まります',
     'Reset the current settings to the saved defaults': '現在の設定を保存済みの既定値に戻します',
 }
+
+
+# Messages built by the capture and file layers (errors, warnings). They are created in English, because
+# warnings are also stored in the metadata, and translated only when shown (panel, reports).
+# Each entry: regular expression matching the whole English message -> Japanese template ({group}).
+MESSAGES_JA = [
+    # 3D view
+    (r'Run ViewPrism from a 3D Viewport', 'ViewPrism は 3D ビューポートから実行してください'),
+    (r'The 3D Viewport has no visible drawing region', '3D ビューポートに表示領域がありません'),
+    (r'The 3D Viewport region has no view data', '3D ビューポートの領域にビューの情報がありません'),
+    (r'The 3D Viewport used for this export was closed or changed; run the export again',
+     'エクスポートに使う 3D ビューポートが閉じられたか変更されました。もう一度エクスポートしてください'),
+    (r'The 3D Viewport is too small', '3D ビューポートが小さすぎます'),
+    (r'Camera view without an active camera', 'カメラビューですが、アクティブなカメラがありません'),
+    # size, GPU
+    (r'resolution (?P<w>\d+)x(?P<h>\d+) exceeds the maximum side of (?P<m>\d+) px',
+     '解像度 {w}x{h} は 1 辺の上限 {m} px を超えています'),
+    (r'resolution (?P<w>\d+)x(?P<h>\d+) exceeds the limit of (?P<m>[\d,]+) pixels',
+     '解像度 {w}x{h} は上限 {m} ピクセルを超えています'),
+    (r'width and height must be positive', '幅と高さは 1 以上にしてください'),
+    (r'GPU capture needs Blender with a user interface \(not --background\)',
+     'GPU キャプチャには UI のある Blender が必要です（--background では動きません）'),
+    (r'(?P<n>\d+) ids exceed the supported maximum of (?P<m>\d+)', 'ID の数 {n} が上限 {m} を超えています'),
+    (r'no active GPU context right now \(for example just after closing a window\); try again',
+     '今は GPU コンテキストがありません（ウィンドウを閉じた直後など）。もう一度試してください'),
+    (r'GPU error \((?P<e>.*)\); try a lower resolution', 'GPU エラー（{e}）。解像度を下げてください'),
+    # memory
+    (r'a (?P<w>\d+)x(?P<h>\d+) capture and export needs about (?P<n>[\d.]+) GB of memory but only (?P<a>[\d.]+) '
+     r'GB can still be allocated; lower the resolution or close other programs',
+     '{w}x{h} のキャプチャと書き出しには約 {n} GB のメモリが必要ですが、確保できるのは {a} GB だけです。'
+     '解像度を下げるか、ほかのプログラムを閉じてください'),
+    (r'a (?P<w>\d+)x(?P<h>\d+) capture needs about (?P<n>[\d.]+) GB of memory but only (?P<a>[\d.]+) GB can '
+     r'still be allocated; lower the resolution or close other programs',
+     '{w}x{h} のキャプチャには約 {n} GB のメモリが必要ですが、確保できるのは {a} GB だけです。'
+     '解像度を下げるか、ほかのプログラムを閉じてください'),
+    (r'a (?P<w>\d+)x(?P<h>\d+) capture and export needs about (?P<n>[\d.]+) GB of memory but only (?P<a>[\d.]+) '
+     r'GB is free; it may be slow while the system pages',
+     '{w}x{h} のキャプチャと書き出しには約 {n} GB のメモリが必要ですが、空きは {a} GB です。'
+     'メモリの退避が起きて遅くなる可能性があります'),
+    (r'a (?P<w>\d+)x(?P<h>\d+) capture needs about (?P<n>[\d.]+) GB of memory but only (?P<a>[\d.]+) GB is free; '
+     r'it may be slow while the system pages',
+     '{w}x{h} のキャプチャには約 {n} GB のメモリが必要ですが、空きは {a} GB です。'
+     'メモリの退避が起きて遅くなる可能性があります'),
+    # capture warnings (with object names in the panel, without in anonymized metadata)
+    (r'nothing visible: the capture is empty', '何も写っていません（キャプチャが空です）'),
+    (r'(?P<n>\d+) object\(s\) have different viewport/render modifier settings \(viewport result exported\)'
+     r'(?P<rest>: .*)?',
+     '{n} 個のオブジェクトはビューポートとレンダーでモディファイアー設定が異なります（ビューポートの結果を書き出します）{rest}'),
+    (r'(?P<n>\d+) object\(s\) use shader displacement \(not included: geometry only\)(?P<rest>: .*)?',
+     '{n} 個のオブジェクトがシェーダーのディスプレイスメントを使っています（反映されません。形状のみ）{rest}'),
+    (r'(?P<n>\d+) object\(s\) may use transparency \(exported as opaque surfaces\)(?P<rest>: .*)?',
+     '{n} 個のオブジェクトが透過を使っている可能性があります（不透明な面として書き出します）{rest}'),
+    (r'(?P<n>\d+) object\(s\) skipped: unsupported type (?P<t>\w+)',
+     '{n} 個のオブジェクトを除外しました（非対応の種類 {t}）'),
+    (r'(?P<n>\d+) object\(s\) skipped: display as (?P<d>\w+)',
+     '{n} 個のオブジェクトを除外しました（表示方法が {d}）'),
+    (r'could not convert (?P<m>.*)', '変換できませんでした: {m}'),
+    (r'the viewport clipping region \(Alt\+B\) is not applied to the export',
+     'ビューポートのクリッピング範囲（Alt+B）はエクスポートに反映されません'),
+    # names and files
+    (r'name must be text', '名前は文字列にしてください'),
+    (r'name is empty', '名前が空です'),
+    (r'name contains characters that are not allowed in file names \(<>:"/\\\|\?\* or control\)',
+     '名前にファイル名で使えない文字が含まれています（<>:"/\\|?* や制御文字）'),
+    (r'name must not start with a dot', '名前をドット（.）で始めることはできません'),
+    (r'"(?P<s>.*)" is a reserved file name on Windows', '「{s}」は Windows で予約されたファイル名です'),
+    (r'name is too long', '名前が長すぎます'),
+    (r'no free file number left', '空いているファイル番号がありません'),
+    (r'refusing to write outside the output directory', '出力フォルダーの外には書き込みません'),
+    # depth / ids
+    (r'fixed depth range needs finite Near and Far values', '固定の深度範囲には、有限の「手前」と「奥」の値が必要です'),
+    (r'fixed depth range: Near and Far must differ', '固定の深度範囲: 「手前」と「奥」を別の値にしてください'),
+    (r'background value must be within \[0, 1\]', '背景の値は 0〜1 にしてください'),
+    (r'object id (?P<i>\d+) exceeds the 16-bit PNG limit (?P<m>\d+); export the ID pass as EXR instead',
+     'オブジェクト ID {i} は 16 ビット PNG の上限 {m} を超えています。ID パスを EXR で書き出してください'),
+]
+_COMPILED = []
+
+
+def translate_message(text, locale):
+    """Japanese for a known capture/file-layer message when `locale` is Japanese; otherwise `text`."""
+    if not locale or not locale.startswith('ja'):
+        return text
+    if not _COMPILED:
+        import re
+        _COMPILED.extend((re.compile(rx), tpl) for rx, tpl in MESSAGES_JA)
+    for rx, tpl in _COMPILED:
+        m = rx.fullmatch(text)
+        if m:
+            return tpl.format(**{k: v or '' for k, v in m.groupdict().items()})
+    return text
 
 
 def table():

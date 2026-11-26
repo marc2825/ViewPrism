@@ -33,8 +33,35 @@ file output are unchanged (same files and metadata `format_version` 1 as 0.2.0).
 - An outdated preview is drawn darker, with its status at the top of the viewport (no longer under the
   header or in a corner).
 - Fixed: changing an add-on setting marked a fresh preview as outdated.
+- Fixed before the release (independent review):
+  - A different normal shading or ID mode marks the preview outdated only while it differs; display
+    settings still apply meanwhile.
+  - A new preview resolution is picked up by Auto Refresh.
+  - A preview that shows nothing (no overlay, no thumbnails) stops instead of capturing in vain.
+  - Thumbnails keep their aspect in very wide views, do not vanish in tall ones, and leave room for the
+    sidebar.
+  - Opacity and pass toggles no longer re-encode the preview.
+  - Hiding object types in the viewport marks the preview outdated.
+- The file list:
+  - is cached longer when the folder is slow to list (network drives);
+  - lets the drive decide names that differ only in case;
+  - predicts Export As names for an unsaved .blend.
+- Messages from capture and file writing (view, size, memory, GPU, name and depth-range errors,
+  capture warnings) are shown in Japanese too; the metadata keeps English.
 
-## 0.2.0 — 2026-11-26 (pre-release)
+### Fixed (review findings, #15)
+- A lock file left by a crash no longer skips its file number forever. A lock older than 15 minutes
+  whose files do not exist is reused.
+- Drives without hard links (macOS/Linux FAT/exFAT, some shares): files are now published with the
+  system's atomic no-replace rename where available. The exclusive placeholder remains the last resort,
+  and it now checks that the placeholder is still its own before swapping it.
+- Paths in metadata text: one-segment absolute paths (`/tmpfile`) are redacted too, and URLs are no
+  longer mistaken for drive paths.
+- The verification decoders (PNG/EXR) refuse oversized images and never inflate more data than the
+  image needs.
+- Tests: the read-only folder test is skipped, with the reason, when run as root.
+
+## 0.2.0 — 2026-11-27 (pre-release)
 
 Safer exports, privacy options for metadata, memory guards and a smoother auto preview. No new pass
 types; files written by 0.1.0 and 0.2.0 have the same format (metadata `format_version` 1).

@@ -13,7 +13,7 @@ import unicodedata
 import bpy
 
 from . import operators, preview, props, viewport
-from .i18n import iface
+from .i18n import iface, message
 from .i18n_data import CONTEXT
 
 DOCS_URL = 'https://github.com/marc2825/ViewPrism#readme'
@@ -40,6 +40,8 @@ def _view_size_hint(context, settings):
     else:
         w, h = view.region.width, view.region.height
         camera = False
+    if w < 1 or h < 1:
+        return None, camera
     if settings.resolution_mode == 'CUSTOM':
         from .projection import locked_height
         ow = settings.width
@@ -109,7 +111,7 @@ def short_folder(path):
 
 
 def _labels(col, text, icon='NONE', width=WRAP):
-    for i, line in enumerate(wrap(text, width)):
+    for i, line in enumerate(wrap(message(text), width)):
         col.label(text=line, icon=icon if i == 0 else 'BLANK1', translate=False)
 
 
@@ -229,7 +231,7 @@ class VIEWPRISM_PT_main(bpy.types.Panel):
             return
         n = len(plan['files'])
         if plan['unsaved']:
-            head = iface('{} files; Export will ask for a folder').format(n)
+            head = iface('{} files; Export will ask for the folder and name').format(n)
             _labels(bcol, head, 'FILEBROWSER', width)
         else:
             folder = short_folder(plan['directory'])

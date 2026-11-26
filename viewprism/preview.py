@@ -128,22 +128,30 @@ def _encoded(result, pass_name, settings):
         return np.zeros(result['mask'].shape + (3,), np.float32)
 
 
-def _rebuild_texture(settings):
-    """Re-encode the cached capture for the current display settings (no new capture)."""
+def _rebuild_texture(settings, overlay=True, thumbnails=True):
+    """Re-encode the cached capture for the current display settings (no new capture). Only the
+    parts asked for are rebuilt (the eye button changes the overlay, not the thumbnails)."""
     if state.raw is None:
         state.texture, state.thumbs = None, {}
         return
     state.error = ''
-    if state.overlay:
-        state.texture = _upload(_encoded(state.raw, settings.preview_pass, settings))
-        if hasattr(state.texture, 'filter_mode'):      # Blender 5.x; cosmetic only
-            state.texture.filter_mode(settings.preview_pass in ('depth', 'normal'))
-    else:
-        state.texture = None
-    if settings.preview_thumbnails and state.small is not None:
-        state.thumbs = {p: _upload(_encoded(state.small, p, settings)) for p in PASSES}
-    else:
-        state.thumbs = {}
+    if overlay:
+        if state.overlay:
+            state.texture = _upload(_encoded(state.raw, settings.preview_pass, settings))
+            if hasattr(state.texture, 'filter_mode'):      # Blender 5.x; cosmetic only
+                state.texture.filter_mode(settings.preview_pass in ('depth', 'normal'))
+        else:
+            state.texture = None
+    if thumbnails:
+        if settings.preview_thumbnails and state.small is not None:
+            state.thumbs = {p: _upload(_encoded(state.small, p, settings)) for p in PASSES}
+        else:
+            state.thumbs = {}
+
+
+def modes_differ(settings):
+    """The capture was made with other normal/ID modes: its data no longer matches the settings."""
+    return state.capture_modes is not None and state.capture_modes != (settings.normal_mode, settings.id_mode)
 
 
 def _tag_redraw():
@@ -204,10 +212,16 @@ def show_pass(context, view, pass_name):
         return
     if state.overlay and settings.preview_pass == pass_name:
         state.overlay = False
+        if not settings.preview_thumbnails:
+            clear()                         # nothing left to show: stop the preview entirely
+            return
+        _rebuild_texture(settings, thumbnails=False)
+    elif settings.preview_pass != pass_name:
+        state.overlay = True
+        settings.preview_pass = pass_name   # its update re-encodes the overlay
     else:
         state.overlay = True
-        settings.preview_pass = pass_name
-    _rebuild_texture(settings)
+        _rebuild_texture(settings, thumbnails=False)
     _tag_redraw()
 
 
@@ -230,17 +244,26 @@ def clear():
             pass
 
 
-def settings_changed(context):
-    """Called by property updates: re-encode the cached preview (no capture) or mark dirty."""
+def settings_changed(context, which='display'):
+    """Called by property updates.
+
+    which='display': display settings changed (pass shown, depth range, colours, thumbnails): re-encode
+    the cached capture; no new capture. A preview with neither overlay nor thumbnails stops.
+    which='repaint': only drawing changes (opacity, which passes are exported, Auto Refresh).
+    which='capture': the preview resolution changed: capture again (at once with Auto Refresh,
+    otherwise on the next Refresh).
+    """
     if not state.active:
         return
     from . import props
     settings = props.settings(context)
-    if state.capture_modes != (settings.normal_mode, settings.id_mode):
-        state.dirty = True
-        state.stale = True
-    else:
+    if which == 'display':
+        if not state.overlay and not settings.preview_thumbnails:
+            clear()
+            return
         _rebuild_texture(settings)
+    elif which == 'capture':
+        state.dirty = True
     if settings.preview_auto:
         _ensure_timer()
     _tag_redraw()
@@ -293,27 +316,34 @@ def _rect(x, y, w, h, rw, rh, color):
             batch.draw(sh)
 
 
-def _left_inset(ctx):
-    """Width of the toolbar when it floats over the viewport (Region Overlap)."""
+def _side_insets(ctx):
+    """(left, right) widths of the toolbar and the sidebar when they float over the viewport."""
     if not ctx.preferences.system.use_region_overlap:
-        return 0
+        return 0, 0
     space = ctx.area.spaces.active
-    if not getattr(space, 'show_region_toolbar', False):
-        return 0
-    tools = next((r for r in ctx.area.regions if r.type == 'TOOLS'), None)
-    return tools.width if tools is not None and tools.width > 1 else 0
+
+    def width(kind, shown):
+        r = next((r for r in ctx.area.regions if r.type == kind), None)
+        return r.width if shown and r is not None and r.width > 1 else 0
+    return (width('TOOLS', getattr(space, 'show_region_toolbar', False)),
+            width('UI', getattr(space, 'show_region_ui', False)))
 
 
-def thumbnail_layout(region_w, region_h, image_w, image_h, ui, left=0):
-    """Pixel rectangles (x, y, w, h) of the four thumbnail images, lower left, or [] if they do not fit."""
+def thumbnail_layout(region_w, region_h, image_w, image_h, ui, left=0, right=0):
+    """Pixel rectangles (x, y, w, h) of the four thumbnail images, lower left, between the toolbar
+    (left) and the sidebar (ight), keeping the image aspect; [] if they do not fit."""
     margin, gap, label_h = 10 * ui, 6 * ui, 18 * ui
+    aspect = image_w / max(1, image_h)
     th = THUMB_HEIGHT * ui
-    tw = min(th * image_w / max(1, image_h), 2.2 * th)
-    room = region_w - left - 2 * margin
+    tw = th * aspect
+    if tw > 2.2 * th:                               # very wide views: limit the width, keep the aspect
+        tw = 2.2 * th
+        th = tw / aspect
+    room = region_w - left - right - 2 * margin
     if 4 * tw + 3 * gap > room:                     # shrink to the available width
         tw = max(0.0, (room - 3 * gap) / 4)
-        th = tw * image_h / max(1, image_w)
-    if tw < 24 * ui or th + label_h + 2 * margin > region_h:
+        th = tw / aspect
+    if tw < 12 * ui or th < 12 * ui or th + label_h + 2 * margin > region_h:
         return []
     return [(left + margin + i * (tw + gap), margin + label_h, tw, th) for i in range(4)]
 
@@ -332,10 +362,9 @@ def _draw():
     settings = props.settings(ctx)
     rw, rh = ctx.region.width, ctx.region.height
     ui = ctx.preferences.system.ui_scale
-    sig_now = (tuple(round(x, 7) for row in ctx.region_data.view_matrix for x in row),
-               tuple(round(x, 7) for row in ctx.region_data.window_matrix for x in row),
-               rw, rh, ctx.region_data.view_perspective)
-    stale = state.stale or sig_now != state.signature
+    sig_now = viewport.signature_of(ctx.region_data, ctx.region, ctx.space_data)
+    stale = state.stale or sig_now != state.signature or modes_differ(settings)
+    left, right = _side_insets(ctx)
     gain = STALE_DIM if stale else 1.0                  # an outdated preview is drawn darker
     prev_blend = gpu.state.blend_get()
     try:
@@ -343,7 +372,7 @@ def _draw():
         if state.overlay and state.texture is not None:
             _draw_image(state.texture, (-1.0, -1.0, 1.0, 1.0), settings.preview_opacity, gain)
         if state.thumbs:
-            _draw_thumbnails(ctx, settings, rw, rh, ui, gain)
+            _draw_thumbnails(ctx, settings, rw, rh, ui, gain, left, right)
         if stale:
             text = iface('Preview updating…') if settings.preview_auto else \
                 iface('Preview outdated: click Refresh or turn on Auto Refresh')
@@ -355,7 +384,7 @@ def _draw():
             font = 0
             blf.size(font, 13 * ui)
             tw, th = blf.dimensions(font, text)
-            x, y = (rw - tw) / 2, rh - _top_inset(ctx) - th - 14 * ui
+            x, y = left + (rw - left - right - tw) / 2, rh - _top_inset(ctx) - th - 14 * ui
             _rect(x - 8 * ui, y - 6 * ui, tw + 16 * ui, th + 12 * ui, rw, rh, (0.0, 0.0, 0.0, 0.65))
             blf.color(font, 1.0, 0.82 if stale else 1.0, 0.25 if stale else 1.0, 1.0)
             blf.position(font, x, y, 0)
@@ -364,10 +393,10 @@ def _draw():
         gpu.state.blend_set(prev_blend)
 
 
-def _draw_thumbnails(ctx, settings, rw, rh, ui, gain):
+def _draw_thumbnails(ctx, settings, rw, rh, ui, gain, left, right):
     import blf
     w, h = state.size
-    rects = thumbnail_layout(rw, rh, w, h, ui, _left_inset(ctx))
+    rects = thumbnail_layout(rw, rh, w, h, ui, left, right)
     shown = settings.preview_pass if state.overlay else None
     exported = {'depth': settings.use_depth, 'normal': settings.use_normal,
                 'object_id': settings.use_object_id, 'mask': settings.use_mask}
@@ -428,7 +457,7 @@ def _tick():
         return TICK
     now = time.monotonic()
     signature = viewport.view_signature(view)
-    if not (state.dirty or signature != state.signature):
+    if not (state.dirty or signature != state.signature or modes_differ(settings)):
         state.change_time = state.pending_signature = None
         return TICK
     # Refresh only once the view has been still for DEBOUNCE seconds (longer for slow scenes), so

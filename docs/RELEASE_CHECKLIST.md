@@ -8,7 +8,7 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 |---|---|
 | Independent harness (background + GPU) | ✅ Windows 11 + NVIDIA (Vulkan, OpenGL); Linux CI Blender 4.5.17, 5.0.1, 5.1.2, 5.2.5, 5.3.0 (Mesa); Windows CI 4.5.17 + 5.3.0 (background) |
 | GUI/GPU suite (26 cases, incl. every panel state in English and Japanese) | ✅ local Vulkan + OpenGL; Linux CI on all five versions |
-| Pure tests (89, incl. translation completeness) | ✅ local + CI (Windows/Linux, Python 3.11/3.13) |
+| Pure tests (100, incl. translation completeness and decoder limits) | ✅ local + CI (Windows/Linux, Python 3.11/3.13) |
 | Resource stress (1080p/4K/8K, repeated 4K, 40 000 instances, GPU failure, preview with/without thumbnails) | ✅ `docs/PERFORMANCE.md` |
 | Independent code review of the changes since the previous release | ✅ v0.2.0 (`docs/QA_REPORT.md`); v0.3.0 UI redesign (see the release PR) |
 | Non-destructiveness, file re-read, Cycles cross-check | ✅ |
