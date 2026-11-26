@@ -4,7 +4,7 @@ schema_version = "1.0.0"
 id = "viewpass"
 version = "0.1.0"
 name = "ViewPass"
-tagline = "Export aligned depth, normal, ID and mask passes from the 3D viewport"
+tagline = "Aligned depth, normal, ID and mask passes from the 3D viewport"
 maintainer = "marc2825"
 type = "add-on"
 

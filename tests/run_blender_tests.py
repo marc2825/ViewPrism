@@ -7,6 +7,7 @@ Timeouts, missing results and skips are failures. Logs and JSON are kept in --ou
 """
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -22,8 +23,10 @@ def run(blender, suite, out, timeout, backend, only, extra):
     cmd = [blender, '--factory-startup', '--disable-autoexec']
     if backend:
         cmd += ['--gpu-backend', backend]
+    env = None
     if suite == 'package':
-        cmd += ['--background']
+        # Isolated, empty user directory: never install into the real Blender configuration.
+        env = dict(os.environ, BLENDER_USER_RESOURCES=tempfile.mkdtemp(prefix='viewpass-userres-'))
     cmd += ['--python-exit-code', '1', '--python', str(SUITES[suite]), '--',
             '--repo', str(HERE.parent), '--result', str(result)]
     if only:
@@ -32,7 +35,7 @@ def run(blender, suite, out, timeout, backend, only, extra):
     print('Running', suite, cmd, flush=True)
     try:
         with log.open('w', encoding='utf-8') as fh:
-            code = subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, timeout=timeout).returncode
+            code = subprocess.run(cmd, stdout=fh, stderr=subprocess.STDOUT, timeout=timeout, env=env).returncode
     except (OSError, subprocess.TimeoutExpired) as exc:
         print(f'{suite}: FAIL ({exc}); log {log}')
         return False
