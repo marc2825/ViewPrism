@@ -57,5 +57,5 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 
 | Item | State |
 |---|---|
-| Push branch / open PR | ✅ pushed, PR #1 open (merge: owner) |
+| Push branch / open PR / merge | ✅ PR #1 merged into `main` (merge commit) |
 | Upload to extensions.blender.org, announcements, pricing | 🔒 not done |
