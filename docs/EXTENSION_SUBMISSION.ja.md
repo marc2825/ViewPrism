@@ -1,7 +1,7 @@
 # Blender Extensions 申請手順（オーナー用）
 
 対象: ViewPrism **0.2.0**。extensions.blender.org での無料頒布です。
-状態: **準備完了・未申請。** 申請は、オーナーがこのページの確認を終えてから自分で行います。
+状態: **準備完了・未申請。** v0.2.0 は 2026-11-27 に GitHub でプレリリース済みです（公開 ZIP でのインストール〜アンインストール検証済み）。申請は、オーナーがこのページの確認を終えてから自分で行います。
 掲載用の文章・画像・審査への回答案は [`EXTENSION_LISTING.md`](EXTENSION_LISTING.md) にまとめています（英語、そのまま貼り付け可）。
 
 ## 1. 使用する ZIP
@@ -9,6 +9,7 @@
 - GitHub Releases の **v0.2.0** に添付された `viewprism-0.2.0.zip` を使います。
   https://github.com/marc2825/ViewPrism/releases/tag/v0.2.0
 - 同じリリースの `viewprism-0.2.0.zip.sha256` と一致することを確認してください。
+  - 公開時に確認した値: `c644f1cbbcb88f856e93ea3a95384a07b7ddf4fab910cea2d03c7c167c54738d`
   - Windows: `certutil -hashfile viewprism-0.2.0.zip SHA256`
 - ZIP はタグ `v0.2.0` から CI（`.github/workflows/release.yml`）で作られています。作成時に次を通過済みです。
   - Blender 5.3 の `extension validate`

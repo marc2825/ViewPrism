@@ -22,7 +22,7 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 | ZIP contains only add-on files + `LICENSE`; privacy scan of the ZIP | ✅ |
 | Install / enable / export / disable / re-enable / uninstall in a clean user dir | ✅ `tests/blender/package_suite.py` (CI, all versions) |
 | `permissions`: `files` only, with reason; no network, wheels or binaries | ✅ |
-| Tag → validated ZIP + SHA-256 as GitHub pre-release | ✅ v0.1.0; v0.2.0 approved by the owner |
+| Tag → validated ZIP + SHA-256 as GitHub pre-release | ✅ v0.1.0; v0.2.0 (2026-11-27): the released ZIP was re-downloaded, its SHA-256 matched, its contents and privacy were checked, and the install/export/uninstall lifecycle passed |
 
 ## Rights and naming
 
@@ -37,7 +37,7 @@ Legend: ✅ done and verified · ⏳ open, can be done without the owner · 🔒
 
 | Item | State |
 |---|---|
-| GitHub pre-release v0.2.0 | approved by the owner 2026-11-26 |
+| GitHub pre-release v0.2.0 | ✅ published 2026-11-27 (approved by the owner) |
 | Listing text, media, review answers | ✅ `docs/EXTENSION_LISTING.md` |
 | Submission procedure and owner checks | ✅ `docs/EXTENSION_SUBMISSION.ja.md` |
 | Upload to extensions.blender.org | 🔒 owner, after the hands-on check |
